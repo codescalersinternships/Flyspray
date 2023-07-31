@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/codescalersinternships/Flyspray/app"
-	"github.com/codescalersinternships/Flyspray/models"
 )
 
 func main() {
@@ -18,12 +17,11 @@ func main() {
 
 	flag.Parse()
 
-	client, err := models.NewDBClient(dbFilePath)
+	app, err := app.NewApp(dbFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	app := app.NewApp(client)
 	if err := app.Run(port); err != nil {
 		log.Fatal(err)
 	}

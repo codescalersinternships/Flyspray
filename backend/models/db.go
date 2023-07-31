@@ -20,3 +20,9 @@ func NewDBClient(dbFilePath string) (DBClient, error) {
 type DBClient struct {
 	Client *gorm.DB
 }
+
+// Migrate makes migrations for the database
+func (d *DBClient) Migrate() error{
+
+	return nil
+}

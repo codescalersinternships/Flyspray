@@ -8,8 +8,18 @@ import (
 )
 
 // NewApp is the factory of App
-func NewApp(client models.DBClient) App {
-	return App{client: client}
+func NewApp(dbFilePath string) (App, error) {
+
+	client, err := models.NewDBClient(dbFilePath)
+	if err != nil {
+		return App{}, err
+	}
+
+	if err := client.Migrate(); err != nil {
+		return App{}, err
+	}
+
+	return App{client: client}, nil
 }
 
 // App initializes the entire app
