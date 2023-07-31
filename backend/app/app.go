@@ -19,12 +19,7 @@ type App struct {
 }
 
 // Run runs server
-func (a *App) Run(port int, dbFilePath string) error {
-	// start db
-	if err := a.client.Start(dbFilePath); err != nil {
-		return err
-	}
-
+func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
 	// set routes here

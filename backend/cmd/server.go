@@ -18,12 +18,13 @@ func main() {
 
 	flag.Parse()
 
-	// database client declaration
-	client := models.DBClient{}
+	client, err := models.NewDBClient(dbFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	app := app.NewApp(client)
-
-	if err := app.Run(port, dbFilePath); err != nil {
+	if err := app.Run(port); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -5,15 +5,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// DBClient used to start and make queries on database
-type DBClient struct {
-	Client *gorm.DB
-}
+// NewDBClient connects sqlite database and returns DBClient 
+func NewDBClient(dbFilePath string) (DBClient, error) {
+	d := DBClient{}
 
-// Start connects sqlite database
-func (d *DBClient) Start(dbFilePath string) error {
+	// connect database
 	var err error
 	d.Client, err = gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
 
-	return err
+	return d, err
+}
+
+// DBClient used to start and make queries on database
+type DBClient struct {
+	Client *gorm.DB
 }
