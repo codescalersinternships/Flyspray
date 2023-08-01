@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -46,7 +47,14 @@ func DeleteComponent(c *gin.Context, db models.DBClient) {
 
 	component := models.Component{}
 
-	db.Client.Delete(&component, componentID)
+	if result := db.Client.First(&component, componentID); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Component not found"})
+		return
+	}
+	if result := db.Client.Delete(&component, componentID); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete the component"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Component deleted successfully"})
 }
@@ -55,8 +63,20 @@ func DeleteComponent(c *gin.Context, db models.DBClient) {
 func ListComponentsForProject(c *gin.Context, db models.DBClient) {
 	projectID := c.Query("project_id")
 
+	fmt.Println(projectID)
+	if projectID == "" {
+		fmt.Println(projectID)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or invalid project_id"})
+		return
+	}
+
 	components := []models.Component{}
 	db.Client.Where("project_id = ?", projectID).Find(&components)
+
+	if len(components) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No components found for the specified project_id"})
+		return
+	}
 
 	c.JSON(http.StatusOK, components)
 }
