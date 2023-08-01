@@ -64,4 +64,13 @@ func (app *App) setRoutes() {
 		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
+	component := app.router.Group("/component")
+	{
+		component.POST("/", WrapFunc(app.createComponent))
+		component.GET("/:id", WrapFunc(app.getComponent))
+		component.DELETE("/:id", WrapFunc(app.deleteComment))
+		component.PUT("/:id", WrapFunc(app.updateComment))
+		component.GET("/filters", WrapFunc(app.getComponents))
+	}
+
 }
