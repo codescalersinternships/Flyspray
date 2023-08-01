@@ -1,0 +1,1 @@
+UPDATE member SET admin_bool = ? WHERE id = ?
