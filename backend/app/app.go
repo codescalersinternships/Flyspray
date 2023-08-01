@@ -33,6 +33,18 @@ func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
 	// set routes here
+	a.router.POST("project", func(ctx *gin.Context) {
+		createProject(ctx, a.client)
+	})
+	a.router.GET("project/:id", func(ctx *gin.Context) {
+		getProject(ctx, a.client)
+	})
+	a.router.GET("project/filters", func(ctx *gin.Context) {
+		getProjects(ctx, a.client)
+	})
+	a.router.DELETE("project/:id", func(ctx *gin.Context) {
+		deleteProject(ctx, a.client)
+	})
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
 }
