@@ -14,13 +14,14 @@ import (
 func (app *App) CreateComponent(c *gin.Context) {
 	var component models.Component
 	if err := c.ShouldBindJSON(&component); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println("error: Component should have name")
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Component should have name"})
 		return
 	}
 
 	if result := app.client.Client.Create(&component); result.Error != nil {
-		log.Fatal(result.Error)
-		c.Status(http.StatusInternalServerError)
+		log.Println("error: Failed to Create the component")
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to Create the component"})
 		return
 	}
 
@@ -35,7 +36,8 @@ func (app *App) GetComponentByID(c *gin.Context) {
 	result := app.client.Client.First(&component, componentID)
 
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Component not found"})
+		log.Println("error: Component not found")
+		c.JSON(http.StatusNotFound, gin.H{"message": "Component not found"})
 		return
 	}
 	c.JSON(http.StatusOK, component)
@@ -48,11 +50,13 @@ func (app *App) DeleteComponent(c *gin.Context) {
 	component := models.Component{}
 
 	if result := app.client.Client.First(&component, componentID); result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Component not found"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Component not found"})
+		log.Println("error: Component not found")
 		return
 	}
 	if result := app.client.Client.Delete(&component, componentID); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete the component"})
+		log.Println("error: Failed to delete the component")
 		return
 	}
 
@@ -66,8 +70,8 @@ func (app *App) ListComponentsForProject(c *gin.Context) {
 
 	fmt.Println(projectID)
 	if projectID == "" {
-		fmt.Println(projectID)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or invalid project_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing or invalid project_id"})
+		log.Println("error: Missing or invalid project_id")
 		return
 	}
 
@@ -81,7 +85,8 @@ func (app *App) ListComponentsForProject(c *gin.Context) {
 	query.Find(&components)
 
 	if len(components) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "No components found for the specified project_id"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "No components found for the specified project_id or name"})
+		log.Println("error: No components found for the specified project_id or name")
 		return
 	}
 
