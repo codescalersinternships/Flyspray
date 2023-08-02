@@ -123,7 +123,7 @@ func TestGetComment(t *testing.T) {
 
 	})
 
-	t.Run("comment not found", func(t *testing.T) {
+	t.Run("comment is not found", func(t *testing.T) {
 
 		request, err := http.NewRequest("GET", "/comment/55", nil)
 		assert.NoError(t, err)
