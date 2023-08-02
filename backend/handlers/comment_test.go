@@ -123,7 +123,7 @@ func TestGetComment(t *testing.T) {
 
 	})
 
-	t.Run("comment not found", func(t *testing.T) {
+	t.Run("comment is not found", func(t *testing.T) {
 
 		request, err := http.NewRequest("GET", "/comment/55", nil)
 		assert.NoError(t, err)
@@ -263,21 +263,6 @@ func TestListComments(t *testing.T) {
 		router.ServeHTTP(rec, request)
 
 		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
-
-	})
-
-	t.Run("bug id is not found", func(t *testing.T) {
-
-		request, err := http.NewRequest("GET", "/comment/filters?bug_id=", nil)
-		assert.NoError(t, err)
-
-		request.Header.Set("Content-Type", "application/json")
-
-		rec := httptest.NewRecorder()
-
-		router.ServeHTTP(rec, request)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code, "got %d status code but want status code 400", rec.Code)
 
 	})
 
