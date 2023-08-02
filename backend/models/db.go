@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// NewDBClient connects sqlite database and returns DBClient 
+// NewDBClient connects sqlite database and returns DBClient
 func NewDBClient(dbFilePath string) (DBClient, error) {
 	d := DBClient{}
 
@@ -22,7 +22,11 @@ type DBClient struct {
 }
 
 // Migrate makes migrations for the database
-func (d *DBClient) Migrate() error{
+func (d *DBClient) Migrate() error {
+
+	if err := d.Client.AutoMigrate(&Comment{}); err != nil {
+		return err
+	}
 
 	return nil
 }
