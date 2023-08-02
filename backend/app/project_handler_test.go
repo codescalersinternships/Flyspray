@@ -17,9 +17,7 @@ func TestCreateProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.router.POST("project", func(ctx *gin.Context) {
-		createProject(ctx, app.client)
-	})
+	app.setRoutes()
 
 	t.Run("valid", func(t *testing.T) {
 		input := createProjectInput{Name: "new project"}
@@ -54,15 +52,70 @@ func TestCreateProject(t *testing.T) {
 	})
 }
 
+func TestUpdateProject(t *testing.T) {
+	dbFilePath := "./test.db"
+	app, err := NewApp(dbFilePath)
+	assert.Nil(t, err)
+
+	app.router = gin.Default()
+	app.setRoutes()
+
+	t.Run("valid", func(t *testing.T) {
+		input := createProjectInput{Name: "updated project"}
+		payload, err := json.Marshal(input)
+		assert.Nil(t, err)
+
+		req, err := http.NewRequest("PUT", "/project/1", bytes.NewBuffer(payload))
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		input := createProjectInput{Name: ""}
+		payload, err := json.Marshal(input)
+		assert.Nil(t, err)
+
+		req, err := http.NewRequest("PUT", "/project/1", bytes.NewBuffer(payload))
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		input := createProjectInput{Name: "updated project"}
+		payload, err := json.Marshal(input)
+		assert.Nil(t, err)
+
+		req, err := http.NewRequest("PUT", "/project/-1", bytes.NewBuffer(payload))
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
 func TestGetProject(t *testing.T) {
 	dbFilePath := "./test.db"
 	app, err := NewApp(dbFilePath)
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.router.GET("project/:id", func(ctx *gin.Context) {
-		getProject(ctx, app.client)
-	})
+	app.setRoutes()
 
 	t.Run("valid", func(t *testing.T) {
 		req, err := http.NewRequest("GET", "/project/1", nil)
@@ -95,9 +148,7 @@ func TestGetProjects(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.router.GET("project/filters", func(ctx *gin.Context) {
-		getProjects(ctx, app.client)
-	})
+	app.setRoutes()
 
 	t.Run("valid", func(t *testing.T) {
 		req, err := http.NewRequest("GET", "/project/filters?userid=10007", nil)
@@ -118,9 +169,7 @@ func TestDeleteProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.router.DELETE("project/:id", func(ctx *gin.Context) {
-		deleteProject(ctx, app.client)
-	})
+	app.setRoutes()
 
 	t.Run("valid", func(t *testing.T) {
 		req, err := http.NewRequest("DELETE", "/project/1", nil)

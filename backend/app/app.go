@@ -32,19 +32,16 @@ type App struct {
 func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
-	// set routes here
-	a.router.POST("project", func(ctx *gin.Context) {
-		createProject(ctx, a.client)
-	})
-	a.router.GET("project/:id", func(ctx *gin.Context) {
-		getProject(ctx, a.client)
-	})
-	a.router.GET("project/filters", func(ctx *gin.Context) {
-		getProjects(ctx, a.client)
-	})
-	a.router.DELETE("project/:id", func(ctx *gin.Context) {
-		deleteProject(ctx, a.client)
-	})
+	a.setRoutes()
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (a *App) setRoutes() {
+	project := a.router.Group("/project")
+	project.POST("", a.createProject)
+	project.GET("/filters", a.getProjects)
+	project.GET("/:id", a.getProject)
+	project.PUT("/:id", a.updateProject)
+	project.DELETE("/:id", a.deleteProject)
 }
