@@ -1,4 +1,4 @@
-package handlers
+package app
 
 import (
 	"log"
@@ -10,14 +10,14 @@ import (
 )
 
 // CreateComponent creates a new component
-func CreateComponent(c *gin.Context, db models.DBClient) {
+func (app *App) CreateComponent(c *gin.Context) {
 	var component models.Component
 	if err := c.ShouldBindJSON(&component); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if result := db.Client.Create(&component); result.Error != nil {
+	if result := app.client.Client.Create(&component); result.Error != nil {
 		log.Fatal(result.Error)
 		c.Status(http.StatusInternalServerError)
 		return
@@ -27,11 +27,11 @@ func CreateComponent(c *gin.Context, db models.DBClient) {
 }
 
 // GetComponentByID gets a component by its ID
-func GetComponentByID(c *gin.Context, db models.DBClient) {
+func (app *App) GetComponentByID(c *gin.Context) {
 
 	componentID := c.Param("id")
 	component := models.Component{}
-	result := db.Client.First(&component, componentID)
+	result := app.client.Client.First(&component, componentID)
 
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Component not found"})
@@ -41,7 +41,7 @@ func GetComponentByID(c *gin.Context, db models.DBClient) {
 }
 
 // DeleteComponent deletes a component by its ID
-func DeleteComponent(c *gin.Context, db models.DBClient) {
+func (app *App) DeleteComponent(c *gin.Context) {
 	componentID := c.Param("id")
 
 	component := models.Component{}
@@ -52,11 +52,12 @@ func DeleteComponent(c *gin.Context, db models.DBClient) {
 }
 
 // ListComponentsForProject gets all components for a project
-func ListComponentsForProject(c *gin.Context, db models.DBClient) {
+func (app *App) ListComponentsForProject(c *gin.Context) {
 	projectID := c.Query("project_id")
+	name := c.Query("name")
 
 	components := []models.Component{}
-	db.Client.Where("project_id = ?", projectID).Find(&components)
+	query.Find(&components)
 
 	c.JSON(http.StatusOK, components)
 }

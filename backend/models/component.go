@@ -7,7 +7,7 @@ import (
 // Component is a struct representing a Component
 type Component struct {
 	// ID uniqe for each Component
-	ID uint `json:"id"`
+	ID uint `json:"id" gorm:"primaryKey;autoIncrement:true"`
 	// ProjectID descripe id project
 	ProjectID uint `json:"project_id" validate:"required"`
 	// Name descripe each Component
