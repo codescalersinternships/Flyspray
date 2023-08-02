@@ -1,4 +1,4 @@
-package handlers
+package app
 
 import (
 	"bytes"
@@ -15,22 +15,13 @@ import (
 func TestCreateComponent(t *testing.T) {
 
 	databasePath := "./test.db"
-
-	client, err := models.NewDBClient(databasePath)
+	app, err := NewApp(databasePath)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 
-	err = client.Migrate()
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	router := gin.Default()
-
-	router.POST("/component", func(c *gin.Context) {
-		CreateComponent(c, client)
-	})
+	app.router = gin.Default()
+	app.router.POST("/component", app.CreateComponent)
 
 	t.Run("Success", func(t *testing.T) {
 
@@ -44,7 +35,7 @@ func TestCreateComponent(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusCreated != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusCreated, w.Code)
@@ -85,7 +76,7 @@ func TestCreateComponent(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusBadRequest != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
@@ -96,22 +87,13 @@ func TestCreateComponent(t *testing.T) {
 func TestGetComponentByID(t *testing.T) {
 
 	databasePath := "./test.db"
-
-	client, err := models.NewDBClient(databasePath)
+	app, err := NewApp(databasePath)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 
-	err = client.Migrate()
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	router := gin.Default()
-
-	router.GET("/component/:id", func(c *gin.Context) {
-		GetComponentByID(c, client)
-	})
+	app.router = gin.Default()
+	app.router.GET("/component/:id", app.GetComponentByID)
 
 	t.Run("Success", func(t *testing.T) {
 
@@ -124,7 +106,7 @@ func TestGetComponentByID(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusOK != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
@@ -142,7 +124,7 @@ func TestGetComponentByID(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusNotFound != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
@@ -151,24 +133,14 @@ func TestGetComponentByID(t *testing.T) {
 }
 
 func TestListComponentsForProject(t *testing.T) {
-
 	databasePath := "./test.db"
-
-	client, err := models.NewDBClient(databasePath)
+	app, err := NewApp(databasePath)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 
-	err = client.Migrate()
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	router := gin.Default()
-
-	router.GET("/component/filters", func(c *gin.Context) {
-		ListComponentsForProject(c, client)
-	})
+	app.router = gin.Default()
+	app.router.GET("/component/filters", app.ListComponentsForProject)
 
 	t.Run("Bad request", func(t *testing.T) {
 		req, err := http.NewRequest("GET", "/component/filters?project_id=", nil)
@@ -180,7 +152,7 @@ func TestListComponentsForProject(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusBadRequest != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
@@ -197,7 +169,7 @@ func TestListComponentsForProject(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusNotFound != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
@@ -215,7 +187,7 @@ func TestListComponentsForProject(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusOK != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
@@ -226,23 +198,14 @@ func TestListComponentsForProject(t *testing.T) {
 func TestDeleteComponent(t *testing.T) {
 
 	databasePath := "./test.db"
-
-	client, err := models.NewDBClient(databasePath)
+	app, err := NewApp(databasePath)
 	if err != nil {
 		t.Fatalf("Error: %v", err)
 	}
 	defer os.Remove(databasePath)
 
-	err = client.Migrate()
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
-
-	router := gin.Default()
-
-	router.DELETE("/component/:id", func(c *gin.Context) {
-		DeleteComponent(c, client)
-	})
+	app.router = gin.Default()
+	app.router.DELETE("/component/:id", app.DeleteComponent)
 
 	t.Run("Success", func(t *testing.T) {
 
@@ -255,7 +218,7 @@ func TestDeleteComponent(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusOK != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
@@ -273,7 +236,7 @@ func TestDeleteComponent(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		router.ServeHTTP(w, req)
+		app.router.ServeHTTP(w, req)
 
 		if http.StatusNotFound != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
