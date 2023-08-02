@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 
-	"github.com/codescalersinternships/Flyspray/handlers"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -37,16 +36,17 @@ func (a *App) Run(port int) error {
 	comment := a.router.Group("/comment")
 	{
 		comment.POST("/", func(c *gin.Context) {
-			handlers.CreateComment(c, a.client)
+			CreateComment(c, a.client)
+
 		})
 		comment.GET("/:id", func(c *gin.Context) {
-			handlers.GetComment(c, a.client)
+			GetComment(c, a.client)
 		})
 		comment.DELETE("/:id", func(c *gin.Context) {
-			handlers.DeleteComment(c, a.client)
+			DeleteComment(c, a.client)
 		})
 		comment.GET("/filters", func(c *gin.Context) {
-			handlers.ListComments(c, a.client)
+			ListComments(c, a.client)
 		})
 	}
 
