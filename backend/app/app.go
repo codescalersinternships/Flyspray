@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 
-	"github.com/codescalersinternships/Flyspray/handlers"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -37,18 +36,10 @@ func (a *App) Run(port int) error {
 
 	component := a.router.Group("/component")
 	{
-		component.POST("/", func(c *gin.Context) {
-			handlers.CreateComponent(c, a.client)
-		})
-		component.GET("/:id", func(c *gin.Context) {
-			handlers.GetComponentByID(c, a.client)
-		})
-		component.DELETE("/:id", func(c *gin.Context) {
-			handlers.DeleteComponent(c, a.client)
-		})
-		component.GET("/filters", func(c *gin.Context) {
-			handlers.ListComponentsForProject(c, a.client)
-		})
+		component.POST("/", a.CreateComponent)
+		component.GET("/:id", a.GetComponentByID)
+		component.DELETE("/:id", a.DeleteComponent)
+		component.GET("/filters", a.ListComponentsForProject)
 	}
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
