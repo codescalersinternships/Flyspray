@@ -35,7 +35,7 @@ func (a *App) createProject(ctx *gin.Context) {
 
 	// TODO: get user id from authorization middleware and assign it to OwnerId
 	newProject := models.Project{Name: input.Name, OwnerId: 10007} // 10007 is just a random number
-	newProject, err := models.CreateProject(newProject, a.client)
+	newProject, err := a.client.CreateProject(newProject)
 
 	if err != nil {
 		log.Fatal(err)
@@ -65,7 +65,7 @@ func (a *App) updateProject(ctx *gin.Context) {
 	}
 
 	updatedProject := models.Project{Name: input.Name}
-	updatedProject, err := models.UpdateProject(id, updatedProject, a.client)
+	updatedProject, err := a.client.UpdateProject(id, updatedProject)
 
 	if err == gorm.ErrRecordNotFound {
 		log.Println("project not found")
@@ -85,7 +85,7 @@ func (a *App) getProject(ctx *gin.Context) {
 	// TODO: add middleware to check if user is signed in
 	id := ctx.Param("id")
 
-	project, err := models.GetProject(id, a.client)
+	project, err := a.client.GetProject(id)
 	if err == gorm.ErrRecordNotFound {
 		log.Println("project not found")
 		ctx.IndentedJSON(http.StatusNotFound,
@@ -106,7 +106,7 @@ func (a *App) getProjects(ctx *gin.Context) {
 	projectName := ctx.Query("name")
 	creationDate := ctx.Query("after")
 
-	projects := models.FilterProjects(userId, projectName, creationDate, a.client)
+	projects := a.client.FilterProjects(userId, projectName, creationDate)
 
 	ctx.IndentedJSON(http.StatusOK, responseOk{
 		Message: "projects retrieved successfully",
@@ -118,7 +118,7 @@ func (a *App) deleteProject(ctx *gin.Context) {
 	// TODO: get user id from authorization middleware and check if user has access to delete the project
 	id := ctx.Param("id")
 
-	models.DeleteProject(id, a.client)
+	a.client.DeleteProject(id)
 
 	ctx.IndentedJSON(http.StatusOK, responseOk{
 		Message: "project deleted successfully",

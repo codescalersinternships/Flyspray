@@ -12,73 +12,73 @@ type Project struct {
 }
 
 // CreateProject adds new project to database
-func CreateProject(project Project, db DBClient) (Project, error) {
-	result := db.Client.Create(&project)
+func (d *DBClient) CreateProject(project Project) (Project, error) {
+	result := d.Client.Create(&project)
 	return project, result.Error
 }
 
 // UpdateProject updates project
-func UpdateProject(id string, updatedProject Project, db DBClient) (Project, error) {
+func (d *DBClient) UpdateProject(id string, updatedProject Project) (Project, error) {
 	project := Project{}
-	result := db.Client.First(&project, id)
+	result := d.Client.First(&project, id)
 	if result.Error != nil {
 		return Project{}, result.Error
 	}
 
 	project.Name = updatedProject.Name
-	db.Client.Save(&project)
+	d.Client.Save(&project)
 
 	return project, nil
 }
 
 // GetProject gets project by id
-func GetProject(id string, db DBClient) (Project, error) {
+func (d *DBClient) GetProject(id string) (Project, error) {
 	project := Project{}
-	result := db.Client.First(&project, id)
+	result := d.Client.First(&project, id)
 	return project, result.Error
 }
 
 // FilterProjects filters all projects by user id, project name, creation date
-func FilterProjects(userId, projectName, date string, db DBClient) []Project {
+func (d *DBClient) FilterProjects(userId, projectName, date string) []Project {
 	projects := []Project{}
 
 	if userId == "" && projectName == "" && date == "" {
-		db.Client.Find(&projects)
+		d.Client.Find(&projects)
 		return projects
 	}
 
 	if userId == "" && projectName == "" {
-		db.Client.Where("created_at > ?", date).Find(&projects)
+		d.Client.Where("created_at > ?", date).Find(&projects)
 		return projects
 	}
 	if userId == "" && date == "" {
-		db.Client.Where("name = ?", projectName).Find(&projects)
+		d.Client.Where("name = ?", projectName).Find(&projects)
 		return projects
 	}
 	if projectName == "" && date == "" {
-		db.Client.Where("owner_id = ?", userId).Find(&projects)
+		d.Client.Where("owner_id = ?", userId).Find(&projects)
 		return projects
 	}
 
 	if userId == "" {
-		db.Client.Where("name = ? and created_at > ?", projectName, date).Find(&projects)
+		d.Client.Where("name = ? and created_at > ?", projectName, date).Find(&projects)
 		return projects
 	}
 	if projectName == "" {
-		db.Client.Where("owner_id = ? and created_at > ?", userId, date).Find(&projects)
+		d.Client.Where("owner_id = ? and created_at > ?", userId, date).Find(&projects)
 		return projects
 	}
 	if date == "" {
-		db.Client.Where("owner_id = ? and name = ?", userId, projectName).Find(&projects)
+		d.Client.Where("owner_id = ? and name = ?", userId, projectName).Find(&projects)
 		return projects
 	}
 
-	db.Client.Where("owner_id = ? and name = ? and created_at > ?", userId, projectName, date).Find(&projects)
+	d.Client.Where("owner_id = ? and name = ? and created_at > ?", userId, projectName, date).Find(&projects)
 	return projects
 }
 
 // DeleteProject deletes project by id
-func DeleteProject(id string, db DBClient) {
+func (d *DBClient) DeleteProject(id string) {
 	project := Project{}
-	db.Client.Delete(&project, id)
+	d.Client.Delete(&project, id)
 }
