@@ -67,5 +67,4 @@ func (app *App) setRoutes() {
 		component.PUT("/:id", WrapFunc(app.updateComment))
 		component.GET("/filters", WrapFunc(app.getComponents))
 	}
-
 }
