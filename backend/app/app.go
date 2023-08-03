@@ -3,8 +3,10 @@ package app
 import (
 	_ "embed"
 	"fmt"
+	"log"
 
 	"github.com/codescalersinternships/Flyspray/models"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -15,14 +17,11 @@ func NewApp(dbFilePath string) (App, error) {
 	if err != nil {
 		return App{}, err
 	}
-	err = client.CreateMemberTable()
-	if err != nil {
-		return App{}, err
-	}
-	if err := client.Migrate(); err != nil {
-		return App{}, err
-	}
 
+	if err := client.Migrate(); err != nil {
+		log.Fatalf("error migrating tables %q", err)
+		return App{}, err
+	}
 	return App{client: client}, nil
 }
 
@@ -34,12 +33,15 @@ type App struct {
 
 // Run runs server
 func (a *App) Run(port int) error {
-	a.router = gin.Default()
-
-	// set routes here
-	a.router.Use(cors.Default())
-	a.router.POST("/member",a.client.Create)
-	a.router.GET("/members",a.client.GetAllMembers)
-	a.router.PUT("/member/:id",a.client.UpdateMemberOwnership)
+	a.setRoutes()
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (a *App) setRoutes() {
+	a.router = gin.Default()
+	a.router.Use(cors.Default())
+	memberRoutes := a.router.Group("/member")
+	memberRoutes.POST("", a.CreateNewMember)
+	memberRoutes.GET("", a.GetAllMembers)
+	memberRoutes.PUT("/:id", a.UpdateMemberOwnership)
 }
