@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
-
 func TestCreateComment(t *testing.T) {
 
 	dbPath := "./testing.db"
