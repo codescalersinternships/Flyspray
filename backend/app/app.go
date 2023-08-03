@@ -33,7 +33,12 @@ func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
 	// set routes here
+	a.setRoutes()
 
+	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (a *App) setRoutes() {
 	component := a.router.Group("/component")
 	{
 		component.POST("/", a.CreateComponent)
@@ -41,6 +46,4 @@ func (a *App) Run(port int) error {
 		component.DELETE("/:id", a.DeleteComponent)
 		component.GET("/filters", a.ListComponentsForProject)
 	}
-
-	return a.router.Run(fmt.Sprintf(":%d", port))
 }
