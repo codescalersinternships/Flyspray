@@ -34,14 +34,7 @@ func (a *App) Run(port int) error {
 
 	// set routes here
 
-	user := models.User{
-		Name:     "diaa",
-		Email:    "diaa@gmail.com",
-		Password: "diaabadr",
-	}
-	user, err := a.client.CreateUser(user)
-	fmt.Println("err",err)
+	a.router.POST("/", a.Signup)
 
-	fmt.Println("user ",user)
 	return a.router.Run(fmt.Sprintf(":%d", port))
 }
