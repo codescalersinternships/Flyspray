@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	// take port number and db filepath as flags
 	var dbFilePath string
 	var port int
 	flag.StringVar(&dbFilePath, "d", "./flyspray.db", "Specify the filepath of sqlite database")

@@ -45,6 +45,11 @@ func (a *App) UpdateMemberOwnership(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	err := a.client.UpdateMemberOwnership(member, id)
 	if err != nil {
+		if err==models.ErrMemberNotFound{
+			log.Printf("%q:cannot update member",err)
+			c.Status(http.StatusNotFound)
+			return
+		}
 		log.Printf("error updating member ownership %q", err)
 		c.Status(http.StatusInternalServerError)
 		return

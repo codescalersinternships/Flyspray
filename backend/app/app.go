@@ -17,7 +17,6 @@ func NewApp(dbFilePath string) (App, error) {
 	if err != nil {
 		return App{}, err
 	}
-
 	if err := client.Migrate(); err != nil {
 		log.Fatalf("error migrating tables %q", err)
 		return App{}, err
