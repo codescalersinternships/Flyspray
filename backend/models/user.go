@@ -3,16 +3,17 @@ package models
 import (
 	"math/rand"
 
+	"github.com/google/uuid"
 	"gopkg.in/validator.v2"
 )
 
 const verificationCodeLength = 6
 
 type User struct {
-	ID                string `gorm:"primary_key;<-:false"`
+	ID                string `gorm:"primaryKey;<-:false"`
 	Name              string `json:"name" validate:"required"`
-	Email             string `json:"email" gorm:"unique;not null" validate:"required regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
-	Password          string `json:"password" gorm:"not null" validate:"required"`
+	Email             string `json:"email" gorm:"unique;not null"`
+	Password          string `json:"password" gorm:"not null"`
 	Verification_code string `gorm:"unique;not null"`
 	Verified          bool   `gorm:"default:false"`
 }
@@ -22,7 +23,8 @@ func (u *User) Validate() error {
 }
 
 func (db *DBClient) CreateUser(user User) (User, error) {
-
+	uuidV4 := uuid.New()
+	user.ID = uuidV4.String()
 	result := db.Client.Create(&user)
 	return user, result.Error
 }
@@ -46,7 +48,7 @@ func (db *DBClient) GenerateVerificationCode() string {
 		}
 
 		var count int64
-		db.Client.Model(&User{}).Where("verificationCode = ?", string(verificationCode)).Count(&count)
+		db.Client.Model(&User{}).Where("Verification_code = ?", string(verificationCode)).Count(&count)
 
 		if count == 0 {
 			return string(verificationCode)
