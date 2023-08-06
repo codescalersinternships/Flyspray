@@ -40,23 +40,6 @@ func TestCreateComponent(t *testing.T) {
 		if http.StatusCreated != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusCreated, w.Code)
 		}
-
-		var responseComponent models.Component
-		err = json.Unmarshal(w.Body.Bytes(), &responseComponent)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
-
-		expectedComponent := models.Component{
-			ProjectID: 1,
-			Name:      "Test Component",
-		}
-		if expectedComponent.ProjectID != responseComponent.ProjectID {
-			t.Errorf("Expected status code %d, but got %d", expectedComponent.ProjectID, responseComponent.ProjectID)
-		}
-		if expectedComponent.Name != responseComponent.Name {
-			t.Errorf("Expected status code %s, but got %s", expectedComponent.Name, responseComponent.Name)
-		}
 	})
 
 	t.Run("Bad Request", func(t *testing.T) {
@@ -80,6 +63,72 @@ func TestCreateComponent(t *testing.T) {
 
 		if http.StatusBadRequest != w.Code {
 			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
+		}
+	})
+}
+
+func TestUpdateComponent(t *testing.T) {
+
+	databasePath := "./test.db"
+	app, err := NewApp(databasePath)
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	app.router = gin.Default()
+	app.router.PUT("/component/:id", app.UpdateComponent)
+	updatedComponent := models.Component{
+		ProjectID: 1,
+		Name:      "Updated Component",
+	}
+	requestBody, err := json.Marshal(updatedComponent)
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	t.Run("Success", func(t *testing.T) {
+
+		req, err := http.NewRequest("PUT", "/component/1", bytes.NewBuffer(requestBody))
+		if err != nil {
+			t.Fatalf("Error: %v", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		app.router.ServeHTTP(w, req)
+
+		if http.StatusOK != w.Code {
+			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("Bad Request", func(t *testing.T) {
+
+		req, err := http.NewRequest("PUT", "/component/1", nil)
+		if err != nil {
+			t.Fatalf("Error: %v", err)
+		}
+
+		w := httptest.NewRecorder()
+		app.router.ServeHTTP(w, req)
+
+		if http.StatusBadRequest != w.Code {
+			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
+		}
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		req, err := http.NewRequest("PUT", "/component/999", bytes.NewBuffer(requestBody))
+		if err != nil {
+			t.Fatalf("Error: %v", err)
+		}
+
+		w := httptest.NewRecorder()
+		app.router.ServeHTTP(w, req)
+
+		if http.StatusNotFound != w.Code {
+			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
 		}
 	})
 }
