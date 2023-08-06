@@ -11,7 +11,7 @@ type Component struct {
 	// ProjectID descripe id project
 	ProjectID uint `json:"project_id" validate:"required"`
 	// Name descripe each Component
-	Name string `json:"name" validate:"required"`
+	Name string `json:"name" gorm:"unique" validate:"required "`
 	// CreatedAt descripe time for the component
 	CreatedAt time.Time `json:"created_at"`
 }

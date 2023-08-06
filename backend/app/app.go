@@ -44,6 +44,7 @@ func (a *App) setRoutes() {
 		component.POST("/", a.CreateComponent)
 		component.GET("/:id", a.GetComponentByID)
 		component.DELETE("/:id", a.DeleteComponent)
+		component.PUT("/:id", a.UpdateComponent)
 		component.GET("/filters", a.ListComponentsForProject)
 	}
 }
