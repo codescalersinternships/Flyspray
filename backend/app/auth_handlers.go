@@ -7,49 +7,35 @@ import (
 
 	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/codescalersinternships/Flyspray/models"
+	"gorm.io/gorm"
 
-	// "github.com/google/uuid"
-
-	// "github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
 
 type CustomResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
 }
 
 type CustomError struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
+	Error string `json:"error"`
 }
 
 func (a *App) Signup(ctx *gin.Context) {
-	user := models.User{
-		ID:                "123", // Assign a valid value to ID
-		Name:              "diaa",    // You can leave this empty if you want to bypass the validation
-		Email:             "test@test.com",
-		Password:          "password123",
-		Verification_code: "abcd123",
-		Verified:          false,
-	}
+	var user models.User
 
 	err := json.NewDecoder(ctx.Request.Body).Decode(&user)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, CustomError{
-			Success: false,
-			Error:   err.Error(),
+			Error: err.Error(),
 		})
 		return
 	}
-	fmt.Println("request body", user)
 	err = user.Validate()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, CustomError{
-			Success: false,
-			Error:   fmt.Sprintf("validation error: %s", err.Error()),
+			Error: fmt.Sprintf("validation error: %s", err.Error()),
 		})
 		return
 	}
@@ -58,35 +44,138 @@ func (a *App) Signup(ctx *gin.Context) {
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, CustomError{
-			Success: false,
-			Error:   err.Error(),
+			Error: err.Error(),
 		})
 		return
 	}
 
 	user.Password = hash
 
-	fmt.Println(user)
-
 	user.Verification_code = a.client.GenerateVerificationCode()
 
 	user, err = a.client.CreateUser(user)
+
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: users.email" {
 			ctx.JSON(http.StatusBadRequest, CustomError{
-				Success: false,
-				Error:   "email already exists",
+				Error: "email already exists",
 			})
 			return
 		}
 
 		ctx.JSON(http.StatusInternalServerError, CustomError{
-			Success: false,
-			Error:   err.Error(),
+			Error: err.Error(),
+		})
+		return
+	}
+	fmt.Println(user.Verification_code)
+
+	// send email with verification code
+
+	ctx.JSON(http.StatusCreated, CustomResponse{
+		Message: "A verification code has been sent to your email.",
+	})
+}
+
+func (a *App) Verify(ctx *gin.Context) {
+
+	var requestBody struct {
+		VerificationCode string `json:"verification_code"`
+	}
+
+	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, CustomError{
+			Error: err.Error(),
 		})
 		return
 	}
 
-	fmt.Println(user.ID)
+	result := a.client.Client.Model(&models.User{}).Where("Verification_code = ?", requestBody.VerificationCode).Update("Verified", true)
+
+	if result.RowsAffected != 1 {
+		ctx.JSON(http.StatusBadRequest, CustomError{
+			Error: "wrong verification code",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, CustomResponse{
+		Message: "your account has been verified successfully",
+	})
+}
+
+func (a *App) SignIn(ctx *gin.Context) {
+
+	var requestBody models.User
+	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, CustomError{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	var user models.User
+	result := a.client.Client.First(&user, "Email = ?", requestBody.Email)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			ctx.JSON(http.StatusNotFound, CustomError{
+				Error: "invalid email or password",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, CustomError{
+			Error: result.Error.Error(),
+		})
+		return
+	}
+
+	if !user.Verified {
+		ctx.JSON(http.StatusForbidden, CustomError{
+			Error: "Account not verified",
+		})
+		return
+	}
+
+	isPasswordMatches := internal.CheckPasswordHash(requestBody.Password, user.Password)
+
+	if !isPasswordMatches {
+		ctx.JSON(http.StatusNotFound, CustomError{
+			Error: "invalid email or password",
+		})
+		return
+	}
+
+	// generate token
+	token, err := internal.GenerateToken(user)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, CustomError{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	user = models.User{
+		Name:     user.Name,
+		Email:    user.Email,
+		Verified: user.Verified,
+	}
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie("Authorization", token, 60*15, "", "", true, true)
+	ctx.JSON(http.StatusOK, CustomResponse{
+		Message: "logged in successfully",
+		Data: struct {
+			AccessToken string      `json:"access_token"`
+			User        models.User `json:"user"`
+		}{
+			AccessToken: token,
+			User:        user,
+		},
+	})
 
 }

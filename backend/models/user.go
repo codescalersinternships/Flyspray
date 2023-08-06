@@ -11,8 +11,8 @@ const verificationCodeLength = 6
 
 type User struct {
 	ID                string `gorm:"primaryKey;<-:false"`
-	Name              string `json:"name" validate:"required"`
-	Email             string `json:"email" gorm:"unique;not null"`
+	Name              string `json:"name"`
+	Email             string `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
 	Password          string `json:"password" gorm:"not null"`
 	Verification_code string `gorm:"unique;not null"`
 	Verified          bool   `gorm:"default:false"`

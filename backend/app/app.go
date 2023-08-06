@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +36,14 @@ func (a *App) Run(port int) error {
 
 	// set routes here
 
-	a.router.POST("/", a.Signup)
+	a.router.POST("/signup", a.Signup)
+	a.router.POST("/signin", a.SignIn)
+	a.router.POST("/verify", a.Verify)
+	a.router.GET("/testmiddleware", middlewares.RequireAuth, func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, CustomResponse{
+			Message: "HI",
+		})
+	})
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
 }
