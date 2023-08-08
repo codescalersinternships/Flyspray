@@ -2,8 +2,10 @@ package app
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +18,7 @@ func NewApp(dbFilePath string) (App, error) {
 	}
 
 	if err := client.Migrate(); err != nil {
+		log.Fatalf("error migrating tables %q", err)
 		return App{}, err
 	}
 
@@ -33,6 +36,14 @@ func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
 	// set routes here
-
+	a.setRoutes()
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+func (a *App) setRoutes() {
+	a.router = gin.Default()
+	a.router.Use(cors.Default())
+	memberRoutes := a.router.Group("/member")
+	memberRoutes.POST("", a.CreateNewMember)
+	memberRoutes.GET("", a.GetAllMembers)
+	memberRoutes.PUT("/:id", a.UpdateMemberOwnership)
 }

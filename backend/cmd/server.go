@@ -13,7 +13,7 @@ func main() {
 	var port int
 
 	flag.StringVar(&dbFilePath, "d", "./flyspray.db", "Specify the filepath of sqlite database")
-	flag.IntVar(&port, "p", 8080, "Specify the port number")
+	flag.IntVar(&port, "p", 3000, "Specify the port number")
 
 	flag.Parse()
 
