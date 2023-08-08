@@ -8,9 +8,9 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o server ./cmd/server.go
+RUN CGO_ENABLED=1 go build -o server ./cmd/server.go
 
-FROM frolvlad/alpine-glibc
+FROM alpine:3
 
 WORKDIR /app
 
