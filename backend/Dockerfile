@@ -10,7 +10,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o server ./cmd/server.go
 
-FROM alpine:latest
+FROM frolvlad/alpine-glibc
 
 WORKDIR /app
 
