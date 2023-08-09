@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,41 +13,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CustomResponse struct {
-	Data    interface{} `json:"data"`
-	Message string      `json:"message"`
-}
-
-type CustomError struct {
-	Error string `json:"error"`
-}
-
-func (a *App) Signup(ctx *gin.Context) {
+func (a *App) Signup(ctx *gin.Context) (interface{}, Response) {
 	var user models.User
 
 	err := json.NewDecoder(ctx.Request.Body).Decode(&user)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: err.Error(),
-		})
-		return
+		return nil, BadRequest(err)
 	}
 	err = user.Validate()
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: fmt.Sprintf("validation error: %s", err.Error()),
-		})
-		return
+		return nil, BadRequest(fmt.Errorf("validation error: %v", err))
 	}
 
 	hash, err := internal.HashPassword(user.Password)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: err.Error(),
-		})
-		return
+		return nil, BadRequest(err)
 	}
 
 	user.Password = hash
@@ -57,27 +40,23 @@ func (a *App) Signup(ctx *gin.Context) {
 
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: users.email" {
-			ctx.JSON(http.StatusBadRequest, CustomError{
-				Error: "email already exists",
-			})
-			return
+			return nil, Conflict(errors.New("email already exists"))
 		}
-
-		ctx.JSON(http.StatusInternalServerError, CustomError{
-			Error: err.Error(),
-		})
-		return
+		return nil, BadRequest(err)
 	}
-	fmt.Println(user.Verification_code)
 
-	// send email with verification code
+	err = internal.SendEmail(user.Email, user.Verification_code)
+	if err != nil {
 
-	ctx.JSON(http.StatusCreated, CustomResponse{
-		Message: "A verification code has been sent to your email.",
-	})
+		return nil, InternalServerError(err)
+	}
+
+	message := "A verification code has been sent to your email."
+
+	return ResponseMsg{Message: message}, Created()
 }
 
-func (a *App) Verify(ctx *gin.Context) {
+func (a *App) Verify(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody struct {
 		VerificationCode string `json:"verification_code"`
@@ -86,35 +65,27 @@ func (a *App) Verify(ctx *gin.Context) {
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: err.Error(),
-		})
-		return
+		return nil, BadRequest(err)
 	}
 
 	result := a.client.Client.Model(&models.User{}).Where("Verification_code = ?", requestBody.VerificationCode).Update("Verified", true)
 
 	if result.RowsAffected != 1 {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: "wrong verification code",
-		})
-		return
+		return nil, BadRequest(errors.New("wrong verification code"))
 	}
 
-	ctx.JSON(http.StatusOK, CustomResponse{
-		Message: "your account has been verified successfully",
-	})
+	msg := "your account has been verified successfully"
+	return ResponseMsg{Message: msg}, Ok()
+
 }
 
-func (a *App) SignIn(ctx *gin.Context) {
+func (a *App) SignIn(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody models.User
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, CustomError{
-			Error: err.Error(),
-		})
-		return
+
+		return nil, BadRequest(err)
 	}
 
 	var user models.User
@@ -122,41 +93,33 @@ func (a *App) SignIn(ctx *gin.Context) {
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			ctx.JSON(http.StatusNotFound, CustomError{
-				Error: "invalid email or password",
-			})
-			return
+			return nil, NotFound(errors.New("invalid email or password"))
 		}
-		ctx.JSON(http.StatusInternalServerError, CustomError{
-			Error: result.Error.Error(),
-		})
-		return
+		return nil, InternalServerError(result.Error)
 	}
 
 	if !user.Verified {
-		ctx.JSON(http.StatusForbidden, CustomError{
-			Error: "Account not verified",
-		})
-		return
+		return nil, Forbidden(errors.New("account not verified"))
 	}
 
 	isPasswordMatches := internal.CheckPasswordHash(requestBody.Password, user.Password)
 
 	if !isPasswordMatches {
-		ctx.JSON(http.StatusNotFound, CustomError{
-			Error: "invalid email or password",
-		})
-		return
+
+		return nil, NotFound(errors.New("invalid email or password"))
 	}
 
-	// generate token
-	token, err := internal.GenerateToken(user)
+	// generate tokens
+	accessToken, err := internal.GenerateAccessToken(user)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, CustomError{
-			Error: err.Error(),
-		})
-		return
+		return nil, InternalServerError(err)
+	}
+
+	refreshToken, err := internal.GenerateRefreshToken(user)
+
+	if err != nil {
+		return nil, InternalServerError(err)
 	}
 
 	user = models.User{
@@ -166,16 +129,113 @@ func (a *App) SignIn(ctx *gin.Context) {
 	}
 
 	ctx.SetSameSite(http.SameSiteLaxMode)
-	ctx.SetCookie("Authorization", token, 60*15, "", "", true, true)
-	ctx.JSON(http.StatusOK, CustomResponse{
-		Message: "logged in successfully",
+	ctx.SetCookie("Authorization", accessToken, 60*15, "", "", true, true)
+
+	return ResponseMsg{Message: "logged in successfully", Data: struct {
+		AccessToken  string      `json:"access_token"`
+		RefreshToken string      `json:"refresh_token"`
+		User         models.User `json:"user"`
+	}{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		User:         user,
+	}}, Ok()
+}
+
+func (a *App) UpdateUser(ctx *gin.Context) (interface{}, Response) {
+	userPayload, exists := ctx.Get("user")
+
+	if !exists {
+		return nil, UnAuthorized(errors.New("user not found"))
+	}
+
+	var user models.User
+
+	if err := json.Unmarshal([]byte(userPayload.(string)), &user); err != nil {
+		return nil, InternalServerError(err)
+	}
+
+	user, err := a.client.GetUserById(user.ID)
+	if err != nil {
+		return nil, NotFound(errors.New("user not found"))
+	}
+
+	err = json.NewDecoder(ctx.Request.Body).Decode(&user)
+	if err != nil {
+		return nil, BadRequest(err)
+	}
+
+	err = a.client.UpdateUser(user)
+
+	if err != nil {
+		return nil, InternalServerError(err)
+	}
+
+	return ResponseMsg{Message: "updated successfully"}, Created()
+}
+
+func (a *App) GetUser(ctx *gin.Context) (interface{}, Response) {
+
+	userPayload, exists := ctx.Get("user")
+
+	if !exists {
+		return nil, NotFound(errors.New("user not found"))
+	}
+
+	var user models.User
+
+	if err := json.Unmarshal([]byte(userPayload.(string)), &user); err != nil {
+		return nil, InternalServerError(err)
+	}
+
+	user, err := a.client.GetUserById(user.ID)
+
+	if err != nil {
+		return nil, NotFound(errors.New("user not found"))
+	}
+
+	return ResponseMsg{Message: "found", Data: user}, Ok()
+}
+
+func (a *App) RefreshToken(ctx *gin.Context) (interface{}, Response) {
+
+	var body struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	err := json.NewDecoder(ctx.Request.Body).Decode(&body)
+	if err != nil {
+		return nil, BadRequest(errors.New("token not found"))
+	}
+
+	claims, err := internal.ValidateToken(body.RefreshToken)
+
+	if err != nil {
+		return nil, UnAuthorized(err)
+	}
+
+	user, err := a.client.GetUserById(claims.ID)
+
+	if err != nil {
+		return nil, NotFound(errors.New("user not found"))
+	}
+
+	accessToken, err := internal.GenerateAccessToken(user)
+
+	if err != nil {
+		return nil, InternalServerError(fmt.Errorf("error refreshing token: %v", err))
+	}
+
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie("Authorization", accessToken, 60*15, "", "", true, true)
+
+	return ResponseMsg{
+		Message: "token has been refreshed successfully",
 		Data: struct {
-			AccessToken string      `json:"access_token"`
-			User        models.User `json:"user"`
+			AccessToken string `json:"access_token"`
 		}{
-			AccessToken: token,
-			User:        user,
+			AccessToken: accessToken,
 		},
-	})
+	}, Created()
 
 }

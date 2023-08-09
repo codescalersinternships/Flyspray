@@ -2,9 +2,8 @@ package app
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/codescalersinternships/Flyspray/middlewares"
+	middleware "github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -32,18 +31,21 @@ type App struct {
 
 // Run runs server
 func (a *App) Run(port int) error {
-	a.router = gin.Default()
 
 	// set routes here
-
-	a.router.POST("/signup", a.Signup)
-	a.router.POST("/signin", a.SignIn)
-	a.router.POST("/verify", a.Verify)
-	a.router.GET("/testmiddleware", middlewares.RequireAuth, func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, CustomResponse{
-			Message: "HI",
-		})
-	})
+	a.setUserRoutes()
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (a *App) setUserRoutes() {
+	a.router = gin.Default()
+
+	userGroup := a.router.Group("/user")
+	userGroup.POST("/signup", WrapFunc(a.Signup))
+	userGroup.POST("/signin", WrapFunc(a.SignIn))
+	userGroup.POST("/signup/verify", WrapFunc(a.Verify))
+	userGroup.POST("/refresh_token", WrapFunc(a.RefreshToken))
+	userGroup.PUT("", middleware.RequireAuth, WrapFunc(a.UpdateUser))
+	userGroup.GET("", middleware.RequireAuth, WrapFunc(a.GetUser))
 }
