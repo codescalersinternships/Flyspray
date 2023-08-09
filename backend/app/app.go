@@ -34,5 +34,20 @@ func (a *App) Run(port int) error {
 
 	// set routes here
 
+	// Bug routes
+	a.registerHandlers()
+
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (app *App) registerHandlers() {
+
+	bugGroup := app.router.Group("/bugs")
+	{
+		bugGroup.POST("/", WrapFunc(app.createBug))
+		bugGroup.GET("/filters", WrapFunc(app.getBugs))
+		bugGroup.GET("/:id", WrapFunc(app.getSpecificBug))
+		bugGroup.PUT("/:id", WrapFunc(app.updateBug))
+		bugGroup.DELETE("/:id", WrapFunc(app.deleteBug))
+	}
 }
