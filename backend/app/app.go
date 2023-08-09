@@ -43,7 +43,7 @@ func (a *App) setRoutes() {
 	a.router = gin.Default()
 	a.router.Use(cors.Default())
 	memberRoutes := a.router.Group("/member")
-	memberRoutes.POST("", a.CreateNewMember)
-	memberRoutes.GET("", a.GetAllMembers)
-	memberRoutes.PUT("/:id", a.UpdateMemberOwnership)
+	memberRoutes.POST("", WrapFunc(a.CreateNewMember))
+	memberRoutes.GET("", WrapFunc(a.GetAllMembers))
+	memberRoutes.PUT("/:id", WrapFunc(a.UpdateMemberOwnership))
 }
