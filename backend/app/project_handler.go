@@ -1,11 +1,11 @@
 package app
 
 import (
-	"log"
-	"net/http"
+	"errors"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -13,24 +13,22 @@ type createProjectInput struct {
 	Name string `json:"name" binding:"required"`
 }
 
-type responseErr struct {
-	Message string `json:"message"`
+type updateProjectInput struct {
+	Name string `json:"name" binding:"required"`
 }
 
-type responseOk struct {
-	Message string           `json:"message"`
-	Data    []models.Project `json:"data"`
-}
-
-func (a *App) createProject(ctx *gin.Context) {
+func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	var input createProjectInput
 
 	if err := ctx.BindJSON(&input); err != nil {
-		log.Println("project name must be specified")
-		ctx.IndentedJSON(http.StatusBadRequest,
-			responseErr{Message: "name must be specified"},
-		)
-		return
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("failed to read project data"))
+	}
+
+	// check if project name exists before
+	if _, err := a.client.GetProjectByName(input.Name); err != gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("project name must be unique"))
 	}
 
 	// TODO: get user id from authorization middleware and assign it to OwnerId
@@ -38,89 +36,95 @@ func (a *App) createProject(ctx *gin.Context) {
 	newProject, err := a.client.CreateProject(newProject)
 
 	if err != nil {
-		log.Fatal(err)
-		ctx.IndentedJSON(http.StatusInternalServerError,
-			responseErr{Message: "could not create new project"},
-		)
-		return
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to create project"))
 	}
 
-	ctx.IndentedJSON(http.StatusCreated, responseOk{
-		Message: "project created successfully",
-		Data:    []models.Project{newProject},
-	})
+	return ResponseMsg{
+		Message: "project is created successfully",
+		Data:    newProject,
+	}, Created()
 }
 
-func (a *App) updateProject(ctx *gin.Context) {
+func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	// TODO: get user id from authorization middleware and check if user has access to update the project
 	id := ctx.Param("id")
-	var input createProjectInput
+	var input updateProjectInput
 
 	if err := ctx.BindJSON(&input); err != nil {
-		log.Println("project name must be specified")
-		ctx.IndentedJSON(http.StatusBadRequest,
-			responseErr{Message: "name must be specified"},
-		)
-		return
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("failed to read project data"))
+	}
+
+	// check if project name exists before
+	if _, err := a.client.GetProjectByName(input.Name); err != gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("project name must be unique"))
 	}
 
 	updatedProject := models.Project{Name: input.Name}
-	updatedProject, err := a.client.UpdateProject(id, updatedProject)
 
-	if err == gorm.ErrRecordNotFound {
-		log.Println("project not found")
-		ctx.IndentedJSON(http.StatusNotFound,
-			responseErr{Message: "project not found"},
-		)
-		return
+	if err := a.client.UpdateProject(id, updatedProject); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to update project"))
 	}
 
-	ctx.IndentedJSON(http.StatusCreated, responseOk{
-		Message: "project updated successfully",
-		Data:    []models.Project{updatedProject},
-	})
+	return ResponseMsg{
+		Message: "project is updated successfully",
+	}, Ok()
 }
 
-func (a *App) getProject(ctx *gin.Context) {
+func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 	// TODO: add middleware to check if user is signed in
 	id := ctx.Param("id")
 
 	project, err := a.client.GetProject(id)
+
 	if err == gorm.ErrRecordNotFound {
-		log.Println("project not found")
-		ctx.IndentedJSON(http.StatusNotFound,
-			responseErr{Message: "project not found"},
-		)
-		return
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("project is not found"))
 	}
 
-	ctx.IndentedJSON(http.StatusOK, responseOk{
-		Message: "project retrieved successfully",
-		Data:    []models.Project{project},
-	})
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to get project"))
+	}
+
+	return ResponseMsg{
+		Message: "project is retrieved successfully",
+		Data:    project,
+	}, Ok()
 }
 
-func (a *App) getProjects(ctx *gin.Context) {
+func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 	// TODO: add middleware to check if user is signed in
 	userId := ctx.Query("userid")
 	projectName := ctx.Query("name")
 	creationDate := ctx.Query("after")
 
-	projects := a.client.FilterProjects(userId, projectName, creationDate)
+	projects, err := a.client.FilterProjects(userId, projectName, creationDate)
 
-	ctx.IndentedJSON(http.StatusOK, responseOk{
-		Message: "projects retrieved successfully",
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to get projects"))
+	}
+
+	return ResponseMsg{
+		Message: "projects is retrieved successfully",
 		Data:    projects,
-	})
+	}, Ok()
 }
 
-func (a *App) deleteProject(ctx *gin.Context) {
+func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	// TODO: get user id from authorization middleware and check if user has access to delete the project
 	id := ctx.Param("id")
 
-	a.client.DeleteProject(id)
+	if err := a.client.DeleteProject(id); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to delete project"))
+	}
 
-	ctx.IndentedJSON(http.StatusOK, responseOk{
-		Message: "project deleted successfully",
-	})
+	return ResponseMsg{
+		Message: "projects is deleted successfully",
+	}, Ok()
 }

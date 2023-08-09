@@ -39,9 +39,9 @@ func (a *App) Run(port int) error {
 
 func (a *App) setRoutes() {
 	project := a.router.Group("/project")
-	project.POST("", a.createProject)
-	project.GET("/filters", a.getProjects)
-	project.GET("/:id", a.getProject)
-	project.PUT("/:id", a.updateProject)
-	project.DELETE("/:id", a.deleteProject)
+	project.POST("", WrapFunc(a.createProject))
+	project.GET("/filters", WrapFunc(a.getProjects))
+	project.GET("/:id", WrapFunc(a.getProject))
+	project.PUT("/:id", WrapFunc(a.updateProject))
+	project.DELETE("/:id", WrapFunc(a.deleteProject))
 }

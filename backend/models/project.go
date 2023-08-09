@@ -4,81 +4,55 @@ import (
 	"time"
 )
 
+// Project model
 type Project struct {
 	ID        uint      `json:"id" gorm:"primary_key; unique"`
-	Name      string    `json:"name" validate:"nonzero"`
+	Name      string    `json:"name" validate:"nonzero" gorm:"unique"`
 	OwnerId   uint      `json:"owner_id" validate:"nonzero"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 // CreateProject adds new project to database
-func (d *DBClient) CreateProject(project Project) (Project, error) {
-	result := d.Client.Create(&project)
-	return project, result.Error
+func (d *DBClient) CreateProject(p Project) (Project, error) {
+	return p, d.Client.Create(&p).Error
 }
 
 // UpdateProject updates project
-func (d *DBClient) UpdateProject(id string, updatedProject Project) (Project, error) {
-	project := Project{}
-	result := d.Client.First(&project, id)
-	if result.Error != nil {
-		return Project{}, result.Error
-	}
-
-	project.Name = updatedProject.Name
-	d.Client.Save(&project)
-
-	return project, nil
+func (d *DBClient) UpdateProject(id string, updatedProject Project) error {
+	return d.Client.Model(&updatedProject).Where("id = ?", id).Update("name", updatedProject.Name).Error
 }
 
 // GetProject gets project by id
 func (d *DBClient) GetProject(id string) (Project, error) {
-	project := Project{}
-	result := d.Client.First(&project, id)
-	return project, result.Error
+	p := Project{}
+	return p, d.Client.First(&p, id).Error
+}
+
+// GetProjectByName gets project by name
+func (d *DBClient) GetProjectByName(name string) (Project, error) {
+	p := Project{}
+	return p, d.Client.Where("name = ?", name).First(&p).Error
 }
 
 // FilterProjects filters all projects by user id, project name, creation date
-func (d *DBClient) FilterProjects(userId, projectName, date string) []Project {
+func (d *DBClient) FilterProjects(ownerId, projectName, date string) ([]Project, error) {
 	projects := []Project{}
 
-	if userId == "" && projectName == "" && date == "" {
-		d.Client.Find(&projects)
-		return projects
+	query := d.Client
+	if ownerId != "" {
+		query = query.Where("owner_id = ?", ownerId)
+	}
+	if projectName != "" {
+		query = query.Where("name = ?", projectName)
+	}
+	if date != "" {
+		query = query.Where("created_at > ?", date)
 	}
 
-	if userId == "" && projectName == "" {
-		d.Client.Where("created_at > ?", date).Find(&projects)
-		return projects
-	}
-	if userId == "" && date == "" {
-		d.Client.Where("name = ?", projectName).Find(&projects)
-		return projects
-	}
-	if projectName == "" && date == "" {
-		d.Client.Where("owner_id = ?", userId).Find(&projects)
-		return projects
-	}
-
-	if userId == "" {
-		d.Client.Where("name = ? and created_at > ?", projectName, date).Find(&projects)
-		return projects
-	}
-	if projectName == "" {
-		d.Client.Where("owner_id = ? and created_at > ?", userId, date).Find(&projects)
-		return projects
-	}
-	if date == "" {
-		d.Client.Where("owner_id = ? and name = ?", userId, projectName).Find(&projects)
-		return projects
-	}
-
-	d.Client.Where("owner_id = ? and name = ? and created_at > ?", userId, projectName, date).Find(&projects)
-	return projects
+	return projects, query.Find(&projects).Error
 }
 
 // DeleteProject deletes project by id
-func (d *DBClient) DeleteProject(id string) {
-	project := Project{}
-	d.Client.Delete(&project, id)
+func (d *DBClient) DeleteProject(id string) error {
+	return d.Client.Delete(&Project{}, id).Error
 }
