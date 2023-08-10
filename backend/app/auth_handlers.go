@@ -98,10 +98,6 @@ func (a *App) SignIn(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(result.Error)
 	}
 
-	if !user.Verified {
-		return nil, Forbidden(errors.New("account not verified"))
-	}
-
 	isPasswordMatches := internal.CheckPasswordHash(requestBody.Password, user.Password)
 
 	if !isPasswordMatches {
@@ -109,6 +105,9 @@ func (a *App) SignIn(ctx *gin.Context) (interface{}, Response) {
 		return nil, NotFound(errors.New("invalid email or password"))
 	}
 
+	if !user.Verified {
+		return nil, Forbidden(errors.New("account not verified"))
+	}
 	// generate tokens
 	accessToken, err := internal.GenerateAccessToken(user)
 
@@ -155,19 +154,23 @@ func (a *App) UpdateUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(err)
 	}
 
-	user, err := a.client.GetUserById(user.ID)
+	_, err := a.client.GetUserById(user.ID)
 	if err != nil {
 		return nil, NotFound(errors.New("user not found"))
 	}
 
+	userID := user.ID
 	err = json.NewDecoder(ctx.Request.Body).Decode(&user)
 	if err != nil {
 		return nil, BadRequest(err)
 	}
 
+	user.ID = userID
+
 	err = a.client.UpdateUser(user)
 
 	if err != nil {
+
 		return nil, InternalServerError(err)
 	}
 
@@ -211,6 +214,8 @@ func (a *App) RefreshToken(ctx *gin.Context) (interface{}, Response) {
 	claims, err := internal.ValidateToken(body.RefreshToken)
 
 	if err != nil {
+		fmt.Println(body.RefreshToken)
+		fmt.Println(err)
 		return nil, UnAuthorized(err)
 	}
 
