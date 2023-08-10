@@ -13,12 +13,12 @@ const verificationCodeLength = 6
 
 // User is the model for the user table
 type User struct {
-	ID                string `gorm:"primaryKey"`
-	Name              string `json:"name"`
-	Email             string `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
-	Password          string `json:"password" gorm:"not null"`
+	ID               string `gorm:"primaryKey"`
+	Name             string `json:"name"`
+	Email            string `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
+	Password         string `json:"password" gorm:"not null"`
 	VerificationCode string `gorm:"unique;not null"`
-	Verified          bool   `gorm:"default:false"`
+	Verified         bool   `gorm:"default:false"`
 }
 
 // Validate validates the user struct
