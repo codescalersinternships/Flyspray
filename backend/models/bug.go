@@ -8,8 +8,8 @@ import (
 
 type Bug struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement:true"`
-	UserID      string    `json:"user_id"`
-	ComponentID int       `json:"component_id"`
+	UserID      string    `json:"user_id" validate:"required"`
+	ComponentID int       `json:"component_id" validate:"required"`
 	Category    string    `json:"category"`
 	Severity    string    `json:"severity"`
 	Summary     string    `json:"summary"`
@@ -37,7 +37,7 @@ func (d *DBClient) UpdateBug(id string, updateBug Bug) *gorm.DB {
 
 // FilterBugs filters all bugs by user id, bug category, bug status, component id, opened,
 func (d *DBClient) FilterBugs(userId, category, status, component_id string) ([]Bug, error) {
-	projects := []Bug{}
+	bugs := []Bug{}
 
 	query := d.Client
 
@@ -57,10 +57,20 @@ func (d *DBClient) FilterBugs(userId, category, status, component_id string) ([]
 		query = query.Where("status = ?", status)
 	}
 
-	return projects, query.Find(&projects).Error
+	return bugs, query.Find(&bugs).Error
 }
 
 // DeleteBug delete bug from database
 func (d *DBClient) DeleteBug(id string) error {
-	return d.Client.Delete(&Bug{}, id).Error
+	bug := Bug{}
+
+	if result := d.Client.First(&bug, id); result.Error != nil {
+		return result.Error
+	}
+
+	if result := d.Client.Delete(&bug, id); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
