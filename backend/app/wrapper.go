@@ -128,6 +128,7 @@ func InternalServerError(err error) Response {
 	return Error(err, 500)
 }
 
+// Conflict response
 func Conflict(err error) Response {
 	return Error(err, 409)
 }

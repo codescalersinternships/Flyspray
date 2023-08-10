@@ -8,6 +8,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
+// SendEmail sends an email to the user with the verification code
 func SendEmail(email, verificationCode string) error {
 	from := mail.NewEmail("Fly Spray", os.Getenv("EMAIL"))
 	subject := "Verify your account"

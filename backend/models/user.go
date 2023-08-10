@@ -11,15 +11,17 @@ import (
 
 const verificationCodeLength = 6
 
+// User is the model for the user table
 type User struct {
 	ID                string `gorm:"primaryKey"`
 	Name              string `json:"name"`
 	Email             string `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
 	Password          string `json:"password" gorm:"not null"`
-	Verification_code string `gorm:"unique;not null"`
+	VerificationCode string `gorm:"unique;not null"`
 	Verified          bool   `gorm:"default:false"`
 }
 
+// Validate validates the user struct
 func (u *User) Validate() error {
 	if u.Email == "" || u.Name == "" || u.Password == "" {
 		return errors.New("missing data name, email, or password")
@@ -27,6 +29,7 @@ func (u *User) Validate() error {
 	return validator.Validate(u)
 }
 
+// CreateUser creates a user
 func (db *DBClient) CreateUser(user User) (User, error) {
 	uuidV4 := uuid.New()
 	user.ID = uuidV4.String()
@@ -34,7 +37,8 @@ func (db *DBClient) CreateUser(user User) (User, error) {
 	return user, result.Error
 }
 
-func (db *DBClient) GetUserById(id string) (User, error) {
+// GetUserByID gets a user by id
+func (db *DBClient) GetUserByID(id string) (User, error) {
 	var user User
 
 	result := db.Client.Select("id", "email", "name", "verified").First(&user)
@@ -42,6 +46,7 @@ func (db *DBClient) GetUserById(id string) (User, error) {
 	return user, result.Error
 }
 
+// UpdateUser updates a user
 func (db *DBClient) UpdateUser(user User) error {
 	if user.Password != "" {
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -63,6 +68,7 @@ func (db *DBClient) UpdateUser(user User) error {
 
 }
 
+// GenerateVerificationCode generates a unique verification code
 func (db *DBClient) GenerateVerificationCode() string {
 
 	charsSet := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"

@@ -34,7 +34,7 @@ func (a *App) Signup(ctx *gin.Context) (interface{}, Response) {
 
 	user.Password = hash
 
-	user.Verification_code = a.client.GenerateVerificationCode()
+	user.VerificationCode = a.client.GenerateVerificationCode()
 
 	user, err = a.client.CreateUser(user)
 
@@ -45,7 +45,7 @@ func (a *App) Signup(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(err)
 	}
 
-	err = internal.SendEmail(user.Email, user.Verification_code)
+	err = internal.SendEmail(user.Email, user.VerificationCode)
 	if err != nil {
 
 		return nil, InternalServerError(err)
@@ -154,7 +154,7 @@ func (a *App) UpdateUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(err)
 	}
 
-	_, err := a.client.GetUserById(user.ID)
+	_, err := a.client.GetUserByID(user.ID)
 	if err != nil {
 		return nil, NotFound(errors.New("user not found"))
 	}
@@ -191,7 +191,7 @@ func (a *App) GetUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(err)
 	}
 
-	user, err := a.client.GetUserById(user.ID)
+	user, err := a.client.GetUserByID(user.ID)
 
 	if err != nil {
 		return nil, NotFound(errors.New("user not found"))
@@ -219,7 +219,7 @@ func (a *App) RefreshToken(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(err)
 	}
 
-	user, err := a.client.GetUserById(claims.ID)
+	user, err := a.client.GetUserByID(claims.ID)
 
 	if err != nil {
 		return nil, NotFound(errors.New("user not found"))

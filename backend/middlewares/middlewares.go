@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RequireAuth is a middleware that checks if the user is authenticated
 func RequireAuth(ctx *gin.Context) {
 	tokenString, err := ctx.Cookie("Authorization")
 	if err != nil {
