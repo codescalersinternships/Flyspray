@@ -2,167 +2,153 @@ package app
 
 import (
 	"errors"
-	"log"
-	"net/http"
+	"strconv"
+	"time"
+
+	//"log"
 
 	"gorm.io/gorm"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
-// Response is a struct that holds the ok response
-type Response struct {
-	Message string           `json:"message"`
-	Payload []models.Comment `json:"payload"`
+type CreateCommentInput struct {
+	BugID   uint   `json:"bug_id" validate:"required"`
+	Summary string `json:"summary" validate:"required"`
 }
 
-// ErrorResponse is a struct that holds the error response
-type ErrorResponse struct {
-	Error string `json:"error"`
+type updateCommentInput struct {
+	Summary string `json:"summary" validate:"required"`
 }
 
-// CreateComment creates a comment on a specific bug
-func (app *App) CreateComment(c *gin.Context) {
+func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 
-	comment := models.Comment{}
+	commentInput := CreateCommentInput{}
 
-	if err := c.ShouldBindJSON(&comment); err != nil {
-		log.Println("failed to create the comment:", err)
-		c.JSON(http.StatusBadRequest,
-			ErrorResponse{Error: "bugID,ownerID and summary of the comment should be provided "})
-		return
+	if err := c.ShouldBindJSON(&commentInput); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("bug ID, user ID, and summary of the comment should be provided"))
 	}
 
-	if err := comment.Validate(); err != nil {
-		log.Println("bugID,ownerID and summary of the comment should be validated", err)
-		c.JSON(http.StatusBadRequest,
-			ErrorResponse{Error: "comment is not validated"})
-		return
+	// user id will be taken from middlewares
+	newComment := models.Comment{BugID: commentInput.BugID, Summary: commentInput.Summary, UserID: "1000", CreatedAt: time.Now()}
+
+	if err := newComment.Validate(); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
-	comment, err := app.client.CreateComment(comment)
+	comment, err := app.db.CreateComment(newComment)
 	if err != nil {
-		log.Fatal(err)
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "failed to create comment"})
-		return
-	}
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to create comment"))
 
-	c.JSON(http.StatusCreated,
-		Response{Message: "comment is created",
-			Payload: []models.Comment{comment}})
+	}
+	return ResponseMsg{
+		Message: "Comment is created successfully",
+		Data:    comment,
+	}, Created()
 
 }
 
-// GetComment gets a comment on a specific bug by id
-func (app *App) GetComment(c *gin.Context) {
+func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 
-	id := c.Param("id")
+	idStr := c.Param("id")
 
-	if id == "" {
-		log.Println("comment ID is required")
-		c.JSON(http.StatusNotFound, ErrorResponse{Error: "comment ID is required"})
-		return
+	if idStr == "" {
+		return nil, BadRequest(errors.New("comment ID is required"))
 	}
 
-	comment, err := app.client.GetComment(id)
+	id, _ := strconv.ParseUint(idStr, 10, 64)
+
+	comment, err := app.db.GetComment(uint(id))
 	if err != nil {
-		log.Println("comment is not found:", err)
-		c.JSON(http.StatusNotFound,
-			ErrorResponse{Error: "comment is not found"})
-		return
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("comment is not found"))
 
 	}
 
-	c.JSON(http.StatusOK,
-		Response{Message: "comment is found",
-			Payload: []models.Comment{comment}})
+	return ResponseMsg{
+		Message: "comment is found successfully",
+		Data:    comment,
+	}, Ok()
 
 }
 
-// DeleteComment deletes a comment on a specific bug by id
-func (app *App) DeleteComment(c *gin.Context) {
+func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 
-	id := c.Param("id")
+	idStr := c.Param("id")
 
-	if id == "" {
-		log.Println("comment ID is required")
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "comment ID is required"})
-		return
+	if idStr == "" {
+		return nil, BadRequest(errors.New("comment ID is required"))
 	}
 
-	if err := app.client.DeleteComment(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Println("comment is not found:", err)
-			c.JSON(http.StatusNotFound, ErrorResponse{Error: "comment is not found"})
-		} else {
-			log.Fatal(err)
-			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "failed to delete comment"})
-		}
-		return
+	id, _ := strconv.ParseUint(idStr, 10, 64)
+
+	err := app.db.DeleteComment(uint(id))
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("comment is not found"))
+
 	}
 
-	c.JSON(http.StatusOK, Response{Message: "comment is deleted"})
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to delete comment"))
+	}
+	return ResponseMsg{
+		Message: "comment is deleted successfully",
+	}, Ok()
 }
 
-// ListComments lists all the comments for a specific bug
-func (app *App) ListComments(c *gin.Context) {
+func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 
-	bugID := c.Query("bug_id")
+	bugIDStr := c.Query("bug_id")
+	UserID := c.Query("user_id")
 
-	if bugID == "" {
-		log.Println("bug id is not found")
-		c.JSON(http.StatusBadRequest,
-			ErrorResponse{Error: "bug id is not found"})
-		return
-	}
-
-	comments := app.client.ListComments(bugID)
+	bugID, err := strconv.ParseUint(bugIDStr, 10, 64)
+	comments := app.db.ListComments(uint(bugID), UserID)
 
 	if len(comments) == 0 {
-		log.Println("no comments are found for this bug")
-		c.JSON(http.StatusNotFound,
-			ErrorResponse{Error: "no comments are found for this bug"})
-		return
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("no comments are found"))
 	}
 
-	c.JSON(http.StatusOK,
-		Response{Message: "comment are found for the bug",
-			Payload: comments})
+	return ResponseMsg{
+		Message: "projects is retrieved successfully",
+		Data:    comments,
+	}, Ok()
 }
 
-// UpdateComment updates a comment on a specific bug by id
-func (app *App) UpdateComment(c *gin.Context) {
+func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
-	comment := models.Comment{}
-	id := c.Param("id")
+	comment := updateCommentInput{}
 
 	if err := c.ShouldBindJSON(&comment); err != nil {
-		log.Println("failed to update the comment:", err)
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid comment data"})
-		return
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("invalid comment data"))
 	}
 
-	if err := comment.Validate(); err != nil {
-		log.Println("bugID, ownerID, and summary of the comment should be validated", err)
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "comment is not validated"})
-		return
+	idStr := c.Param("id")
+
+	id, _ := strconv.ParseUint(idStr, 10, 64)
+
+	err := app.db.UpdateComment(uint(id), comment.Summary)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("comment is not found"))
 	}
 
-	comment, err := app.client.UpdateComment(comment, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Println("comment is not found:", err)
-			c.JSON(http.StatusNotFound, ErrorResponse{Error: "comment is not found"})
-		} else {
-			log.Fatal(err)
-			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "failed to update comment"})
-		}
-		return
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to update the comment"))
 	}
 
-	c.JSON(http.StatusOK, Response{
-		Message: "comment is updated",
-		Payload: []models.Comment{comment},
-	})
+	return ResponseMsg{
+		Message: "comment is updated successfully",
+	}, Ok()
 }
