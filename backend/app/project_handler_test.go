@@ -112,7 +112,29 @@ func TestUpdateProject(t *testing.T) {
 		_, err := app.client.CreateProject(p)
 		assert.Nil(t, err)
 
-		input := updateProjectInput{Name: "updated project"}
+		input := updateProjectInput{Name: "updated project", OwnerId: 1}
+		payload, err := json.Marshal(input)
+		assert.Nil(t, err)
+
+		req, err := http.NewRequest("PUT", "/project/1", bytes.NewBuffer(payload))
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("no change", func(t *testing.T) {
+		defer app.client.Client.Exec("DELETE FROM projects")
+
+		p := models.Project{Name: "project", OwnerId: 1}
+		_, err := app.client.CreateProject(p)
+		assert.Nil(t, err)
+
+		input := updateProjectInput{Name: "project", OwnerId: 1}
 		payload, err := json.Marshal(input)
 		assert.Nil(t, err)
 
@@ -130,11 +152,15 @@ func TestUpdateProject(t *testing.T) {
 	t.Run("repeated project name", func(t *testing.T) {
 		defer app.client.Client.Exec("DELETE FROM projects")
 
-		p := models.Project{Name: "updated project", OwnerId: 1}
-		_, err := app.client.CreateProject(p)
+		p1 := models.Project{Name: "project1", OwnerId: 1}
+		_, err := app.client.CreateProject(p1)
 		assert.Nil(t, err)
 
-		input := updateProjectInput{Name: "updated project"}
+		p2 := models.Project{Name: "project2", OwnerId: 1}
+		_, err = app.client.CreateProject(p2)
+		assert.Nil(t, err)
+
+		input := updateProjectInput{Name: "project2", OwnerId: 1}
 		payload, err := json.Marshal(input)
 		assert.Nil(t, err)
 
@@ -156,7 +182,7 @@ func TestUpdateProject(t *testing.T) {
 		_, err := app.client.CreateProject(p)
 		assert.Nil(t, err)
 
-		input := updateProjectInput{Name: ""}
+		input := updateProjectInput{Name: "", OwnerId: 1}
 		payload, err := json.Marshal(input)
 		assert.Nil(t, err)
 
@@ -169,6 +195,24 @@ func TestUpdateProject(t *testing.T) {
 		app.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		defer app.client.Client.Exec("DELETE FROM projects")
+
+		input := updateProjectInput{Name: "updated project", OwnerId: 1}
+		payload, err := json.Marshal(input)
+		assert.Nil(t, err)
+
+		req, err := http.NewRequest("PUT", "/project/1", bytes.NewBuffer(payload))
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
 	t.Run("invalid format", func(t *testing.T) {

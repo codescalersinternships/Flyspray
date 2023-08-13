@@ -9,12 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+var errCreateRepeatedProjectName = errors.New("UNIQUE constraint failed: projects.name")
+var errUpdateRepeatedProjectName = errors.New("UNIQUE constraint failed: projects.name; invalid transaction")
+
 type createProjectInput struct {
 	Name string `json:"name" binding:"required"`
 }
 
 type updateProjectInput struct {
-	Name string `json:"name" binding:"required"`
+	OwnerId uint   `json:"owner_id" binding:"required"`
+	Name    string `json:"name" binding:"required"`
 }
 
 func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
@@ -25,16 +29,14 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("failed to read project data"))
 	}
 
-	// check if project name exists before
-	if _, err := a.client.GetProjectByName(input.Name); err != gorm.ErrRecordNotFound {
-		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("project name must be unique"))
-	}
-
 	// TODO: get user id from authorization middleware and assign it to OwnerId
 	newProject := models.Project{Name: input.Name, OwnerId: 10007} // 10007 is just a random number
 	newProject, err := a.client.CreateProject(newProject)
 
+	if err != nil && err.Error() == errCreateRepeatedProjectName.Error() {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("project name must be unique"))
+	}
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("failed to create project"))
@@ -56,15 +58,18 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("failed to read project data"))
 	}
 
-	// check if project name exists before
-	if _, err := a.client.GetProjectByName(input.Name); err != gorm.ErrRecordNotFound {
+	updatedProject := models.Project{OwnerId: input.OwnerId, Name: input.Name}
+	err := a.client.UpdateProject(id, updatedProject)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("project is not found"))
+	}
+	if err != nil && err.Error() == errUpdateRepeatedProjectName.Error() {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("project name must be unique"))
 	}
-
-	updatedProject := models.Project{Name: input.Name}
-
-	if err := a.client.UpdateProject(id, updatedProject); err != nil {
+	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("failed to update project"))
 	}
@@ -80,11 +85,10 @@ func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 
 	project, err := a.client.GetProject(id)
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("project is not found"))
 	}
-
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("failed to get project"))
@@ -121,7 +125,7 @@ func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 
 	err := a.client.DeleteProject(id)
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("project is not found"))
 	}

@@ -21,7 +21,14 @@ func (d *DBClient) CreateProject(p Project) (Project, error) {
 
 // UpdateProject updates project
 func (d *DBClient) UpdateProject(id string, updatedProject Project) error {
-	return d.Client.Model(&updatedProject).Where("id = ?", id).Update("name", updatedProject.Name).Error
+	result := d.Client.Model(&updatedProject).Where("id = ?", id).
+		Update("name", updatedProject.Name).
+		Update("owner_id", updatedProject.OwnerId)
+	
+	if result.Error == nil && result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
 // GetProject gets project by id
