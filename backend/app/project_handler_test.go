@@ -283,4 +283,18 @@ func TestDeleteProject(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
+
+	t.Run("not found", func(t *testing.T) {
+		defer app.client.Client.Exec("DELETE FROM projects")
+
+		req, err := http.NewRequest("DELETE", "/project/1", nil)
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }

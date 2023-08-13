@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Project model
@@ -54,5 +56,9 @@ func (d *DBClient) FilterProjects(ownerId, projectName, date string) ([]Project,
 
 // DeleteProject deletes project by id
 func (d *DBClient) DeleteProject(id string) error {
-	return d.Client.Delete(&Project{}, id).Error
+	result := d.Client.Delete(&Project{}, id)
+	if result.Error == nil && result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }

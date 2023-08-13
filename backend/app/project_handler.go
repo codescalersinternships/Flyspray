@@ -110,7 +110,7 @@ func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	return ResponseMsg{
-		Message: "projects is retrieved successfully",
+		Message: "projects are retrieved successfully",
 		Data:    projects,
 	}, Ok()
 }
@@ -119,12 +119,18 @@ func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	// TODO: get user id from authorization middleware and check if user has access to delete the project
 	id := ctx.Param("id")
 
-	if err := a.client.DeleteProject(id); err != nil {
+	err := a.client.DeleteProject(id)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("project is not found"))
+	}
+	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("failed to delete project"))
 	}
 
 	return ResponseMsg{
-		Message: "projects is deleted successfully",
+		Message: "project is deleted successfully",
 	}, Ok()
 }
