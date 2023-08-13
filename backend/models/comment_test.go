@@ -12,7 +12,7 @@ import (
 func TestCommentValidate(t *testing.T) {
 	comment := models.Comment{
 		ID:        1,
-		OwnerID:   2,
+		UserID:    "2",
 		BugID:     3,
 		Summary:   "This is a comment",
 		CreatedAt: time.Now(),
@@ -22,7 +22,7 @@ func TestCommentValidate(t *testing.T) {
 	err := validate.Struct(comment)
 	assert.NoError(t, err, "comment should be valid")
 
-	comment.OwnerID = 0
+	comment.UserID = "0"
 	err = validate.Struct(comment)
 	assert.Error(t, err, "comment should be invalid")
 }

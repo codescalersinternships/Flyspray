@@ -10,21 +10,21 @@ import (
 // NewApp is the factory of App
 func NewApp(dbFilePath string) (App, error) {
 
-	client, err := models.NewDBClient(dbFilePath)
+	database, err := models.NewDBClient(dbFilePath)
 	if err != nil {
 		return App{}, err
 	}
 
-	if err := client.Migrate(); err != nil {
+	if err := database.Migrate(); err != nil {
 		return App{}, err
 	}
 
-	return App{client: client}, nil
+	return App{db: database}, nil
 }
 
 // App initializes the entire app
 type App struct {
-	client models.DBClient
+	db     models.DBClient
 	router *gin.Engine
 }
 
@@ -42,23 +42,15 @@ func (app *App) registerHandlers() {
 
 	comment := app.router.Group("/comment")
 	{
-		comment.POST("/", func(c *gin.Context) {
-			app.CreateComment(c)
+		comment.POST("/", WrapFunc(app.createComment))
 
-		})
-		comment.GET("/:id", func(c *gin.Context) {
-			app.GetComment(c)
-		})
-		comment.DELETE("/:id", func(c *gin.Context) {
-			app.DeleteComment(c)
-		})
-		comment.GET("/filters", func(c *gin.Context) {
-			app.ListComments(c)
-		})
-		comment.PUT("/:id", func(c *gin.Context) {
-			app.UpdateComment(c)
-		})
+		comment.GET("/:id", WrapFunc(app.getComment))
 
+		comment.DELETE("/:id", WrapFunc(app.deleteComment))
+
+		comment.GET("/filters", WrapFunc(app.listComments))
+
+		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
 
 }

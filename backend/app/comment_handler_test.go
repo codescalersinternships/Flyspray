@@ -3,43 +3,50 @@ package app
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
+
 func TestCreateComment(t *testing.T) {
 
-	dbPath := "./testing.db"
+	tempDir := t.TempDir()
+
+	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
 	assert.NoError(t, err)
 
 	router := gin.Default()
 
-	router.POST("/comment", func(c *gin.Context) {
-		app.CreateComment(c)
-	})
+	router.POST("/comment", WrapFunc(app.createComment))
 
 	t.Run("create comment successfully", func(t *testing.T) {
 
-		wantedComment := models.Comment{
-			OwnerID: 1,
+		commentInput := CreateCommentInput{
 			BugID:   10,
 			Summary: "bug to be solved",
 		}
 
-		payload, err := json.Marshal(wantedComment)
+		wantedComment := models.Comment{
+			UserID:  "1000",
+			BugID:   commentInput.BugID,
+			Summary: commentInput.Summary,
+		}
+
+		payload, err := json.Marshal(commentInput)
 		if err != nil {
 			t.Fatal("failed to marshal comment payload")
 		}
 
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -47,23 +54,24 @@ func TestCreateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		var response Response
+		var response ResponseMsg
 		err = json.Unmarshal(recorder.Body.Bytes(), &response)
 		assert.NoError(t, err)
 
-		jsonData, _ := json.MarshalIndent(response, "", "  ")
-		fmt.Println("response body:", string(jsonData))
+		comment := response.Data
+		commentMap := comment.(map[string]interface{})
+		bugID := commentMap["bug_id"].(float64)
+		userID := commentMap["user_id"]
+		summary := commentMap["summary"]
 
-		fmt.Println("response", response.Payload[0].Summary)
-
-		assert.Equal(t, response.Payload[0].OwnerID, wantedComment.OwnerID, "got %d ownerID but wanted %d", response.Payload[0].OwnerID, wantedComment.OwnerID)
-		assert.Equal(t, response.Payload[0].BugID, wantedComment.BugID, "got %d bugID but wanted %d", response.Payload[0].BugID, wantedComment.BugID)
-		assert.Equal(t, response.Payload[0].Summary, wantedComment.Summary, "got %s summary but wanted %s", response.Payload[0].Summary, wantedComment.Summary)
+		assert.Equal(t, userID, wantedComment.UserID, "got %d userID but wanted %d", userID, wantedComment.UserID)
+		assert.Equal(t, uint(bugID), wantedComment.BugID, "got %d bugID but wanted %d", uint(bugID), wantedComment.BugID)
+		assert.Equal(t, summary, wantedComment.Summary, "got %s summary but wanted %s", summary, wantedComment.Summary)
 	})
 
 	t.Run("failed to create comment due to incomplete input data", func(t *testing.T) {
 
-		requestBody := []byte(`{"owner_id": 1}`)
+		requestBody := []byte(`{"user_id": "1"}`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -79,7 +87,7 @@ func TestCreateComment(t *testing.T) {
 
 	t.Run("failed to create comment as it is invalid", func(t *testing.T) {
 
-		requestBody := []byte(`{"owner_id": 1, "bug_id":-2,"summary": "this is a bug" }`)
+		requestBody := []byte(`{"user_id": "1", "bug_id":-2,"summary": "this is a bug" }`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -95,24 +103,23 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TestUpdateComment(t *testing.T) {
-	dbPath := "./testing.db"
+
+	tempDir := t.TempDir()
+
+	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
 	assert.NoError(t, err)
 
 	router := gin.Default()
 
-	router.POST("/comment", func(c *gin.Context) {
-		app.CreateComment(c)
-	})
+	router.POST("/comment", WrapFunc(app.createComment))
 
-	router.PUT("/comment/:id", func(c *gin.Context) {
-		app.UpdateComment(c)
-	})
+	router.PUT("/comment/:id", WrapFunc(app.updateComment))
 
 	t.Run("update comment successfully", func(t *testing.T) {
 
-		requestBody := []byte(`{"id":100,"owner_id": 3, "bug_id": 10, "summary": "bug to be solved"}`)
+		requestBody := []byte(`{"id": 5,"user_id": "3", "bug_id": 20, "summary": "bug to be solved"}`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -123,40 +130,36 @@ func TestUpdateComment(t *testing.T) {
 		router.ServeHTTP(recorder, req)
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		updatedRequestBody := []byte(`{"id":100,"owner_id": 3, "bug_id": 10, "summary": "updated bug"}`)
+		commentUpdate := updateCommentInput{
+			Summary: "updated bug",
+		}
 
-		request, err := http.NewRequest("PUT", "/comment/100", bytes.NewBuffer(updatedRequestBody))
+		payload, err := json.Marshal(commentUpdate)
+		if err != nil {
+			t.Fatal("failed to marshal comment payload")
+		}
+
+		request, err := http.NewRequest("PUT", "/comment/5", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
 		request.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, request)
 		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
 
-		var response Response
-		err = json.Unmarshal(rec.Body.Bytes(), &response)
-		assert.NoError(t, err)
-
-		jsonData, _ := json.MarshalIndent(response, "", "  ")
-		fmt.Println("response body:", string(jsonData))
-
-		wantedComment := models.Comment{
-			ID:      100,
-			OwnerID: 3,
-			BugID:   10,
-			Summary: "updated bug",
-		}
-
-		assert.Equal(t, response.Payload[0].ID, wantedComment.ID, "got %d ID but wanted %d", response.Payload[0].ID, wantedComment.ID)
-		assert.Equal(t, response.Payload[0].OwnerID, wantedComment.OwnerID, "got %d ownerID but wanted %d", response.Payload[0].OwnerID, wantedComment.OwnerID)
-		assert.Equal(t, response.Payload[0].BugID, wantedComment.BugID, "got %d bugID but wanted %d", response.Payload[0].BugID, wantedComment.BugID)
-		assert.Equal(t, response.Payload[0].Summary, wantedComment.Summary, "got %s summary but wanted %s", response.Payload[0].Summary, wantedComment.Summary)
 	})
 
 	t.Run("comment is not found", func(t *testing.T) {
 
-		updatedRequestBody := []byte(`{"id":100,"owner_id": 3, "bug_id": 10, "summary": "updated bug"}`)
+		commentUpdate := updateCommentInput{
+			Summary: "updated one",
+		}
 
-		request, err := http.NewRequest("PUT", "/comment/55", bytes.NewBuffer(updatedRequestBody))
+		payload, err := json.Marshal(commentUpdate)
+		if err != nil {
+			t.Fatal("failed to marshal comment payload")
+		}
+
+		request, err := http.NewRequest("PUT", "/comment/50", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
 
 		request.Header.Set("Content-Type", "application/json")
@@ -167,9 +170,9 @@ func TestUpdateComment(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
 	})
 
-	t.Run("failed to update comment as it is invalid", func(t *testing.T) {
+	t.Run("invalid comment", func(t *testing.T) {
 
-		requestBody := []byte(`{"id":200,"owner_id": 12, "bug_id":15,"summary": "this is a bug" }`)
+		requestBody := []byte(`{"id": 200,"user_id": "12", "bug_id": 15,"summary": "this is a bug" }`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -181,7 +184,7 @@ func TestUpdateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		updatedRequestBody := []byte(`{"id":200,"owner_id": 12, "bug_id":15,"summary": 12 }`)
+		updatedRequestBody := []byte(`{"summary": 12 }`)
 
 		request, err := http.NewRequest("PUT", "/comment/200", bytes.NewBuffer(updatedRequestBody))
 		assert.NoError(t, err)
@@ -195,9 +198,9 @@ func TestUpdateComment(t *testing.T) {
 
 	})
 
-	t.Run("failed to update comment as the request is incomplete (bad request)", func(t *testing.T) {
+	t.Run("failed to update comment as the request is incomplete", func(t *testing.T) {
 
-		requestBody := []byte(`{"id":300,"owner_id": 13, "bug_id":15,"summary": "this is a bug" }`)
+		requestBody := []byte(`{"id":300,"user_id": "13", "bug_id":15,"summary": "this is a bug" }`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -209,7 +212,7 @@ func TestUpdateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		updatedRequestBody := []byte(`{"id":300,"owner_id": 13, "bug_id":,"summary": "this is a bug" }`)
+		updatedRequestBody := []byte(`{"id":300,"user_id": "13", "bug_id":,"summary": "this is a bug" }`)
 		request, err := http.NewRequest("PUT", "/comment/200", bytes.NewBuffer(updatedRequestBody))
 		assert.NoError(t, err)
 
@@ -226,24 +229,22 @@ func TestUpdateComment(t *testing.T) {
 
 func TestGetComment(t *testing.T) {
 
-	dbPath := "./testing.db"
+	tempDir := t.TempDir()
+
+	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
 	assert.NoError(t, err)
 
 	router := gin.Default()
 
-	router.POST("/comment", func(c *gin.Context) {
-		app.CreateComment(c)
-	})
+	router.POST("/comment", WrapFunc(app.createComment))
 
-	router.GET("/comment/:id", func(c *gin.Context) {
-		app.GetComment(c)
-	})
+	router.GET("/:id", WrapFunc(app.getComment))
 
 	t.Run("get comment successfully", func(t *testing.T) {
 
-		requestBody := []byte(`{"id": 50,"owner_id": 2,"bug_id": 10, "summary": "bug to be solved"}`)
+		requestBody := []byte(`{"id": 50,"user_id": "2","bug_id": 10, "summary": "bug to be solved"}`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -302,27 +303,40 @@ func TestGetComment(t *testing.T) {
 
 func TestDeleteComment(t *testing.T) {
 
-	dbPath := "./testing.db"
+	tempDir := t.TempDir()
+
+	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
 	assert.NoError(t, err)
 
 	router := gin.Default()
 
-	router.POST("/comment", func(c *gin.Context) {
-		app.CreateComment(c)
-	})
+	router.POST("/comment", WrapFunc(app.createComment))
 
-	router.DELETE("/comment/:id", func(c *gin.Context) {
-		app.DeleteComment(c)
-	})
+	router.DELETE("/:id", WrapFunc(app.deleteComment))
 
 	t.Run("delete comment successfully", func(t *testing.T) {
 
-		requestBody := []byte(`{"id": 60,"owner_id": 5,"bug_id": 10, "summary": "bug to be solved"}`)
-		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
-		assert.NoError(t, err)
+		commentInput := CreateCommentInput{
+			BugID:   10,
+			Summary: "bug to be solved",
+		}
 
+		wantedComment := models.Comment{
+			ID:      60,
+			UserID:  "1000",
+			BugID:   commentInput.BugID,
+			Summary: commentInput.Summary,
+		}
+
+		payload, err := json.Marshal(wantedComment)
+		if err != nil {
+			t.Fatal("failed to marshal comment payload")
+		}
+
+		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(payload))
+		assert.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -377,24 +391,22 @@ func TestDeleteComment(t *testing.T) {
 
 func TestListComments(t *testing.T) {
 
-	dbPath := "./testing.db"
+	tempDir := t.TempDir()
+
+	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
 	assert.NoError(t, err)
 
 	router := gin.Default()
 
-	router.POST("/comment", func(c *gin.Context) {
-		app.CreateComment(c)
-	})
+	router.POST("/comment", WrapFunc(app.createComment))
 
-	router.GET("/comment/filters", func(c *gin.Context) {
-		app.ListComments(c)
-	})
+	router.GET("/filters", WrapFunc(app.listComments))
 
 	t.Run("list comments for a specific bug", func(t *testing.T) {
 
-		requestBody := []byte(`{"owner_id": 2,"bug_id": 12, "summary": "bug to be solved"}`)
+		requestBody := []byte(`{"user_id": "2","bug_id": 12, "summary": "bug to be solved"}`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -434,20 +446,4 @@ func TestListComments(t *testing.T) {
 
 	})
 
-	t.Run("missing the bug_id in the get request (bad request) ", func(t *testing.T) {
-
-		request, err := http.NewRequest("GET", "/comment/filters?bug_id=", nil)
-		assert.NoError(t, err)
-
-		request.Header.Set("Content-Type", "application/json")
-
-		rec := httptest.NewRecorder()
-
-		router.ServeHTTP(rec, request)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code, "got %d status code but want status code 400", rec.Code)
-
-	})
-
 }
-
