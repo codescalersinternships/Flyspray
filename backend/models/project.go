@@ -24,7 +24,7 @@ func (d *DBClient) UpdateProject(id string, updatedProject Project) error {
 	result := d.Client.Model(&updatedProject).Where("id = ?", id).
 		Update("name", updatedProject.Name).
 		Update("owner_id", updatedProject.OwnerId)
-	
+
 	if result.Error == nil && result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
