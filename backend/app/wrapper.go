@@ -127,6 +127,11 @@ func InternalServerError(err error) Response {
 	return Error(err, 0)
 }
 
+// Conflict response
+func Conflict(err error) Response {
+	return Error(err, http.StatusConflict)
+}
+
 // NotFound response
 func NotFound(err error) Response {
 	return Error(err, http.StatusNotFound)
