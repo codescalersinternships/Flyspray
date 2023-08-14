@@ -1,3 +1,5 @@
+// TODO: check duplicated project name when create & update in a better way
+
 package app
 
 import (
@@ -9,6 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
+
+var errInternalServerError = errors.New("internal server error")
 
 type createProjectInput struct {
 	Name string `json:"name" binding:"required"`
@@ -41,14 +45,14 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != gorm.ErrRecordNotFound { // there is some error other than not found
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	newProject, err = a.client.CreateProject(newProject)
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -58,7 +62,6 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 }
 
 func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
-	// TODO: get user id from authorization middleware and check if user has access to update the project
 	id := ctx.Param("id")
 	var input updateProjectInput
 
@@ -81,7 +84,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	if fmt.Sprint(userID) != fmt.Sprint(p.OwnerID) {
@@ -98,7 +101,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil && err != gorm.ErrRecordNotFound { // there is some error and it is other than not found
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	err = a.client.UpdateProject(id, updatedProject)
@@ -109,7 +112,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -128,7 +131,7 @@ func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -146,7 +149,7 @@ func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -172,7 +175,7 @@ func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	if fmt.Sprint(userID) != fmt.Sprint(p.OwnerID) {
@@ -188,7 +191,7 @@ func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("internal server error"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
