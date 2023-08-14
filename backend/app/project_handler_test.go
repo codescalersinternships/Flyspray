@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestCreateProject(t *testing.T) {
@@ -70,6 +72,13 @@ func TestCreateProject(t *testing.T) {
 			app.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.expectedStatusCode, w.Code)
+
+			// test changes in db
+			if tc.expectedStatusCode == http.StatusCreated {
+				p, err := app.client.GetProject("1")
+				assert.Nil(t, err)
+				assert.Equal(t, p.Name, tc.input.Name)
+			}
 		})
 	}
 }
@@ -91,7 +100,7 @@ func TestUpdateProject(t *testing.T) {
 		{
 			name:               "valid",
 			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
-			input:              updateProjectInput{Name: "updated project", OwnerID: "1"},
+			input:              updateProjectInput{Name: "updated project", OwnerID: "2"},
 			expectedStatusCode: http.StatusOK,
 		}, {
 			name:               "no change",
@@ -140,6 +149,14 @@ func TestUpdateProject(t *testing.T) {
 			app.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.expectedStatusCode, w.Code)
+
+			// test changes in db
+			if tc.expectedStatusCode == http.StatusOK {
+				p, err := app.client.GetProject("1")
+				assert.Nil(t, err)
+				assert.Equal(t, p.Name, tc.input.Name)
+				assert.Equal(t, p.OwnerID, tc.input.OwnerID)
+			}
 		})
 	}
 }
@@ -185,6 +202,26 @@ func TestGetProject(t *testing.T) {
 			app.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.expectedStatusCode, w.Code)
+
+			// test response body with db
+			if tc.expectedStatusCode == http.StatusOK {
+				// remove all whitespace from got
+				got := strings.ReplaceAll(w.Body.String(), " ", "")
+				got = strings.ReplaceAll(got, "\n", "")
+
+				p, err := app.client.GetProject("1")
+				assert.Nil(t, err)
+				resp := ResponseMsg{
+					Message: "project is retrieved successfully",
+					Data:    p,
+				}
+				EncodedWant, err := json.Marshal(resp)
+				assert.Nil(t, err)
+				// remove all whitespace from want
+				want := strings.ReplaceAll(string(EncodedWant), " ", "")
+
+				assert.Equal(t, want, got)
+			}
 		})
 	}
 }
@@ -200,7 +237,7 @@ func TestGetProjects(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		defer app.client.Client.Exec("DELETE FROM projects")
 
-		p := models.Project{Name: "new project", OwnerID: "1"}
+		p := models.Project{Name: "new project", OwnerID: "10007"}
 		_, err := app.client.CreateProject(p)
 		assert.Nil(t, err)
 
@@ -213,6 +250,25 @@ func TestGetProjects(t *testing.T) {
 		app.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+
+		// test response body with db
+
+		// remove all whitespace from got
+		got := strings.ReplaceAll(w.Body.String(), " ", "")
+		got = strings.ReplaceAll(got, "\n", "")
+
+		ps, err := app.client.FilterProjects("10007", "new project", "")
+		assert.Nil(t, err)
+		resp := ResponseMsg{
+			Message: "projects are retrieved successfully",
+			Data:    ps,
+		}
+		EncodedWant, err := json.Marshal(resp)
+		assert.Nil(t, err)
+		// remove all whitespace from want
+		want := strings.ReplaceAll(string(EncodedWant), " ", "")
+
+		assert.Equal(t, want, got)
 	})
 }
 
@@ -234,7 +290,7 @@ func TestDeleteProject(t *testing.T) {
 			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
 			expectedStatusCode: http.StatusOK,
 		}, {
-			name:               "valid",
+			name:               "not found",
 			preCreatedProjects: []models.Project{},
 			expectedStatusCode: http.StatusNotFound,
 		},
@@ -258,6 +314,12 @@ func TestDeleteProject(t *testing.T) {
 			app.router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.expectedStatusCode, w.Code)
+
+			// test changes in db
+			if tc.expectedStatusCode == http.StatusOK {
+				_, err := app.client.GetProject("1")
+				assert.Equal(t, gorm.ErrRecordNotFound, err)
+			}
 		})
 	}
 }
