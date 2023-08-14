@@ -32,7 +32,16 @@ type App struct {
 func (a *App) Run(port int) error {
 	a.router = gin.Default()
 
-	// set routes here
+	a.setRoutes()
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
+}
+
+func (a *App) setRoutes() {
+	project := a.router.Group("/project")
+	project.POST("", WrapFunc(a.createProject))
+	project.GET("/filters", WrapFunc(a.getProjects))
+	project.GET("/:id", WrapFunc(a.getProject))
+	project.PUT("/:id", WrapFunc(a.updateProject))
+	project.DELETE("/:id", WrapFunc(a.deleteProject))
 }
