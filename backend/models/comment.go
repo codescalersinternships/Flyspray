@@ -89,12 +89,13 @@ func (db *DBClient) ListComments(bugID uint, UserID string) []Comment {
 // UpdateComment updates a comment on a specific bug by id
 func (db *DBClient) UpdateComment(id uint, newSummary string) error {
 
-	result := db.Client.Model(&Comment{}).Where("id = ?", id).Update("summary", newSummary)
+	comment := Comment{}
+	if result := db.Client.First(&comment, id); result.Error != nil {
 
-	if result.Error == nil && result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+		return result.Error
+
 	}
 
-	return result.Error
+	return db.Client.Model(&comment).Where("id = ?", id).Update("summary", newSummary).Error
 
 }
