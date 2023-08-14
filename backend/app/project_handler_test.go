@@ -34,7 +34,7 @@ func TestCreateProject(t *testing.T) {
 			expectedStatusCode: http.StatusCreated,
 		}, {
 			name:               "repeated project name",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
 			input:              createProjectInput{Name: "new project"},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
@@ -90,31 +90,31 @@ func TestUpdateProject(t *testing.T) {
 	}{
 		{
 			name:               "valid",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
-			input:              updateProjectInput{Name: "updated project", OwnerId: 1},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
+			input:              updateProjectInput{Name: "updated project", OwnerID: "1"},
 			expectedStatusCode: http.StatusOK,
 		}, {
 			name:               "no change",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
-			input:              updateProjectInput{Name: "new project", OwnerId: 1},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
+			input:              updateProjectInput{Name: "new project", OwnerID: "1"},
 			expectedStatusCode: http.StatusOK,
 		}, {
 			name:               "repeated project name",
-			preCreatedProjects: []models.Project{{Name: "new project1", OwnerId: 1}, {Name: "new project2", OwnerId: 1}},
-			input:              updateProjectInput{Name: "new project2", OwnerId: 1},
+			preCreatedProjects: []models.Project{{Name: "new project1", OwnerID: "1"}, {Name: "new project2", OwnerID: "1"}},
+			input:              updateProjectInput{Name: "new project2", OwnerID: "1"},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name:               "empty name",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
-			input:              updateProjectInput{Name: "", OwnerId: 1},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
+			input:              updateProjectInput{Name: "", OwnerID: "1"},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name:               "invalid format",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name:               "not found",
-			input:              updateProjectInput{Name: "updated project", OwnerId: 1},
+			input:              updateProjectInput{Name: "updated project", OwnerID: "1"},
 			expectedStatusCode: http.StatusNotFound,
 		},
 	}
@@ -159,7 +159,7 @@ func TestGetProject(t *testing.T) {
 	}{
 		{
 			name:               "valid",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
 			expectedStatusCode: http.StatusOK,
 		}, {
 			name:               "not found",
@@ -200,7 +200,7 @@ func TestGetProjects(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		defer app.client.Client.Exec("DELETE FROM projects")
 
-		p := models.Project{Name: "new project", OwnerId: 1}
+		p := models.Project{Name: "new project", OwnerID: "1"}
 		_, err := app.client.CreateProject(p)
 		assert.Nil(t, err)
 
@@ -231,7 +231,7 @@ func TestDeleteProject(t *testing.T) {
 	}{
 		{
 			name:               "valid",
-			preCreatedProjects: []models.Project{{Name: "new project", OwnerId: 1}},
+			preCreatedProjects: []models.Project{{Name: "new project", OwnerID: "1"}},
 			expectedStatusCode: http.StatusOK,
 		}, {
 			name:               "valid",

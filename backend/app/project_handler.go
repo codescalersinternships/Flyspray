@@ -15,7 +15,7 @@ type createProjectInput struct {
 }
 
 type updateProjectInput struct {
-	OwnerId uint   `json:"owner_id" binding:"required"`
+	OwnerID string `json:"owner_id" binding:"required"`
 	Name    string `json:"name" binding:"required"`
 }
 
@@ -28,7 +28,7 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	// TODO: get user id from authorization middleware and assign it to OwnerId
-	newProject := models.Project{Name: input.Name, OwnerId: 10007} // 10007 is just a random number
+	newProject := models.Project{Name: input.Name, OwnerID: "10007"} // 10007 is just a random number
 
 	// check if project name exists before
 	_, err := a.client.GetProjectByName(input.Name) // expected to return 'gorm.ErrRecordNotFound' if not exist
@@ -37,14 +37,14 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != gorm.ErrRecordNotFound { // there is some error other than not found
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to create project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	newProject, err = a.client.CreateProject(newProject)
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to create project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	return ResponseMsg{
@@ -63,7 +63,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("failed to read project data"))
 	}
 
-	updatedProject := models.Project{OwnerId: input.OwnerId, Name: input.Name}
+	updatedProject := models.Project{OwnerID: input.OwnerID, Name: input.Name}
 
 	// check if project name exists before
 	p, err := a.client.GetProjectByName(input.Name) // expected to return 'gorm.ErrRecordNotFound' if not exist
@@ -72,7 +72,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil && err != gorm.ErrRecordNotFound { // there is some error and it is other than not found
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to create project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	err = a.client.UpdateProject(id, updatedProject)
@@ -83,7 +83,7 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to update project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	return ResponseMsg{
@@ -103,7 +103,7 @@ func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to get project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	return ResponseMsg{
@@ -122,7 +122,7 @@ func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to get projects"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	return ResponseMsg{
@@ -143,7 +143,7 @@ func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to delete project"))
+		return nil, InternalServerError(errors.New("internal server error"))
 	}
 
 	return ResponseMsg{

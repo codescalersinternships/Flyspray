@@ -10,7 +10,7 @@ import (
 type Project struct {
 	ID        uint      `json:"id" gorm:"primary_key; unique"`
 	Name      string    `json:"name" validate:"nonzero" gorm:"unique"`
-	OwnerId   uint      `json:"owner_id" validate:"nonzero"`
+	OwnerID   string    `json:"owner_id" validate:"nonzero"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -23,7 +23,7 @@ func (d *DBClient) CreateProject(p Project) (Project, error) {
 func (d *DBClient) UpdateProject(id string, updatedProject Project) error {
 	result := d.Client.Model(&updatedProject).Where("id = ?", id).
 		Update("name", updatedProject.Name).
-		Update("owner_id", updatedProject.OwnerId)
+		Update("owner_id", updatedProject.OwnerID)
 
 	if result.Error == nil && result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
