@@ -24,6 +24,12 @@ func TestCreateComment(t *testing.T) {
 
 	router := gin.Default()
 
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "1000")
+		c.Next()
+	})
+
 	router.POST("/comment", WrapFunc(app.createComment))
 
 	t.Run("create comment successfully", func(t *testing.T) {
@@ -71,7 +77,7 @@ func TestCreateComment(t *testing.T) {
 
 	t.Run("failed to create comment due to incomplete input data", func(t *testing.T) {
 
-		requestBody := []byte(`{"user_id": "1"}`)
+		requestBody := []byte(`{"user_id": "1000"}`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -87,7 +93,7 @@ func TestCreateComment(t *testing.T) {
 
 	t.Run("failed to create comment as it is invalid", func(t *testing.T) {
 
-		requestBody := []byte(`{"user_id": "1", "bug_id":-2,"summary": "this is a bug" }`)
+		requestBody := []byte(`{"user_id": "1000", "bug_id":-2,"summary": "this is a bug" }`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -113,6 +119,12 @@ func TestUpdateComment(t *testing.T) {
 
 	router := gin.Default()
 
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "12")
+		c.Next()
+	})
+
 	router.POST("/comment", WrapFunc(app.createComment))
 
 	router.PUT("/comment/:id", WrapFunc(app.updateComment))
@@ -126,7 +138,7 @@ func TestUpdateComment(t *testing.T) {
 
 		wantedComment := models.Comment{
 			ID:      50,
-			UserID:  "1000",
+			UserID:  "12",
 			BugID:   commentInput.BugID,
 			Summary: commentInput.Summary,
 		}
@@ -204,7 +216,7 @@ func TestUpdateComment(t *testing.T) {
 
 	t.Run("failed to update comment as the request is incomplete", func(t *testing.T) {
 
-		requestBody := []byte(`{"id":300,"user_id": "13", "bug_id":15,"summary": "this is a bug" }`)
+		requestBody := []byte(`{"id":300,"user_id": "12", "bug_id":15,"summary": "this is a bug" }`)
 		req, err := http.NewRequest("POST", "/comment", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
 
@@ -216,7 +228,7 @@ func TestUpdateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		updatedRequestBody := []byte(`{"id":300,"user_id": "13", "bug_id":,"summary": "this is a bug" }`)
+		updatedRequestBody := []byte(`{"id":300,"user_id": "12", "bug_id":,"summary": "this is a bug" }`)
 		request, err := http.NewRequest("PUT", "/comment/200", bytes.NewBuffer(updatedRequestBody))
 		assert.NoError(t, err)
 

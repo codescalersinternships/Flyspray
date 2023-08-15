@@ -67,35 +67,27 @@ func (db *DBClient) DeleteComment(id uint) error {
 
 // ListComments lists all the comments for a specific bug
 func (db *DBClient) ListComments(bugID uint, UserID string) []Comment {
-
 	comments := []Comment{}
 
-	if bugID != 0 {
-		db.Client.Where("bug_id=?", bugID).Find(&comments)
-	}
-
-	if UserID != "" {
-		db.Client.Where("user_id=?", UserID).Find(&comments)
-	}
-
-	if bugID == 0 && UserID == "" {
+	if bugID != 0 || UserID != "" {
+		db.Client.Where("bug_id = ? OR user_id = ?", bugID, UserID).Find(&comments)
+	} else {
 		db.Client.Find(&comments)
 	}
 
 	return comments
-
 }
 
 // UpdateComment updates a comment on a specific bug by id
 func (db *DBClient) UpdateComment(id uint, newSummary string) error {
 
-	comment := Comment{}
-	if result := db.Client.First(&comment, id); result.Error != nil {
+	// comment := Comment{}
+	// if result := db.Client.First(&comment, id); result.Error != nil {
 
-		return result.Error
+	// 	return result.Error
 
-	}
+	// }
 
-	return db.Client.Model(&comment).Where("id = ?", id).Update("summary", newSummary).Error
+	return db.Client.Model(&Comment{}).Where("id = ?", id).Update("summary", newSummary).Error
 
 }

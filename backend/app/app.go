@@ -33,12 +33,12 @@ func (app *App) Run(port int) error {
 
 	app.router = gin.Default()
 
-	app.registerHandlers()
+	app.setRoutes()
 
 	return app.router.Run(fmt.Sprintf(":%d", port))
 }
 
-func (app *App) registerHandlers() {
+func (app *App) setRoutes() {
 
 	comment := app.router.Group("/comment")
 	{

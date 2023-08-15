@@ -2,10 +2,9 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
-
-	//"log"
 
 	"gorm.io/gorm"
 
@@ -32,8 +31,12 @@ func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("bug ID, user ID, and summary of the comment should be provided"))
 	}
 
-	// user id will be taken from middlewares
-	newComment := models.Comment{BugID: commentInput.BugID, Summary: commentInput.Summary, UserID: "1000", CreatedAt: time.Now()}
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	newComment := models.Comment{BugID: commentInput.BugID, Summary: commentInput.Summary, UserID: userID.(string), CreatedAt: time.Now()}
 
 	if err := newComment.Validate(); err != nil {
 		log.Error().Err(err).Send()
@@ -64,10 +67,16 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
 	comment, err := app.db.GetComment(uint(id))
-	if err != nil {
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("comment is not found"))
 
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to get comment"))
 	}
 
 	return ResponseMsg{
@@ -125,9 +134,9 @@ func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 
 func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
-	comment := updateCommentInput{}
+	updatedComment := updateCommentInput{}
 
-	if err := c.ShouldBindJSON(&comment); err != nil {
+	if err := c.ShouldBindJSON(&updatedComment); err != nil {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("invalid comment data"))
 	}
@@ -136,7 +145,29 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
-	err := app.db.UpdateComment(uint(id), comment.Summary)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	comment, err := app.db.GetComment(uint(id))
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("comment is not found"))
+
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("failed to get comment"))
+	}
+
+	if fmt.Sprint(userID) != fmt.Sprint(comment.UserID) {
+		return nil, Forbidden(errors.New("have no access to update the comment"))
+	}
+
+	err = app.db.UpdateComment(uint(id), updatedComment.Summary)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
