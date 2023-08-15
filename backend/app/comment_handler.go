@@ -64,7 +64,11 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("comment id is required"))
 	}
 
-	id, _ := strconv.ParseUint(idStr, 10, 64)
+	id, err := strconv.ParseUint(idStr, 10, 64)
+
+	if err != nil {
+		return nil, BadRequest(errors.New("failed to parse the bug id"))
+	}
 
 	comment, err := app.DB.GetComment(uint(id))
 
@@ -94,7 +98,11 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("comment id is required"))
 	}
 
-	id, _ := strconv.ParseUint(idStr, 10, 64)
+	id, err := strconv.ParseUint(idStr, 10, 64)
+
+	if err != nil {
+		return nil, BadRequest(errors.New("failed to parse the bug id"))
+	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -141,11 +149,11 @@ func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 	bugIDStr := c.Query("bug_id")
 	UserID := c.Query("user_id")
 
-	var bugID uint64
+	bugID, err := strconv.ParseUint(bugIDStr, 10, 64)
 
-	if bugIDStr != "" {
+	if bugIDStr != "" && err != nil {
+		return nil, BadRequest(errors.New("failed to parse the bug id"))
 
-		bugID, _ = strconv.ParseUint(bugIDStr, 10, 64)
 	}
 
 	comments := app.DB.ListComments(uint(bugID), UserID)
