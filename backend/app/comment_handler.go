@@ -187,7 +187,11 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("comment id is required"))
 	}
 
-	id, _ := strconv.ParseUint(idStr, 10, 64)
+	id, err := strconv.ParseUint(idStr, 10, 64)
+
+	if err != nil {
+		return nil, BadRequest(errors.New("failed to parse the bug id"))
+	}
 
 	userID, exists := c.Get("user_id")
 	if !exists {
