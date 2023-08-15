@@ -67,7 +67,7 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 	id, err := strconv.ParseUint(idStr, 10, 64)
 
 	if err != nil {
-		return nil, BadRequest(errors.New("failed to parse the bug id"))
+		return nil, BadRequest(errors.New("failed to parse the comment id"))
 	}
 
 	comment, err := app.DB.GetComment(uint(id))
@@ -101,7 +101,7 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 	id, err := strconv.ParseUint(idStr, 10, 64)
 
 	if err != nil {
-		return nil, BadRequest(errors.New("failed to parse the bug id"))
+		return nil, BadRequest(errors.New("failed to parse the comment id"))
 	}
 
 	userID, exists := c.Get("user_id")
@@ -190,7 +190,7 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 	id, err := strconv.ParseUint(idStr, 10, 64)
 
 	if err != nil {
-		return nil, BadRequest(errors.New("failed to parse the bug id"))
+		return nil, BadRequest(errors.New("failed to parse the comment id"))
 	}
 
 	userID, exists := c.Get("user_id")
