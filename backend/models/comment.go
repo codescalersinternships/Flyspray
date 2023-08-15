@@ -67,6 +67,7 @@ func (db *DBClient) DeleteComment(id uint) error {
 
 // ListComments lists all the comments for a specific bug
 func (db *DBClient) ListComments(bugID uint, UserID string) []Comment {
+
 	comments := []Comment{}
 
 	if bugID != 0 || UserID != "" {
@@ -80,13 +81,6 @@ func (db *DBClient) ListComments(bugID uint, UserID string) []Comment {
 
 // UpdateComment updates a comment on a specific bug by id
 func (db *DBClient) UpdateComment(id uint, newSummary string) error {
-
-	// comment := Comment{}
-	// if result := db.Client.First(&comment, id); result.Error != nil {
-
-	// 	return result.Error
-
-	// }
 
 	return db.Client.Model(&Comment{}).Where("id = ?", id).Update("summary", newSummary).Error
 
