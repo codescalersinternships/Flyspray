@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type CreateCommentInput struct {
+type createCommentInput struct {
 	BugID   uint   `json:"bug_id" validate:"required"`
 	Summary string `json:"summary" validate:"required"`
 }
@@ -24,11 +24,11 @@ type updateCommentInput struct {
 
 func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 
-	commentInput := CreateCommentInput{}
+	var commentInput createCommentInput
 
 	if err := c.ShouldBindJSON(&commentInput); err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("bug ID, user ID, and summary of the comment should be provided"))
+		return nil, BadRequest(errors.New("bug id, user id, and summary of the comment should be provided"))
 	}
 
 	userID, exists := c.Get("user_id")
@@ -46,7 +46,7 @@ func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 	comment, err := app.DB.CreateComment(newComment)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to create comment"))
+		return nil, InternalServerError(errInternalServerError)
 
 	}
 	return ResponseMsg{
@@ -61,7 +61,7 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 	idStr := c.Param("id")
 
 	if idStr == "" {
-		return nil, BadRequest(errors.New("comment ID is required"))
+		return nil, BadRequest(errors.New("comment id is required"))
 	}
 
 	id, _ := strconv.ParseUint(idStr, 10, 64)
@@ -76,7 +76,7 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to get comment"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -91,12 +91,17 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 	idStr := c.Param("id")
 
 	if idStr == "" {
-		return nil, BadRequest(errors.New("comment ID is required"))
+		return nil, BadRequest(errors.New("comment id is required"))
 	}
 
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
-	err := app.DB.DeleteComment(uint(id))
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	comment, err := app.DB.GetComment(uint(id))
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
@@ -106,7 +111,24 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to delete comment"))
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	err = app.DB.DeleteComment(uint(id))
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("comment is not found"))
+
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if fmt.Sprint(userID) != fmt.Sprint(comment.UserID) {
+		return nil, Forbidden(errors.New("you have no access to delete the comment"))
 	}
 	return ResponseMsg{
 		Message: "comment is deleted successfully",
@@ -118,23 +140,26 @@ func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 	bugIDStr := c.Query("bug_id")
 	UserID := c.Query("user_id")
 
-	bugID, err := strconv.ParseUint(bugIDStr, 10, 64)
+	bugID, _ := strconv.ParseUint(bugIDStr, 10, 64)
 	comments := app.DB.ListComments(uint(bugID), UserID)
 
 	if len(comments) == 0 {
-		log.Error().Err(err).Send()
-		return nil, NotFound(errors.New("no comments are found"))
+		return ResponseMsg{
+			Message: "no comments are found",
+			Data:    comments,
+		}, Ok()
+
 	}
 
 	return ResponseMsg{
-		Message: "projects is retrieved successfully",
+		Message: "comments are retrieved successfully",
 		Data:    comments,
 	}, Ok()
 }
 
 func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
-	updatedComment := updateCommentInput{}
+	var updatedComment updateCommentInput
 
 	if err := c.ShouldBindJSON(&updatedComment); err != nil {
 		log.Error().Err(err).Send()
@@ -160,11 +185,11 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to get comment"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	if fmt.Sprint(userID) != fmt.Sprint(comment.UserID) {
-		return nil, Forbidden(errors.New("have no access to update the comment"))
+		return nil, Forbidden(errors.New("you have no access to update the comment"))
 	}
 
 	err = app.DB.UpdateComment(uint(id), updatedComment.Summary)
@@ -176,7 +201,7 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("failed to update the comment"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{

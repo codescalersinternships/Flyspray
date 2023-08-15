@@ -34,7 +34,7 @@ func TestCreateComment(t *testing.T) {
 
 	t.Run("create comment successfully", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   10,
 			Summary: "bug to be solved",
 		}
@@ -70,8 +70,8 @@ func TestCreateComment(t *testing.T) {
 		userID := commentMap["user_id"]
 		summary := commentMap["summary"]
 
-		assert.Equal(t, userID, wantedComment.UserID, "got %d userID but wanted %d", userID, wantedComment.UserID)
-		assert.Equal(t, uint(bugID), wantedComment.BugID, "got %d bugID but wanted %d", uint(bugID), wantedComment.BugID)
+		assert.Equal(t, userID, wantedComment.UserID, "got %d user id but wanted %d", userID, wantedComment.UserID)
+		assert.Equal(t, uint(bugID), wantedComment.BugID, "got %d bug id but wanted %d", uint(bugID), wantedComment.BugID)
 		assert.Equal(t, summary, wantedComment.Summary, "got %s summary but wanted %s", summary, wantedComment.Summary)
 	})
 
@@ -131,7 +131,7 @@ func TestUpdateComment(t *testing.T) {
 
 	t.Run("update comment successfully", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   10,
 			Summary: "bug to be solved",
 		}
@@ -258,7 +258,7 @@ func TestGetComment(t *testing.T) {
 
 	t.Run("get comment successfully", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   20,
 			Summary: "bug to be solved",
 		}
@@ -333,7 +333,7 @@ func TestDeleteComment(t *testing.T) {
 
 	t.Run("delete comment successfully", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   10,
 			Summary: "bug to be solved",
 		}
@@ -409,7 +409,7 @@ func TestListComments(t *testing.T) {
 
 	t.Run("list comments without filters", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   12,
 			Summary: "bug to be solved",
 		}
@@ -423,7 +423,7 @@ func TestListComments(t *testing.T) {
 		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
-		commentInput2 := CreateCommentInput{
+		commentInput2 := createCommentInput{
 			BugID:   10,
 			Summary: "there is a bug",
 		}
@@ -452,7 +452,7 @@ func TestListComments(t *testing.T) {
 
 	t.Run("list comments for a specific bug", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   12,
 			Summary: "bug to be solved",
 		}
@@ -466,7 +466,7 @@ func TestListComments(t *testing.T) {
 		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
-		commentInput2 := CreateCommentInput{
+		commentInput2 := createCommentInput{
 			BugID:   12,
 			Summary: "there is a bug",
 		}
@@ -495,7 +495,7 @@ func TestListComments(t *testing.T) {
 
 	t.Run("list comments for a specific user", func(t *testing.T) {
 
-		commentInput := CreateCommentInput{
+		commentInput := createCommentInput{
 			BugID:   12,
 			Summary: "bug to be solved",
 		}
@@ -509,7 +509,7 @@ func TestListComments(t *testing.T) {
 		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
-		commentInput2 := CreateCommentInput{
+		commentInput2 := createCommentInput{
 			BugID:   10,
 			Summary: "there is a bug",
 		}
