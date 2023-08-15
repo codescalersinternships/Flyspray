@@ -53,10 +53,10 @@ func TestCreateProject(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			defer app.client.Client.Exec("DELETE FROM projects")
+			defer app.DB.Client.Exec("DELETE FROM projects")
 
 			for _, p := range tc.preCreatedProjects {
-				_, err := app.client.CreateProject(p)
+				_, err := app.DB.CreateProject(p)
 				assert.Nil(t, err)
 			}
 
@@ -75,7 +75,7 @@ func TestCreateProject(t *testing.T) {
 
 			// test changes in db
 			if tc.expectedStatusCode == http.StatusCreated {
-				p, err := app.client.GetProject("1")
+				p, err := app.DB.GetProject("1")
 				assert.Nil(t, err)
 				assert.Equal(t, p.Name, tc.input.Name)
 			}
@@ -130,10 +130,10 @@ func TestUpdateProject(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			defer app.client.Client.Exec("DELETE FROM projects")
+			defer app.DB.Client.Exec("DELETE FROM projects")
 
 			for _, p := range tc.preCreatedProjects {
-				_, err := app.client.CreateProject(p)
+				_, err := app.DB.CreateProject(p)
 				assert.Nil(t, err)
 			}
 
@@ -152,7 +152,7 @@ func TestUpdateProject(t *testing.T) {
 
 			// test changes in db
 			if tc.expectedStatusCode == http.StatusOK {
-				p, err := app.client.GetProject("1")
+				p, err := app.DB.GetProject("1")
 				assert.Nil(t, err)
 				assert.Equal(t, p.Name, tc.input.Name)
 				assert.Equal(t, p.OwnerID, tc.input.OwnerID)
@@ -186,10 +186,10 @@ func TestGetProject(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			defer app.client.Client.Exec("DELETE FROM projects")
+			defer app.DB.Client.Exec("DELETE FROM projects")
 
 			for _, p := range tc.preCreatedProjects {
-				_, err := app.client.CreateProject(p)
+				_, err := app.DB.CreateProject(p)
 				assert.Nil(t, err)
 			}
 
@@ -209,7 +209,7 @@ func TestGetProject(t *testing.T) {
 				got := strings.ReplaceAll(w.Body.String(), " ", "")
 				got = strings.ReplaceAll(got, "\n", "")
 
-				p, err := app.client.GetProject("1")
+				p, err := app.DB.GetProject("1")
 				assert.Nil(t, err)
 				resp := ResponseMsg{
 					Message: "project is retrieved successfully",
@@ -235,10 +235,10 @@ func TestGetProjects(t *testing.T) {
 	app.setRoutes()
 
 	t.Run("valid", func(t *testing.T) {
-		defer app.client.Client.Exec("DELETE FROM projects")
+		defer app.DB.Client.Exec("DELETE FROM projects")
 
 		p := models.Project{Name: "new project", OwnerID: "10007"}
-		_, err := app.client.CreateProject(p)
+		_, err := app.DB.CreateProject(p)
 		assert.Nil(t, err)
 
 		req, err := http.NewRequest("GET", "/project/filters?userid=10007", nil)
@@ -257,7 +257,7 @@ func TestGetProjects(t *testing.T) {
 		got := strings.ReplaceAll(w.Body.String(), " ", "")
 		got = strings.ReplaceAll(got, "\n", "")
 
-		ps, err := app.client.FilterProjects("10007", "new project", "")
+		ps, err := app.DB.FilterProjects("10007", "new project", "")
 		assert.Nil(t, err)
 		resp := ResponseMsg{
 			Message: "projects are retrieved successfully",
@@ -298,10 +298,10 @@ func TestDeleteProject(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			defer app.client.Client.Exec("DELETE FROM projects")
+			defer app.DB.Client.Exec("DELETE FROM projects")
 
 			for _, p := range tc.preCreatedProjects {
-				_, err := app.client.CreateProject(p)
+				_, err := app.DB.CreateProject(p)
 				assert.Nil(t, err)
 			}
 
@@ -317,7 +317,7 @@ func TestDeleteProject(t *testing.T) {
 
 			// test changes in db
 			if tc.expectedStatusCode == http.StatusOK {
-				_, err := app.client.GetProject("1")
+				_, err := app.DB.GetProject("1")
 				assert.Equal(t, gorm.ErrRecordNotFound, err)
 			}
 		})

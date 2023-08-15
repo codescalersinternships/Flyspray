@@ -10,38 +10,53 @@ import (
 // NewApp is the factory of App
 func NewApp(dbFilePath string) (App, error) {
 
-	client, err := models.NewDBClient(dbFilePath)
+	database, err := models.NewDBClient(dbFilePath)
 	if err != nil {
 		return App{}, err
 	}
 
-	if err := client.Migrate(); err != nil {
+	if err := database.Migrate(); err != nil {
 		return App{}, err
 	}
 
-	return App{client: client}, nil
+	return App{DB: database}, nil
 }
 
 // App initializes the entire app
 type App struct {
-	client models.DBClient
+	DB     models.DBClient
 	router *gin.Engine
 }
 
-// Run runs server
-func (a *App) Run(port int) error {
-	a.router = gin.Default()
+// Run runs the server by seting the router and calling the internal setRoutes method
+func (app *App) Run(port int) error {
 
-	a.setRoutes()
+	app.router = gin.Default()
 
-	return a.router.Run(fmt.Sprintf(":%d", port))
+	app.setRoutes()
+
+	return app.router.Run(fmt.Sprintf(":%d", port))
 }
 
-func (a *App) setRoutes() {
-	project := a.router.Group("/project")
-	project.POST("", WrapFunc(a.createProject))
-	project.GET("/filters", WrapFunc(a.getProjects))
-	project.GET("/:id", WrapFunc(a.getProject))
-	project.PUT("/:id", WrapFunc(a.updateProject))
-	project.DELETE("/:id", WrapFunc(a.deleteProject))
+func (app *App) setRoutes() {
+
+	project := app.router.Group("/project")
+	{
+		project.POST("", WrapFunc(app.createProject))
+		project.GET("/filters", WrapFunc(app.getProjects))
+		project.GET("/:id", WrapFunc(app.getProject))
+		project.PUT("/:id", WrapFunc(app.updateProject))
+		project.DELETE("/:id", WrapFunc(app.deleteProject))
+
+	}
+
+	comment := app.router.Group("/comment")
+	{
+		comment.POST("", WrapFunc(app.createComment))
+		comment.GET("/:id", WrapFunc(app.getComment))
+		comment.DELETE("/:id", WrapFunc(app.deleteComment))
+		comment.GET("/filters", WrapFunc(app.listComments))
+		comment.PUT("/:id", WrapFunc(app.updateComment))
+	}
+
 }
