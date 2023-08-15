@@ -1,18 +1,22 @@
 package models
 
-import "errors"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
 
 // Member struct has Member table's columns
 type Member struct {
 	ID        int  `json:"id"`
-	UserID    int  `json:"user_id"  gorm:"not null"`
-	ProjectID int  `json:"project_id"  gorm:"not null"`
+	UserID    int  `json:"user_id"  gorm:"not null;" validate:"required"`
+	ProjectID int  `json:"project_id"  gorm:"not null" validate:"required"`
 	Admin     bool `json:"admin_bool"`
 }
 
+//in member part of Flyspray, can one member be a part of many projects? 
 var (
 	ErrEmptyMemberFields = errors.New("userid and projectid cannot be null")
-	ErrMemberNotFound    = errors.New("member was not found")
 )
 
 // Crete adds a new member to member table
@@ -35,7 +39,7 @@ func (db *DBClient) GetAllMembers() ([]Member, error) {
 func (db *DBClient) UpdateMemberOwnership(member Member, id int) error {
 	res := db.Client.Model(&Member{}).Where("ID = ?", id).Update("Admin", member.Admin)
 	if res.RowsAffected == 0 {
-		return ErrMemberNotFound
+		return gorm.ErrRecordNotFound
 	}
 	return res.Error
 }

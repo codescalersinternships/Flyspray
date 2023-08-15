@@ -2,11 +2,11 @@ package app
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // NewApp is the factory of App
@@ -18,7 +18,8 @@ func NewApp(dbFilePath string) (App, error) {
 	}
 
 	if err := client.Migrate(); err != nil {
-		log.Fatalf("error migrating tables %q", err)
+
+		log.Error().Err(err).Send()
 		return App{}, err
 	}
 
@@ -43,7 +44,7 @@ func (a *App) setRoutes() {
 	a.router = gin.Default()
 	a.router.Use(cors.Default())
 	memberRoutes := a.router.Group("/member")
-	memberRoutes.POST("", WrapFunc(a.CreateNewMember))
-	memberRoutes.GET("", WrapFunc(a.GetAllMembers))
-	memberRoutes.PUT("/:id", WrapFunc(a.UpdateMemberOwnership))
+	memberRoutes.POST("", WrapFunc(a.createNewMember))
+	memberRoutes.GET("", WrapFunc(a.getAllMembers))
+	memberRoutes.PUT("/:id", WrapFunc(a.updateMemberOwnership))
 }

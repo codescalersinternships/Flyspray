@@ -7,14 +7,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
-func (a *App) CreateNewMember(c *gin.Context) (interface{}, Response) {
-	var member models.Member
-	if err := c.ShouldBindJSON(&member); err != nil {
+type createMemberInput struct {
+	ProjectID int  `json:"project_id" validate:"required"`
+	Admin     bool `json:"admin_bool"`
+}
+
+func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
+	memberInput := createMemberInput{}
+
+	if err := c.ShouldBindJSON(&memberInput); err != nil {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("error binding json data"))
 	}
+	// UserID will be replaced by that of middleware
+	member := models.Member{ProjectID: memberInput.ProjectID, Admin: memberInput.Admin, UserID: 100}
 	err := a.client.CreateNewMember(member)
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -26,7 +35,7 @@ func (a *App) CreateNewMember(c *gin.Context) (interface{}, Response) {
 	}, Created()
 }
 
-func (a *App) GetAllMembers(c *gin.Context) (interface{}, Response) {
+func (a *App) getAllMembers(c *gin.Context) (interface{}, Response) {
 	members, err := a.client.GetAllMembers()
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -38,24 +47,32 @@ func (a *App) GetAllMembers(c *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
-func (a *App) UpdateMemberOwnership(c *gin.Context) (interface{}, Response) {
-	var member models.Member
-	if err := c.ShouldBindJSON(&member); err != nil {
+func (a *App) updateMemberOwnership(c *gin.Context) (interface{}, Response) {
+
+	memberInput := createMemberInput{}
+
+	if err := c.ShouldBindJSON(&memberInput); err != nil {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("error binding json data"))
 	}
-	id, _ := strconv.Atoi(c.Param("id"))
-	err := a.client.UpdateMemberOwnership(member, id)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		if err == models.ErrMemberNotFound {
-			log.Error().Err(err).Send()
-			return nil, NotFound(err)
-		}
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errors.New("error parsing id"))
+	}
+	// UserID will be replaced by that of middleware
+	member := models.Member{ProjectID: memberInput.ProjectID, Admin: memberInput.Admin, UserID: 100}
+	err = a.client.UpdateMemberOwnership(member, id)
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(err)
+	}
+	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("error updating member ownership"))
 	}
 	return ResponseMsg{
-		Message: "member ownership updateds successfully",
+		Message: "member ownership updated successfully",
 		Data:    member,
 	}, Ok()
 }

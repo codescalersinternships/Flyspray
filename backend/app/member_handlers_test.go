@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/codescalersinternships/Flyspray/models"
@@ -14,7 +14,8 @@ import (
 )
 
 func TestCreateNewMember(t *testing.T) {
-	app, err := NewApp("./test.db")
+	dir := t.TempDir()
+	app, err := NewApp(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
 	app.setRoutes()
 	testCases := []struct {
@@ -49,8 +50,14 @@ func TestCreateNewMember(t *testing.T) {
 }
 
 func TestGetAllMembers(t *testing.T) {
-	app, err := NewApp("./test.db")
+	dir := t.TempDir()
+	app, err := NewApp(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
+	member := models.Member{UserID: 1, ProjectID: 2}
+	jsonData, err := json.Marshal(member)
+	assert.NoError(t, err, "failed to marshal json data")
+	_, err = http.NewRequest("POST", "/member", bytes.NewBuffer(jsonData))
+	assert.NoError(t, err, "failed to create http request")
 	app.setRoutes()
 	t.Run("getallmembers returns status 200", func(t *testing.T) {
 		req, err := http.NewRequest("GET", "/member", nil)
@@ -64,10 +71,17 @@ func TestGetAllMembers(t *testing.T) {
 }
 
 func TestUpdateMemberOwnership(t *testing.T) {
-	app, err := NewApp("./test.db")
-	defer os.Remove("./test.db")
-	assert.NoError(t, err, "failed to connect to database")
+	dir := t.TempDir()
+	app, err := NewApp(filepath.Join(dir, "test.db"))
 	app.setRoutes()
+	assert.NoError(t, err, "failed to connect to database")
+	member := models.Member{UserID: 1, ProjectID: 2}
+	jsonData, err := json.Marshal(member)
+	assert.NoError(t, err, "failed to marshal json data")
+	req, err := http.NewRequest("POST", "/member", bytes.NewBuffer(jsonData))
+	assert.NoError(t, err, "failed to create http request")
+	resp := httptest.NewRecorder()
+	app.router.ServeHTTP(resp, req)
 	testCases := []struct {
 		name      string
 		id        int
