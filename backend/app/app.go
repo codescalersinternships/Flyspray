@@ -19,16 +19,16 @@ func NewApp(dbFilePath string) (App, error) {
 		return App{}, err
 	}
 
-	return App{db: database}, nil
+	return App{DB: database}, nil
 }
 
 // App initializes the entire app
 type App struct {
-	db     models.DBClient
+	DB     models.DBClient
 	router *gin.Engine
 }
 
-// Run runs the server by seting the router and calling the internal registerHandlers method
+// Run runs the server by seting the router and calling the internal setRoutes method
 func (app *App) Run(port int) error {
 
 	app.router = gin.Default()
@@ -40,16 +40,22 @@ func (app *App) Run(port int) error {
 
 func (app *App) setRoutes() {
 
+	project := app.router.Group("/project")
+	{
+		project.POST("", WrapFunc(app.createProject))
+		project.GET("/filters", WrapFunc(app.getProjects))
+		project.GET("/:id", WrapFunc(app.getProject))
+		project.PUT("/:id", WrapFunc(app.updateProject))
+		project.DELETE("/:id", WrapFunc(app.deleteProject))
+
+	}
+
 	comment := app.router.Group("/comment")
 	{
-		comment.POST("/", WrapFunc(app.createComment))
-
+		comment.POST("", WrapFunc(app.createComment))
 		comment.GET("/:id", WrapFunc(app.getComment))
-
 		comment.DELETE("/:id", WrapFunc(app.deleteComment))
-
 		comment.GET("/filters", WrapFunc(app.listComments))
-
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
 

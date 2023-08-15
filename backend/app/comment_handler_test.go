@@ -143,7 +143,7 @@ func TestUpdateComment(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		commentUpdate := updateCommentInput{
@@ -270,7 +270,7 @@ func TestGetComment(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("GET", "/comment/100", nil)
@@ -345,7 +345,7 @@ func TestDeleteComment(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("DELETE", "/comment/60", nil)
@@ -420,7 +420,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		commentInput2 := CreateCommentInput{
@@ -434,7 +434,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput2.Summary,
 		}
 
-		result = app.db.Client.Create(&wantedComment2)
+		result = app.DB.Client.Create(&wantedComment2)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("GET", "/comment/filters?", nil)
@@ -463,7 +463,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		commentInput2 := CreateCommentInput{
@@ -477,7 +477,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput2.Summary,
 		}
 
-		result = app.db.Client.Create(&wantedComment2)
+		result = app.DB.Client.Create(&wantedComment2)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("GET", "/comment/filters?bug_id=12", nil)
@@ -506,7 +506,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput.Summary,
 		}
 
-		result := app.db.Client.Create(&wantedComment)
+		result := app.DB.Client.Create(&wantedComment)
 		assert.NoError(t, result.Error)
 
 		commentInput2 := CreateCommentInput{
@@ -520,7 +520,7 @@ func TestListComments(t *testing.T) {
 			Summary: commentInput2.Summary,
 		}
 
-		result = app.db.Client.Create(&wantedComment2)
+		result = app.DB.Client.Create(&wantedComment2)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("GET", "/comment/filters?user_id=2", nil)

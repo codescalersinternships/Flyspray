@@ -43,7 +43,7 @@ func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
-	comment, err := app.db.CreateComment(newComment)
+	comment, err := app.DB.CreateComment(newComment)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("failed to create comment"))
@@ -66,7 +66,7 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
-	comment, err := app.db.GetComment(uint(id))
+	comment, err := app.DB.GetComment(uint(id))
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
@@ -96,7 +96,7 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 
 	id, _ := strconv.ParseUint(idStr, 10, 64)
 
-	err := app.db.DeleteComment(uint(id))
+	err := app.DB.DeleteComment(uint(id))
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
@@ -119,7 +119,7 @@ func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 	UserID := c.Query("user_id")
 
 	bugID, err := strconv.ParseUint(bugIDStr, 10, 64)
-	comments := app.db.ListComments(uint(bugID), UserID)
+	comments := app.DB.ListComments(uint(bugID), UserID)
 
 	if len(comments) == 0 {
 		log.Error().Err(err).Send()
@@ -150,7 +150,7 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	comment, err := app.db.GetComment(uint(id))
+	comment, err := app.DB.GetComment(uint(id))
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
@@ -167,7 +167,7 @@ func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 		return nil, Forbidden(errors.New("have no access to update the comment"))
 	}
 
-	err = app.db.UpdateComment(uint(id), updatedComment.Summary)
+	err = app.DB.UpdateComment(uint(id), updatedComment.Summary)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
