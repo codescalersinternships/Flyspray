@@ -28,6 +28,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -36,6 +37,9 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.27.10 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rs/zerolog v1.30.0 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
