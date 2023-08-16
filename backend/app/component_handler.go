@@ -1,22 +1,27 @@
 package app
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
 
-type responseErr struct {
-	Message string `json:"message"`
+type createComponentInput struct {
+	Name      string `json:"name" binding:"required"`
+	ProjectID string `json:"project_id" binding:"required"`
 }
 
-type responseOk struct {
-	Message string             `json:"message"`
-	Data    []models.Component `json:"data"`
+type updateComponentInput struct {
+	UserID string `json:"user_id" binding:"required"`
+	Name   string `json:"name" binding:"required"`
 }
 
 // CreateComponent creates a new component
@@ -44,12 +49,47 @@ func (app *App) CreateComponent(c *gin.Context) {
 	})
 }
 
-// GetComponentByID gets a component by its ID
-func (app *App) GetComponentByID(c *gin.Context) {
+func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
+	id := ctx.Param("id")
+	var input updateComponentInput
 
-	componentID := c.Param("id")
-	component := models.Component{}
-	result := app.client.Client.First(&component, componentID)
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("failed to read component data"))
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	c, err := a.DB.GetComponent(id)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("component is not found"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if userID != c.UserID {
+		return nil, Forbidden(errors.New("have not access to update component"))
+	}
+
+	updatedComponent := models.Component{Name: input.Name}
+
+	c, err = a.DB.GetComponentByName(input.Name)
+	if err == nil && fmt.Sprint(c.ID) != id {
+		return nil, BadRequest(errors.New("component name must be unique"))
+	}
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	err = a.DB.UpdateComponent(id, updatedComponent)
 
 	if result.Error != nil {
 		log.Println("error: Component not found")
@@ -58,17 +98,16 @@ func (app *App) GetComponentByID(c *gin.Context) {
 		)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, responseOk{
-		Message: "project retrieved successfully",
-		Data:    []models.Component{component},
-	})
+
+	return ResponseMsg{
+		Message: "component is updated successfully",
+	}, Ok()
 }
 
-// DeleteComponent deletes a component by its ID
-func (app *App) DeleteComponent(c *gin.Context) {
-	componentID := c.Param("id")
+func (a *App) getComponent(ctx *gin.Context) (interface{}, Response) {
+	id := ctx.Param("id")
 
-	component := models.Component{}
+	component, err := a.DB.GetComponent(id)
 
 	if result := app.client.Client.First(&component, componentID); result.Error != nil {
 		log.Println("error: Component not found")
@@ -124,31 +163,57 @@ func (app *App) UpdateComponent(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, responseOk{
-		Message: "project updated successfully",
-		Data:    []models.Component{component},
-	})
+	return ResponseMsg{
+		Message: "component is retrieved successfully",
+		Data:    component,
+	}, Ok()
 }
 
-// ListComponentsForProject gets all components for a project
-func (app *App) ListComponentsForProject(c *gin.Context) {
-	projectID := c.Query("project_id")
-	name := c.Query("name")
+func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
+	id := ctx.Param("id")
 
-	if projectID == "" {
-		fmt.Println(projectID)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or invalid project_id"})
-		return
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	query := app.client.Client.Where("project_id = ?", projectID)
+	c, err := a.DB.GetComponent(id)
 
-	if name != "" {
-		query = query.Where("name = ?", name)
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("component is not found"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
 	}
 
-	components := []models.Component{}
-	query.Find(&components)
+	if fmt.Sprint(userID) != fmt.Sprint(c.UserID) {
+		return nil, Forbidden(errors.New("have not access to delete component"))
+	}
+
+	err = a.DB.DeleteComponent(id)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("component is not found"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{
+		Message: "component is deleted successfully",
+	}, Ok()
+}
+
+func (a *App) getComponents(ctx *gin.Context) (interface{}, Response) {
+	userId := ctx.Query("project_id")
+	componentName := ctx.Query("name")
+	creationDate := ctx.Query("after")
+
+	components, err := a.DB.FilterComponents(userId, componentName, creationDate)
 
 	if len(components) == 0 {
 		log.Println("error: No components found for the specified project_id or name")
@@ -158,5 +223,8 @@ func (app *App) ListComponentsForProject(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, components)
+	return ResponseMsg{
+		Message: "components are retrieved successfully",
+		Data:    components,
+	}, Ok()
 }
