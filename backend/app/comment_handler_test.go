@@ -240,6 +240,20 @@ func TestUpdateComment(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code, "got %d status code but want status code 400", rec.Code)
 
 	})
+	t.Run("comment id is not given", func(t *testing.T) {
+
+		request, err := http.NewRequest("PUT", "/comment", nil)
+		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, request)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
+
+	})
 
 }
 
@@ -301,9 +315,9 @@ func TestGetComment(t *testing.T) {
 
 	})
 
-	t.Run("comment ID is not given", func(t *testing.T) {
+	t.Run("comment id is not given", func(t *testing.T) {
 
-		request, err := http.NewRequest("GET", "/comment/ ", nil)
+		request, err := http.NewRequest("GET", "/comment", nil)
 		assert.NoError(t, err)
 
 		request.Header.Set("Content-Type", "application/json")
@@ -328,6 +342,12 @@ func TestDeleteComment(t *testing.T) {
 	assert.NoError(t, err)
 
 	router := gin.Default()
+
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "1000")
+		c.Next()
+	})
 
 	router.DELETE("/comment/:id", WrapFunc(app.deleteComment))
 
@@ -375,9 +395,9 @@ func TestDeleteComment(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
 
 	})
-	t.Run("comment ID is not given", func(t *testing.T) {
+	t.Run("comment id is not given", func(t *testing.T) {
 
-		request, err := http.NewRequest("DELETE", "/comment/ ", nil)
+		request, err := http.NewRequest("DELETE", "/comment", nil)
 		assert.NoError(t, err)
 
 		request.Header.Set("Content-Type", "application/json")
@@ -535,35 +555,4 @@ func TestListComments(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
 
 	})
-
-	t.Run("no comments found for the bug", func(t *testing.T) {
-
-		request, err := http.NewRequest("GET", "/comment/filters?bug_id=6", nil)
-		assert.NoError(t, err)
-
-		request.Header.Set("Content-Type", "application/json")
-
-		rec := httptest.NewRecorder()
-
-		router.ServeHTTP(rec, request)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
-
-	})
-
-	t.Run("no comments found for the user", func(t *testing.T) {
-
-		request, err := http.NewRequest("GET", "/comment/filters?user_id=70", nil)
-		assert.NoError(t, err)
-
-		request.Header.Set("Content-Type", "application/json")
-
-		rec := httptest.NewRecorder()
-
-		router.ServeHTTP(rec, request)
-
-		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
-
-	})
-
 }

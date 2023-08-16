@@ -21,6 +21,10 @@ func TestCreateProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
+	app.router.Use(func(ctx *gin.Context) {
+		ctx.Set("user_id", "1")
+		ctx.Next()
+	})
 	app.setRoutes()
 
 	tests := []struct {
@@ -89,6 +93,10 @@ func TestUpdateProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
+	app.router.Use(func(ctx *gin.Context) {
+		ctx.Set("user_id", "1")
+		ctx.Next()
+	})
 	app.setRoutes()
 
 	tests := []struct {
@@ -278,6 +286,10 @@ func TestDeleteProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
+	app.router.Use(func(ctx *gin.Context) {
+		ctx.Set("user_id", "1")
+		ctx.Next()
+	})
 	app.setRoutes()
 
 	tests := []struct {

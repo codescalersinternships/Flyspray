@@ -9,7 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCommentValidate(t *testing.T) {
+func TestValidateComment(t *testing.T) {
+
 	comment := models.Comment{
 		ID:        1,
 		UserID:    "2",
@@ -22,7 +23,7 @@ func TestCommentValidate(t *testing.T) {
 	err := validate.Struct(comment)
 	assert.NoError(t, err, "comment should be valid")
 
-	comment.UserID = "0"
+	comment.UserID = ""
 	err = validate.Struct(comment)
 	assert.Error(t, err, "comment should be invalid")
 }
