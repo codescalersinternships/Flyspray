@@ -35,7 +35,6 @@ func (db *DBClient) CreateNewMember(member Member) (*Member, error) {
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	// Retrieve the newly created member from the database
 	err = db.Client.First(&member, member.ID).Error
 	if err != nil {
 		return nil, err
@@ -58,15 +57,12 @@ func (db *DBClient) UpdateMemberOwnership(member Member, id int) (*Member, error
 	if res.Error != nil {
 		return nil, res.Error
 	}
-
 	if res.RowsAffected == 0 {
 		return nil, gorm.ErrRecordNotFound
 	}
-
 	updatedMember := Member{}
 	if err := db.Client.First(&updatedMember, id).Error; err != nil {
 		return nil, err
 	}
-
 	return &updatedMember, nil
 }
