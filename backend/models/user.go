@@ -31,14 +31,14 @@ func (u *User) Validate() error {
 }
 
 // BeforeCreate generates a uuid for the user
-func (db *DBClient) BeforeCreate(user User) {
+func (db *DBClient) BeforeCreate(user *User) {
 	uuidV4 := uuid.New()
 	user.ID = uuidV4.String()
 }
 
 // CreateUser creates a user
 func (db *DBClient) CreateUser(user User) (User, error) {
-	db.BeforeCreate(user)
+	db.BeforeCreate(&user)
 	result := db.Client.Create(&user)
 	return user, result.Error
 }

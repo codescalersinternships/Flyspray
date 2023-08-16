@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +22,17 @@ func TestSignup(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
+	// adding verified user
+	user := signupBody{
+		Name:            "diaa",
+		Email:           "diaabadr@gmail.com",
+		Password:        "diaabadr",
+		ConfirmPassword: "diaabadr",
+		Verified:        true,
+	}
+
+	AddUserToDB(t, user, &app)
+
 	testCases := []struct {
 		name               string
 		requestBody        map[string]string
@@ -31,17 +41,19 @@ func TestSignup(t *testing.T) {
 		{
 			name: "valid body",
 			requestBody: map[string]string{
-				"name":     "diaa",
-				"email":    "diaabadr82@gmail.com",
-				"password": "diaabadr",
+				"name":             "diaa",
+				"email":            "diaabadr82@gmail.com",
+				"password":         "diaabadr",
+				"confirm_password": "diaabadr",
 			},
 			expectedStatusCode: http.StatusCreated,
 		}, {
 			name: "invalid email",
 			requestBody: map[string]string{
-				"name":     "diaa",
-				"email":    "diaabadr",
-				"password": "diaabadr",
+				"name":             "diaa",
+				"email":            "diaabadr",
+				"password":         "diaabadr",
+				"confirm_password": "diaabadr",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
@@ -52,11 +64,21 @@ func TestSignup(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
-			name: "email already exists",
+			name: "email already exists and not verified",
 			requestBody: map[string]string{
-				"name":     "diaa",
-				"email":    "diaabadr82@gmail.com",
-				"password": "diaabadr",
+				"name":             "diaa",
+				"email":            "diaabadr82@gmail.com",
+				"password":         "diaabadr",
+				"confirm_password": "diaabadr",
+			},
+			expectedStatusCode: http.StatusOK,
+		}, {
+			name: "email already exists and verified",
+			requestBody: map[string]string{
+				"name":             "diaa",
+				"email":            "diaabadr@gmail.com",
+				"password":         "diaabadr",
+				"confirm_password": "diaabadr",
 			},
 			expectedStatusCode: http.StatusConflict,
 		},
@@ -72,12 +94,12 @@ func TestSignup(t *testing.T) {
 
 			assert.Nil(t, err)
 			res := httptest.NewRecorder()
-			fmt.Println(res.Body)
 			app.router.ServeHTTP(res, req)
 
 			assert.Equal(t, tc.expectedStatusCode, res.Code)
 		})
 	}
+
 }
 
 func TestVerify(t *testing.T) {
@@ -132,18 +154,20 @@ func TestSignin(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	unverifiedUser := models.User{
-		Name:     "diaa",
-		Email:    "diaabadr82@gmail.com",
-		Password: "diaabadr",
+	unverifiedUser := signupBody{
+		Name:            "diaa",
+		Email:           "diaabadr82@gmail.com",
+		Password:        "diaabadr",
+		ConfirmPassword: "diaabadr",
 	}
 	AddUserToDB(t, unverifiedUser, &app)
 
-	verifiedUser := models.User{
-		Name:     "Omar",
-		Email:    "omar12345678912@gmail.com",
-		Password: "omar",
-		Verified: true,
+	verifiedUser := signupBody{
+		Name:            "Omar",
+		Email:           "omar12345678912@gmail.com",
+		Password:        "omar",
+		ConfirmPassword: "omar",
+		Verified:        true,
 	}
 
 	AddUserToDB(t, verifiedUser, &app)
@@ -215,11 +239,12 @@ func TestUpdateUser(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	user := models.User{
-		Name:     "diaa",
-		Email:    "diaa12345678912@gmail.com",
-		Password: "diaa",
-		Verified: true,
+	user := signupBody{
+		Name:            "diaa",
+		Email:           "diaa12345678912@gmail.com",
+		Password:        "diaa",
+		ConfirmPassword: "diaa",
+		Verified:        true,
 	}
 
 	AddUserToDB(t, user, &app)
@@ -240,7 +265,11 @@ func TestUpdateUser(t *testing.T) {
 	})
 
 	// login user
-	SigninUser(t, user, &app)
+	reqBody := signinBody{
+		Email:    user.Email,
+		Password: user.Password,
+	}
+	token := SigninUser(t, reqBody, &app)
 	t.Run("authorized user", func(t *testing.T) {
 		requestBody := signupBody{
 			Name:     "Omar",
@@ -253,11 +282,12 @@ func TestUpdateUser(t *testing.T) {
 		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
+		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 		res := httptest.NewRecorder()
 
 		app.router.ServeHTTP(res, request)
 
-		assert.Equal(t, http.StatusCreated, res.Code)
+		assert.Equal(t, http.StatusOK, res.Code)
 	})
 }
 
@@ -271,11 +301,12 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	user := models.User{
-		Name:     "diaa",
-		Email:    "diaa12345678912@gmail.com",
-		Password: "diaa",
-		Verified: true,
+	user := signupBody{
+		Name:            "diaa",
+		Email:           "diaa12345678912@gmail.com",
+		Password:        "diaa",
+		ConfirmPassword: "diaa",
+		Verified:        true,
 	}
 
 	AddUserToDB(t, user, &app)
@@ -295,15 +326,18 @@ func TestGetUser(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	reqBody := signinBody{
+		Email:    user.Email,
+		Password: user.Password,
+	}
 	// login user
-	token := SigninUser(t, user, &app)
-	fmt.Println(token)
+	token := SigninUser(t, reqBody, &app)
 
 	t.Run("authorized user", func(t *testing.T) {
 		request, err := http.NewRequest(http.MethodGet, "/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
-		// request.AddCookie(authCookie)
+		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 
 		res := httptest.NewRecorder()
 
@@ -313,78 +347,68 @@ func TestGetUser(t *testing.T) {
 	})
 }
 
-// func TestRefreshToken(t *testing.T) {
-// 	t.Parallel()
-// 	dir := t.TempDir()
-// 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
-// 	assert.Nil(t, err)
+func TestRefreshToken(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
 
-// 	err = app.client.Migrate()
-// 	assert.Nil(t, err)
-// 	app.setRoutes()
+	err = app.client.Migrate()
+	assert.Nil(t, err)
+	app.setRoutes()
 
-// 	user := models.User{
-// 		Name:     "diaa",
-// 		Email:    "diaa12345678912@gmail.com",
-// 		Password: "diaa",
-// 		Verified: true,
-// 	}
+	user := signupBody{
+		Name:            "diaa",
+		Email:           "diaa12345678912@gmail.com",
+		Password:        "diaa",
+		ConfirmPassword: "diaa",
+		Verified:        true,
+	}
 
-// 	AddUserToDB(t, user, &app)
+	AddUserToDB(t, user, &app)
+	reqBody := signinBody{
+		Email:    user.Email,
+		Password: user.Password,
+	}
 
-// 	token := SigninUser(t, user, &app)
-// 	fmt.Println(token)
+	token := SigninUser(t, reqBody, &app)
 
-// 	var responseBody struct {
-// 		Data struct {
-// 			RefreshToken string `json:"refresh_token"`
-// 		}
-// 	}
-// 	err = json.Unmarshal(body.Bytes(), &responseBody)
+	testCases := []struct {
+		name               string
+		token              string
+		expectedStatusCode int
+	}{
+		{
+			name:               "invalid token",
+			token:              "token",
+			expectedStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name:               "valid token",
+			token:              token,
+			expectedStatusCode: http.StatusCreated,
+		},
+	}
 
-// 	assert.Nil(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 
-// 	testCases := []struct {
-// 		name               string
-// 		requestBody        map[string]string
-// 		expectedStatusCode int
-// 	}{
-// 		{
-// 			name: "invalid token",
-// 			requestBody: map[string]string{
-// 				"refresh_token": "token",
-// 			},
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 		},
-// 		{
-// 			name: "valid token",
-// 			requestBody: map[string]string{
-// 				"refresh_token": responseBody.Data.RefreshToken,
-// 			},
-// 			expectedStatusCode: http.StatusCreated,
-// 		},
-// 	}
+			request, err := http.NewRequest(http.MethodPost, "/user/refresh_token", nil)
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
+			assert.Nil(t, err)
 
-// 			body, err := json.Marshal(tc.requestBody)
+			request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", tc.token))
+			res := httptest.NewRecorder()
 
-// 			assert.Nil(t, err)
-// 			request, err := http.NewRequest(http.MethodPost, "/user/refresh_token", bytes.NewReader(body))
+			app.router.ServeHTTP(res, request)
 
-// 			assert.Nil(t, err)
-// 			res := httptest.NewRecorder()
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
 
-// 			app.router.ServeHTTP(res, request)
+}
 
-// 			assert.Equal(t, tc.expectedStatusCode, res.Code)
-// 		})
-// 	}
-
-// }
-
-func AddUserToDB(t testing.TB, user models.User, app *App) {
+func AddUserToDB(t testing.TB, user signupBody, app *App) {
 	t.Helper()
 
 	body, err := json.Marshal(user)
@@ -400,7 +424,7 @@ func AddUserToDB(t testing.TB, user models.User, app *App) {
 	assert.Equal(t, http.StatusCreated, res.Code)
 }
 
-func SigninUser(t testing.TB, user models.User, app *App) string {
+func SigninUser(t testing.TB, user signinBody, app *App) string {
 	t.Helper()
 
 	body, err := json.Marshal(user)

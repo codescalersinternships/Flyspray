@@ -84,7 +84,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 				return nil, InternalServerError(err)
 			}
 			if !user.Verified {
-				return ResponseMsg{Message: "your email exists but not verified. check you mailbox for verification code"}, Conflict(errors.New("email already exists"))
+				return ResponseMsg{Message: "your email exists but not verified. check you mailbox for verification code"}, nil
 			}
 			return nil, Conflict(errors.New("email already exists"))
 		}
