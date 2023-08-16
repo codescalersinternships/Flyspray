@@ -59,3 +59,14 @@ func (app *App) setRoutes() {
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
 }
+
+func (a *App) setRoutes() {
+	component := a.router.Group("/component")
+	{
+		component.POST("/", a.CreateComponent)
+		component.GET("/:id", a.GetComponentByID)
+		component.DELETE("/:id", a.DeleteComponent)
+		component.PUT("/:id", a.UpdateComponent)
+		component.GET("/filters", a.ListComponentsForProject)
+	}
+}
