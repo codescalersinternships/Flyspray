@@ -5,15 +5,10 @@ import (
 	"log"
 
 	"github.com/codescalersinternships/Flyspray/app"
-	"github.com/codescalersinternships/Flyspray/internal"
 )
 
 func main() {
 
-	err := internal.LoadEnv()
-	if err != nil {
-		log.Fatal(err)
-	}
 	// take port number and db filepath as flags
 	var dbFilePath string
 	var port int

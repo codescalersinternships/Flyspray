@@ -125,12 +125,12 @@ func BadRequest(err error) Response {
 
 // InternalServerError result
 func InternalServerError(err error) Response {
-	return Error(err, 500)
+	return Error(err, 0)
 }
 
 // Conflict response
 func Conflict(err error) Response {
-	return Error(err, 409)
+	return Error(err, http.StatusConflict)
 }
 
 // NotFound response

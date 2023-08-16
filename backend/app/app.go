@@ -33,19 +33,25 @@ type App struct {
 func (a *App) Run(port int) error {
 
 	// set routes here
-	a.setUserRoutes()
+	a.setRoutes()
 
 	return a.router.Run(fmt.Sprintf(":%d", port))
 }
 
-func (a *App) setUserRoutes() {
+func (a *App) setRoutes() {
 	a.router = gin.Default()
 
-	userGroup := a.router.Group("/user")
-	userGroup.POST("/signup", WrapFunc(a.Signup))
-	userGroup.POST("/signin", WrapFunc(a.SignIn))
-	userGroup.POST("/signup/verify", WrapFunc(a.Verify))
-	userGroup.POST("/refresh_token", WrapFunc(a.RefreshToken))
-	userGroup.PUT("", middleware.RequireAuth, WrapFunc(a.UpdateUser))
-	userGroup.GET("", middleware.RequireAuth, WrapFunc(a.GetUser))
+	authUserGroup := a.router.Group("/user")
+	userGroup := authUserGroup.Group("")
+	
+	
+	userGroup.POST("/signup", WrapFunc(a.signup))
+	userGroup.POST("/signin", WrapFunc(a.signIn))
+	userGroup.POST("/signup/verify", WrapFunc(a.verify))
+	userGroup.POST("/refresh_token", WrapFunc(a.refreshToken))
+	
+	authUserGroup.Use(middleware.RequireAuth)
+	
+	authUserGroup.PUT("", WrapFunc(a.updateUser))
+	authUserGroup.GET("", WrapFunc(a.getUser))
 }

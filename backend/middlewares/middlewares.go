@@ -1,9 +1,8 @@
 package middleware
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/codescalersinternships/Flyspray/models"
@@ -12,34 +11,21 @@ import (
 
 // RequireAuth is a middleware that checks if the user is authenticated
 func RequireAuth(ctx *gin.Context) {
-	tokenString, err := ctx.Cookie("Authorization")
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errors.New("token not found"))
-		ctx.Abort()
-		return
-	}
+	token := ctx.GetHeader("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
 
-	claims, err := internal.ValidateToken(tokenString)
+	claims, err := internal.ValidateToken(token)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, err)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"err": err})
 		ctx.Abort()
 		return
 	}
 	var user models.User
 
-	user.Email = claims.Email
 	user.ID = claims.ID
-	user.Name = claims.Name
-	user.Verified = claims.Verified
 
-	userEncoded, err := json.Marshal(user)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err)
-		ctx.Abort()
-		return
-	}
-	ctx.Set("user", string(userEncoded))
+	ctx.Set("user_id", claims.ID)
 
 	ctx.Next()
 }
