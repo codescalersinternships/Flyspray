@@ -104,17 +104,12 @@ func Ok() Response {
 }
 
 // Error generic error response
-func Error(err error, code ...int) Response {
-	status := http.StatusInternalServerError
-	if len(code) > 0 {
-		status = code[0]
-	}
-
+func Error(err error, code int) Response {
 	if err == nil {
 		err = fmt.Errorf("no message")
 	}
 
-	return genericResponse{status: status, err: err}
+	return genericResponse{status: code, err: err}
 }
 
 // BadRequest result
@@ -127,8 +122,9 @@ func InternalServerError(err error) Response {
 	return Error(err, http.StatusInternalServerError)
 }
 
+// Conflict response
 func Conflict(err error) Response {
-	return Error(err, 409)
+	return Error(err, http.StatusConflict)
 }
 
 // NotFound response

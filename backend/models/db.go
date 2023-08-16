@@ -22,6 +22,5 @@ type DBClient struct {
 
 // Migrate makes migrations for the database
 func (d *DBClient) Migrate() error {
-	err := d.Client.AutoMigrate(&Member{})
-	return err
+	return d.Client.AutoMigrate(&Project{}, &Comment{}, &Member{})
 }

@@ -12,39 +12,63 @@ import (
 // NewApp is the factory of App
 func NewApp(dbFilePath string) (App, error) {
 
-	client, err := models.NewDBClient(dbFilePath)
+	database, err := models.NewDBClient(dbFilePath)
 	if err != nil {
 		return App{}, err
 	}
 
-	if err := client.Migrate(); err != nil {
+	if err := database.Migrate(); err != nil {
 
 		log.Error().Err(err).Send()
 		return App{}, err
 	}
 
-	return App{client: client}, nil
+	return App{DB: database}, nil
 }
 
 // App initializes the entire app
 type App struct {
-	client models.DBClient
+	DB     models.DBClient
 	router *gin.Engine
 }
 
-// Run runs server
-func (a *App) Run(port int) error {
-	a.router = gin.Default()
+// Run runs the server by seting the router and calling the internal setRoutes method
+func (app *App) Run(port int) error {
 
-	// set routes here
-	a.setRoutes()
-	return a.router.Run(fmt.Sprintf(":%d", port))
+	app.router = gin.Default()
+
+	app.setRoutes()
+
+	return app.router.Run(fmt.Sprintf(":%d", port))
 }
-func (a *App) setRoutes() {
-	a.router = gin.Default()
-	a.router.Use(cors.Default())
-	memberRoutes := a.router.Group("/member")
-	memberRoutes.POST("", WrapFunc(a.createNewMember))
-	memberRoutes.GET("", WrapFunc(a.getAllMembers))
-	memberRoutes.PUT("/:id", WrapFunc(a.updateMemberOwnership))
+
+func (app *App) setRoutes() {
+
+	app.router.Use(cors.Default())
+
+	project := app.router.Group("/project")
+	{
+		project.POST("", WrapFunc(app.createProject))
+		project.GET("/filters", WrapFunc(app.getProjects))
+		project.GET("/:id", WrapFunc(app.getProject))
+		project.PUT("/:id", WrapFunc(app.updateProject))
+		project.DELETE("/:id", WrapFunc(app.deleteProject))
+
+	}
+
+	comment := app.router.Group("/comment")
+	{
+		comment.POST("", WrapFunc(app.createComment))
+		comment.GET("/:id", WrapFunc(app.getComment))
+		comment.DELETE("/:id", WrapFunc(app.deleteComment))
+		comment.GET("/filters", WrapFunc(app.listComments))
+		comment.PUT("/:id", WrapFunc(app.updateComment))
+	}
+	memberRoutes := app.router.Group("/member")
+	{
+		memberRoutes.POST("", WrapFunc(app.createNewMember))
+		memberRoutes.GET("", WrapFunc(app.getAllMembers))
+		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
+	}
+
 }
