@@ -129,7 +129,7 @@ func TestUpdateMemberOwnership(t *testing.T) {
 	createdData, err := json.Marshal(member)
 	assert.NoError(t, err, "failed to marshal json data")
 	createFirstMember(app, t, createdData)
-	
+
 	jsonData, err := json.Marshal(updateMemberInput{Admin: true})
 	assert.NoError(t, err, "failed to marshal json data")
 	t.Run("updating member successfully returns status 200 and correct response", func(t *testing.T) {
@@ -163,7 +163,7 @@ func TestUpdateMemberOwnership(t *testing.T) {
 
 }
 
-func createFirstMember(app App, t *testing.T,jsonData []byte){
+func createFirstMember(app App, t *testing.T, jsonData []byte) {
 	p := createProjectInput{Name: "test project"}
 	_, err := app.DB.CreateProject(models.Project{})
 	assert.Nil(t, err)
