@@ -9,12 +9,13 @@ import (
 
 // Member struct has Member table's columns
 type Member struct {
-	ID        int       `json:"id"`
-	UserID    string    `json:"user_id"  gorm:"not null;" validate:"required"`
-	ProjectID int       `json:"project_id"  gorm:"not null" validate:"required"`
-	Admin     bool      `json:"admin_bool"`
-	Project   []Project `gorm:"many2many:member_project;"`
+	ID        int    `json:"id"`
+	UserID    string `json:"user_id"  gorm:"not null;" validate:"required"`
+	ProjectID int    `json:"project_id"  gorm:"not null" validate:"required"`
+	Admin     bool   `json:"admin"`
 }
+
+var ErrAccessDenied = errors.New("error access denied")
 
 // Validate validates the comment struct using the validate tag
 func (member *Member) Validate() error {
@@ -23,23 +24,30 @@ func (member *Member) Validate() error {
 }
 
 // CreateNewMember adds a new member to member table
-func (db *DBClient) CreateNewMember(member Member) (*Member, error) {
+func (db *DBClient) CreateNewMember(member Member, userId string) error {
+	var authMember Member
+	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, member.ProjectID).First(&authMember)
+	if !authMember.Admin {
+		var project Project
+		if err := db.Client.Model(&Project{}).Where("id = ?", member.ProjectID).First(&project).Error; err != nil {
+			return err
+		}
+		if project.OwnerID != userId {
+			return ErrAccessDenied
+		}
+	}
+	if rows.Error != nil && !errors.Is(rows.Error, gorm.ErrRecordNotFound) {
+		return rows.Error
+	}
 	err := db.Client.Where("user_id = ? AND project_id = ?", member.UserID, member.ProjectID).First(&member).Error
 	if err == nil {
-		return nil, gorm.ErrDuplicatedKey
+		return gorm.ErrDuplicatedKey
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		return err
 	}
 	res := db.Client.Create(&member)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	err = db.Client.First(&member, member.ID).Error
-	if err != nil {
-		return nil, err
-	}
-	return &member, nil
+	return res.Error
 }
 
 // GetAllMembers returns all members in member table
@@ -49,20 +57,33 @@ func (db *DBClient) GetAllMembers() ([]Member, error) {
 	return members, rows.Error
 }
 
-// UpdateMemberOwnership updates the admin bool in member table
-func (db *DBClient) UpdateMemberOwnership(member Member, id int) (*Member, error) {
-	res := db.Client.Model(&Member{}).Where("ID = ?", id).Updates(map[string]interface{}{
-		"Admin": member.Admin,
-	})
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	if res.RowsAffected == 0 {
+// GetMembersInProject returns all member in a specific project
+func (db *DBClient) GetMembersInProject(project_id int) ([]Member, error) {
+	var members []Member
+	rows := db.Client.Model(&Member{}).Where("project_id = ?", project_id).Find(&members)
+	if rows.RowsAffected == 0 {
 		return nil, gorm.ErrRecordNotFound
 	}
-	updatedMember := Member{}
-	if err := db.Client.First(&updatedMember, id).Error; err != nil {
-		return nil, err
+	return members, rows.Error
+}
+
+// UpdateMemberOwnership updates the admin bool in member table
+func (db *DBClient) UpdateMemberOwnership(id int, admin bool, userId string) error {
+	var member Member
+	res := db.Client.Model(&member).Where("ID = ?", id).First(&member).Update("Admin", admin).Error
+	var authMember Member
+	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, member.ProjectID).First(&authMember)
+	if !authMember.Admin {
+		var project Project
+		if err := db.Client.Model(&Project{}).Where("id = ?", member.ProjectID).First(&project).Error; err != nil {
+			return err
+		}
+		if project.OwnerID != userId {
+			return ErrAccessDenied
+		}
 	}
-	return &updatedMember, nil
+	if rows.Error != nil && !errors.Is(rows.Error, gorm.ErrRecordNotFound) {
+		return rows.Error
+	}
+	return res
 }

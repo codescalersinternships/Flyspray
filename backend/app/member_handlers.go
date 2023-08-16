@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/codescalersinternships/Flyspray/models"
@@ -12,43 +11,43 @@ import (
 )
 
 type createMemberInput struct {
-	ProjectID int  `json:"project_id" validate:"required"`
-	Admin     bool `json:"admin_bool"`
+	ProjectID int    `json:"project_id" validate:"required"`
+	Admin     bool   `json:"admin"`
+	UserID    string `json:"user_id" validate:"required"`
+}
+type updateMemberInput struct {
+	Admin bool `json:"admin"`
+	ID    int
 }
 
 func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
 	memberInput := createMemberInput{}
 	if err := c.ShouldBindJSON(&memberInput); err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("error binding json data"))
+		return nil, BadRequest(errors.New("error reading member data"))
 	}
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return nil, UnAuthorized(errors.New("authentication is required"))
-	}
-	member := models.Member{ProjectID: memberInput.ProjectID, Admin: memberInput.Admin, UserID: userID.(string)}
+	userID, _ := c.Get("user_id")
+	member := models.Member{ProjectID: memberInput.ProjectID, Admin: memberInput.Admin, UserID: memberInput.UserID}
 	if err := member.Validate(); err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("input data is invalid"))
+		return nil, BadRequest(errors.New("error invalid input data"))
 	}
-
-	if fmt.Sprint(userID) != fmt.Sprint(member.UserID) && !member.Admin {
-		return nil, Forbidden(errors.New("you have no access to create member"))
-	}
-
-	addedMember, err := a.DB.CreateNewMember(member)
-	if err == gorm.ErrDuplicatedKey{
+	err := a.DB.CreateNewMember(member, userID.(string))
+	if err == gorm.ErrDuplicatedKey {
 		log.Error().Err(err).Send()
-		return nil, Forbidden(errors.New("member already exists"))
+		return nil, Forbidden(errors.New("error member already exists"))
+	}
+	if err == models.ErrAccessDenied {
+		return nil, Forbidden(errors.New("error access denied to create member"))
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("error creating new member"))
+		return nil, BadRequest(errors.New("error cannot create new member"))
 	}
 
 	return ResponseMsg{
 		Message: "member created successfully",
-		Data:    addedMember,
+		Data:    member,
 	}, Created()
 }
 
@@ -56,7 +55,7 @@ func (a *App) getAllMembers(c *gin.Context) (interface{}, Response) {
 	members, err := a.DB.GetAllMembers()
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("error getting all members"))
+		return nil, BadRequest(errors.New("error retrieving all members"))
 	}
 
 	return ResponseMsg{
@@ -64,39 +63,53 @@ func (a *App) getAllMembers(c *gin.Context) (interface{}, Response) {
 		Data:    members,
 	}, Ok()
 }
+func (a *App) getMembersInProject(c *gin.Context) (interface{}, Response) {
 
-func (a *App) updateMemberOwnership(c *gin.Context) (interface{}, Response) {
-	memberInput := createMemberInput{}
-
-	if err := c.ShouldBindJSON(&memberInput); err != nil {
-		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("error binding json data"))
-	}
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return nil, UnAuthorized(errors.New("authentication is required"))
-	}
-
-	id, err := strconv.Atoi(c.Param("id"))
+	project_id, err := strconv.Atoi(c.Param("project_id"))
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("error parsing id"))
+		return nil, InternalServerError(errInternalServerError)
 	}
-	member := models.Member{ProjectID: memberInput.ProjectID, Admin: memberInput.Admin, UserID: userID.(string)}
-	if fmt.Sprint(userID) != fmt.Sprint(member.UserID) && !member.Admin {
-		return nil, Forbidden(errors.New("you have no access to update member"))
-	}
-	updatedMember, err := a.DB.UpdateMemberOwnership(member, id)
+	members, err := a.DB.GetMembersInProject(project_id)
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
 		return nil, NotFound(err)
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("error updating member ownership"))
+		return nil, InternalServerError(errInternalServerError)
+	}
+	return ResponseMsg{
+		Message: "members in project retrieved successfully",
+		Data:    members,
+	}, Ok()
+}
+func (a *App) updateMemberOwnership(c *gin.Context) (interface{}, Response) {
+	memberInput := updateMemberInput{}
+	if err := c.ShouldBindJSON(&memberInput); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("error reading member data"))
+	}
+	userID, _ := c.Get("user_id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	err = a.DB.UpdateMemberOwnership(id, memberInput.Admin, userID.(string))
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(err)
+	}
+	if err == models.ErrAccessDenied {
+		return nil, Forbidden(errors.New("error access denied to update member"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
 	}
 	return ResponseMsg{
 		Message: "member ownership updated successfully",
-		Data:    updatedMember,
 	}, Ok()
 }

@@ -4,9 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codescalersinternships/Flyspray/models"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 )
 
 // NewApp is the factory of App
@@ -18,8 +16,6 @@ func NewApp(dbFilePath string) (App, error) {
 	}
 
 	if err := database.Migrate(); err != nil {
-
-		log.Error().Err(err).Send()
 		return App{}, err
 	}
 
@@ -43,9 +39,6 @@ func (app *App) Run(port int) error {
 }
 
 func (app *App) setRoutes() {
-
-	app.router.Use(cors.Default())
-
 	project := app.router.Group("/project")
 	{
 		project.POST("", WrapFunc(app.createProject))
@@ -69,6 +62,7 @@ func (app *App) setRoutes() {
 		memberRoutes.POST("", WrapFunc(app.createNewMember))
 		memberRoutes.GET("", WrapFunc(app.getAllMembers))
 		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
+		memberRoutes.GET("/:project_id",WrapFunc(app.getMembersInProject))
 	}
 
 }
