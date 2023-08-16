@@ -20,9 +20,7 @@ func TestCreateComponent(t *testing.T) {
 	dbPath := filepath.Join(tempDir, "testing.db")
 
 	app, err := NewApp(dbPath)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	assert.Nil(t, err)
 
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
@@ -41,9 +39,7 @@ func TestCreateComponent(t *testing.T) {
 			t.Fatal("failed to marshal comment payload")
 		}
 		req, err := http.NewRequest("POST", "/component", bytes.NewBuffer(payload))
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -51,9 +47,8 @@ func TestCreateComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusCreated != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusCreated, w.Code)
-		}
+		assert.Equal(t, http.StatusCreated, w.Code)
+
 	})
 
 	t.Run("Bad Request", func(t *testing.T) {
@@ -68,9 +63,7 @@ func TestCreateComponent(t *testing.T) {
 		}
 
 		req, err := http.NewRequest("POST", "/component", bytes.NewBuffer(payload))
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -78,23 +71,17 @@ func TestCreateComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusBadRequest != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
-		}
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	t.Run("Bad Request", func(t *testing.T) {
 
 		requestBody := []byte(`{}`)
 		payload, err := json.Marshal(requestBody)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req, err := http.NewRequest("POST", "/component", bytes.NewBuffer(payload))
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -102,9 +89,7 @@ func TestCreateComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusBadRequest != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
-		}
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
 
@@ -147,47 +132,35 @@ func TestUpdateComponent(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 
 		req, err := http.NewRequest("PUT", "/component/1", bytes.NewBuffer(requestBody))
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
 		w := httptest.NewRecorder()
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusOK != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
-		}
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("Bad Request", func(t *testing.T) {
 
 		req, err := http.NewRequest("PUT", "/component/1", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		w := httptest.NewRecorder()
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusBadRequest != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, w.Code)
-		}
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
 		req, err := http.NewRequest("PUT", "/component/999", bytes.NewBuffer(requestBody))
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		w := httptest.NewRecorder()
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusNotFound != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
-		}
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
 
@@ -221,10 +194,7 @@ func TestGetComponent(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "/component/1", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
-		// assert.Equal(t, tc.expectedStatusCode, w.Code)
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -232,17 +202,13 @@ func TestGetComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusOK != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
-		}
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "/component/123", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -250,9 +216,7 @@ func TestGetComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusNotFound != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
-		}
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
 
@@ -276,9 +240,7 @@ func TestGetComponents(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "/component/filters?project_id=1", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -286,9 +248,7 @@ func TestGetComponents(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusOK != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
-		}
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 }
 
@@ -323,9 +283,7 @@ func TestDeleteComponent(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 
 		req, err := http.NewRequest("DELETE", "/component/1", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -333,17 +291,13 @@ func TestDeleteComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusOK != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusOK, w.Code)
-		}
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
 
 		req, err := http.NewRequest("DELETE", "/component/123", nil)
-		if err != nil {
-			t.Fatalf("Error: %v", err)
-		}
+		assert.Nil(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
@@ -351,8 +305,6 @@ func TestDeleteComponent(t *testing.T) {
 
 		app.router.ServeHTTP(w, req)
 
-		if http.StatusNotFound != w.Code {
-			t.Errorf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
-		}
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
