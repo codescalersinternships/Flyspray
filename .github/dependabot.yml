@@ -5,7 +5,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      target-branch: "development"
     labels:
       - "github actions dependencies"
 
@@ -14,7 +13,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      target-branch: "development"
     labels:
       - "composer dependencies"
 
@@ -23,7 +21,6 @@ updates:
     directory: "/backend"
     schedule:
       interval: "weekly"
-      target-branch: "development"
     labels:
       - "gomod dependencies"
 
@@ -32,6 +29,5 @@ updates:
     directory: "/backend"
     schedule:
       interval: "weekly"
-      target-branch: "development"
     labels:
       - "docker dependencies"
