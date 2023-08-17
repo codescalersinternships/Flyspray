@@ -7,6 +7,7 @@ import (
 
 	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/google/uuid"
+	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/validator.v2"
 )
@@ -59,8 +60,13 @@ func (db *DBClient) UpdateUser(user User) error {
 		Name:  user.Name,
 		Email: user.Email,
 	})
-	return result.Error
 
+	var sqliteErr sqlite3.Error
+
+	if errors.As(result.Error, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+		return errors.New("email you are trying to update with already exists")
+	}
+	return result.Error
 }
 
 // GenerateVerificationCode generates a unique verification code
