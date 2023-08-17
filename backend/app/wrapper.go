@@ -56,7 +56,6 @@ func WrapFunc(a Handler) gin.HandlerFunc {
 		}
 
 		ctx.IndentedJSON(status, object)
-		ctx.Next()
 	}
 }
 
@@ -105,16 +104,10 @@ func Ok() Response {
 }
 
 // Error generic error response
-func Error(err error, code ...int) Response {
-	status := http.StatusInternalServerError
-	if len(code) > 0 {
-		status = code[0]
+func Error(err error, code int) Response {
+	if code == 0 {
+	  status := http.StatusInternalServerError
 	}
-
-	if err == nil {
-		err = fmt.Errorf("no message")
-	}
-
 	return genericResponse{status: status, err: err}
 }
 
