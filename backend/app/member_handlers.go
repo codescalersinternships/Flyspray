@@ -16,7 +16,8 @@ type createMemberInput struct {
 	UserID    string `json:"user_id" validate:"required"`
 }
 type updateMemberInput struct {
-	Admin bool `json:"admin"`
+	Admin     bool `json:"admin"`
+	ProjectID int  `json:"project_id"`
 }
 
 func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
@@ -34,13 +35,13 @@ func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("invalid input data"))
 	}
-	err := a.DB.CheckUserAccess(member, userID.(string))
+	err := a.DB.CheckUserAccess(member.ProjectID, userID.(string))
 	if err == models.ErrAccessDenied {
 		return nil, Forbidden(errors.New("access denied to create member"))
 	}
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("cannot check user access to create new member"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 	err = a.DB.CreateNewMember(member)
 	if err == gorm.ErrDuplicatedKey {
@@ -50,7 +51,7 @@ func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("cannot create new member"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -67,10 +68,6 @@ func (a *App) getMembersInProject(c *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 	members, err := a.DB.GetMembersInProject(project_id)
-	if err == gorm.ErrRecordNotFound {
-		log.Error().Err(err).Send()
-		return nil, NotFound(err)
-	}
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -95,15 +92,20 @@ func (a *App) updateMemberOwnership(c *gin.Context) (interface{}, Response) {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
-
-	err = a.DB.UpdateMemberOwnership(id, memberInput.Admin, userID.(string))
+	err = a.DB.CheckUserAccess(memberInput.ProjectID, userID.(string))
+	if err == models.ErrAccessDenied {
+		return nil, Forbidden(errors.New("access denied to update member"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+	err = a.DB.UpdateMemberOwnership(id, memberInput.Admin, memberInput.ProjectID)
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
 		return nil, NotFound(err)
 	}
-	if err == models.ErrAccessDenied {
-		return nil, Forbidden(errors.New("access denied to update member"))
-	}
+
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)

@@ -151,7 +151,7 @@ func TestUpdateMemberOwnership(t *testing.T) {
 	})
 	app.setRoutes()
 	createFirstMember(app, t)
-	jsonData, err := json.Marshal(updateMemberInput{Admin: true})
+	jsonData, err := json.Marshal(updateMemberInput{Admin: true, ProjectID: 2})
 	assert.NoError(t, err, "failed to marshal json data")
 	t.Run("updating member successfully returns status 200 and correct response", func(t *testing.T) {
 		req, err := http.NewRequest("PUT", "/member/1", bytes.NewBuffer(jsonData))

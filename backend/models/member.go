@@ -45,27 +45,19 @@ func (db *DBClient) GetMembersInProject(project_id int) ([]Member, error) {
 }
 
 // UpdateMemberOwnership updates the admin bool in member table
-func (db *DBClient) UpdateMemberOwnership(id int, admin bool, userId string) error {
+func (db *DBClient) UpdateMemberOwnership(id int, admin bool, projectId int) error {
 	var member Member
-	res := db.Client.Model(&member).Where("ID = ?", id).First(&member)
+	res := db.Client.Model(&member).Where("user_id = ? AND project_id = ?", id, projectId).First(&member).Update("Admin", admin)
 	if res.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
-	var authMember Member
-	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, member.ProjectID).First(&authMember)
-	if !authMember.Admin {
-		return ErrAccessDenied
-	}
-	if rows.Error != nil && !errors.Is(rows.Error, gorm.ErrRecordNotFound) {
-		return rows.Error
-	}
-	resErr := res.Update("Admin", admin).Error
-	return resErr
+	return res.Error
 }
 
-func (db *DBClient) CheckUserAccess(member Member, userId string) error {
+// CheckUserAccess checks if user is authorized to create or update member
+func (db *DBClient) CheckUserAccess(project_id int, userId string) error {
 	var authMember Member
-	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, member.ProjectID).First(&authMember)
+	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, project_id).First(&authMember)
 
 	if !authMember.Admin {
 		return ErrAccessDenied
