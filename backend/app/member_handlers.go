@@ -17,7 +17,6 @@ type createMemberInput struct {
 }
 type updateMemberInput struct {
 	Admin bool `json:"admin"`
-	ID    int
 }
 
 func (a *App) createNewMember(c *gin.Context) (interface{}, Response) {
