@@ -1,0 +1,52 @@
+version: 2
+updates:
+   # maintain dependencies for github actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "github actions dependencies"
+
+   # maintain dependencies for composer
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "composer dependencies"
+
+    # maintain dependencies for gomod
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "gomod dependencies"
+
+    # maintain dependencies for backend docker
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "backend docker dependencies"
+
+    # maintain dependencies for frontend docker
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "frontend docker dependencies"
+    
+    # maintain dependencies for npm
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "npm dependencies"
+
+
+    
