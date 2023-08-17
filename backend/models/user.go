@@ -5,11 +5,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/google/uuid"
-	"github.com/mattn/go-sqlite3"
-	"github.com/rs/zerolog/log"
 	"gopkg.in/validator.v2"
+	"gorm.io/gorm"
 )
 
 // User is the model for the user table
@@ -31,15 +29,19 @@ func (u *User) Validate() error {
 	return validator.Validate(u)
 }
 
-// BeforeCreate generates a uuid for the user
-func (db *DBClient) BeforeCreate(user *User) {
+// BeforeCreate generates a new uuid
+func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
 	uuidV4 := uuid.New()
+	if err != nil {
+		return err
+	}
+
 	user.ID = uuidV4.String()
+	return
 }
 
 // CreateUser creates a user
 func (db *DBClient) CreateUser(user User) (User, error) {
-	db.BeforeCreate(&user)
 	result := db.Client.Create(&user)
 	return user, result.Error
 }
@@ -57,15 +59,12 @@ func (db *DBClient) GetUserByID(id string) (User, error) {
 func (db *DBClient) UpdateUser(user User) error {
 
 	result := db.Client.Model(&user).Updates(User{
-		Name:  user.Name,
-		Email: user.Email,
+		Name: user.Name,
 	})
-
-	var sqliteErr sqlite3.Error
-
-	if errors.As(result.Error, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-		return errors.New("email you are trying to update with already exists")
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
+
 	return result.Error
 }
 
@@ -86,49 +85,16 @@ func (db *DBClient) GenerateVerificationCode() int {
 
 }
 
-func (db *DBClient) VerifyUser(verificationCode int) (string, error) {
+func (db *DBClient) UpdateVerificationCode(userID string, newVerificationCode int, timeout int) error {
+	return db.Client.Model(&User{}).Where("id = ?", userID).Updates(User{
+		VerificationCode:        newVerificationCode,
+		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+	}).Error
+}
 
-	var user User
-	result := db.Client.First(&user, "verification_code = ?", verificationCode)
+func (db *DBClient) VerifyUser(userID string) error {
 
-	if result.Error != nil {
-		return "", result.Error
-	}
-
-	if user.ID == "" {
-		return "", errors.New("wrong verification code")
-	}
-
-	if user.Verified {
-		return "", errors.New("user already verified")
-	}
-
-	result = db.Client.Model(&User{}).Where("verification_code = ? AND verification_code_Timeout > ?", verificationCode, time.Now()).Update("Verified", true)
-
-	if result.Error != nil {
-		log.Error().Err(result.Error).Msg("")
-		return "", errors.New("verification code has expired and failed to generate new one")
-	}
-	if result.RowsAffected != 1 {
-		verificationCode := db.GenerateVerificationCode()
-		result = db.Client.Model(&User{}).Where("verification_code = ?", verificationCode).Updates(User{VerificationCode: verificationCode, VerificationCodeTimeout: time.Now().Add(time.Hour * 2)})
-
-		if result.Error != nil || result.RowsAffected != 1 {
-			log.Error().Err(result.Error).Msg("")
-			return "", errors.New("verification code has expired and failed to generate new one")
-		}
-
-		err := internal.SendEmail(user.Email, verificationCode)
-
-		if err != nil {
-			log.Error().Err(err).Msg("")
-			return "", err
-		}
-
-		return "your verification code has expired. A new one has been sent to your email", nil
-
-	}
-	return "updated succsssfully", nil
+	return db.Client.Model(&User{}).Where("id = ?", userID).Update("verified", true).Error
 
 }
 

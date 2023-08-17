@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -11,22 +10,28 @@ import (
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
+
+const timeout = 120
+const tokenTimeout = 15
+const apiKey = ""
+const apiEmail = ""
+const secret = ""
 
 type signupBody struct {
 	Name            string `json:"name"`
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
-	Verified        bool   `json:"verified"`
 }
 
 type signinBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"nonzero"`
+	Password string `json:"password" validate:"nonzero"`
 }
 
 func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
@@ -36,7 +41,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
@@ -48,54 +53,65 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 		Name:                    requestBody.Name,
 		Email:                   requestBody.Email,
 		Password:                requestBody.Password,
-		Verified:                requestBody.Verified,
-		VerificationCodeTimeout: time.Now().Add(time.Hour * 2),
+		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 	}
 
 	err = user.Validate()
 	if err != nil {
-		log.Error().Err(err).Msg("")
-		return nil, BadRequest(fmt.Errorf("validation error: %w", err))
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("invalid data"))
 	}
 
-	hash, err := internal.HashPassword(user.Password)
+	hash, err := internal.HashPassword([]byte(user.Password))
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
-		return nil, BadRequest(fmt.Errorf("failed to hash password: %w", err))
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("failed to hash password"))
 	}
 
-	user.Password = hash
+	user.Password = string(hash)
 
 	user.VerificationCode = a.DB.GenerateVerificationCode()
-	fmt.Println(user.VerificationCode)
 
 	user, err = a.DB.CreateUser(user)
 
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		var sqliteErr sqlite3.Error
+	var sqliteErr sqlite3.Error
 
-		if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 
-			user, err := a.DB.GetUserByEmail(requestBody.Email)
-			if err != nil {
-				log.Error().Err(err).Msg("")
-				return nil, InternalServerError(err)
-			}
-			if !user.Verified {
-				return ResponseMsg{Message: "your email exists but not verified. check you mailbox for verification code"}, nil
-			}
-			return nil, Conflict(errors.New("email already exists"))
+		user, err := a.DB.GetUserByEmail(requestBody.Email)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return nil, InternalServerError(errInternalServerError)
 		}
-		return nil, BadRequest(err)
+		if !user.Verified {
+			verifivationCode := a.DB.GenerateVerificationCode()
+			err = a.DB.UpdateVerificationCode(user.ID, verifivationCode, timeout)
+			if err != nil {
+				log.Error().Err(err).Send()
+				return "", InternalServerError(errInternalServerError)
+			}
+
+			err = internal.SendEmail(apiKey, apiEmail, user.Email, verifivationCode)
+			if err != nil {
+				log.Error().Err(err).Send()
+				return "", InternalServerError(errInternalServerError)
+			}
+			return ResponseMsg{Message: "your email exists but not verified. check you mailbox for verification code"}, nil
+		}
+		return nil, Conflict(errors.New("email already exists and verified"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+
+		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = internal.SendEmail(user.Email, user.VerificationCode)
+	err = internal.SendEmail(apiKey, apiEmail, user.Email, user.VerificationCode)
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, InternalServerError(fmt.Errorf("failed to send verification mail: %w", err))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	message := "A verification code has been sent to your email."
@@ -106,25 +122,47 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody struct {
-		VerificationCode int `json:"verification_code"`
+		VerificationCode int    `json:"verification_code"`
+		Email            string `json:"email"`
 	}
 
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
-	msg, err := a.DB.VerifyUser(requestBody.VerificationCode)
-
+	user, err := a.DB.GetUserByEmail(requestBody.Email)
+	if err == gorm.ErrRecordNotFound {
+		return nil, NotFound(errors.New("email does not exist"))
+	}
 	if err != nil {
-		log.Error().Err(err).Msg("")
-		return nil, BadRequest(err)
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
 	}
 
-	return ResponseMsg{Message: msg}, Ok()
+	if user.Verified {
+		return "", BadRequest(errors.New("user already verified"))
+	}
+
+	if user.VerificationCode != requestBody.VerificationCode {
+		return "", BadRequest(errors.New("wrong verification code"))
+	}
+
+	if user.VerificationCodeTimeout.After(time.Now()) {
+		return "", BadRequest(errors.New("verification code has expired"))
+	}
+
+	err = a.DB.VerifyUser(user.ID)
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "updated"}, Ok()
 
 }
 
@@ -133,23 +171,28 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 	var requestBody signinBody
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
+	err = validator.Validate(requestBody)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("invalid input data"))
+	}
 	user, err := a.DB.GetUserByEmail(requestBody.Email)
 
-	if err != nil {
-		log.Error().Err(err).Msg("")
-
-		if err == gorm.ErrRecordNotFound {
-			return nil, NotFound(errors.New("wrong email or password"))
-		}
-		return nil, BadRequest(err)
+	if err == gorm.ErrRecordNotFound {
+		return nil, NotFound(errors.New("wrong email or password"))
 	}
 
-	isPasswordMatches := internal.CheckPasswordHash(requestBody.Password, user.Password)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	isPasswordMatches := internal.CheckPasswordHash([]byte(user.Password), requestBody.Password)
 
 	if !isPasswordMatches {
 
@@ -160,12 +203,12 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 		return nil, Forbidden(errors.New("account is not verified yet, please check the verification email in your inbox"))
 	}
 	// generate tokens
-	accessToken, err := internal.GenerateToken(user.ID, time.Now().Add(time.Minute*15))
+	accessToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Minute*time.Duration(tokenTimeout)))
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, InternalServerError(fmt.Errorf("failed to generate token:%w ", err))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{Message: "logged in successfully", Data: struct {
@@ -182,39 +225,33 @@ func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("user is not found"))
 	}
 
-	_, err := a.DB.GetUserByID(userID.(string))
-	if err != nil {
-		log.Error().Err(err).Msg("")
-
-		return nil, NotFound(errors.New("user is not found"))
-	}
-
 	var requestBody struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		Name string `json:"name"`
 	}
-	err = json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
+	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, BadRequest(err)
+		return nil, BadRequest(errors.New("invalid input data"))
 	}
 
 	user := models.User{
-		Name:  requestBody.Name,
-		Email: requestBody.Email,
-		ID:    userID.(string),
+		Name: requestBody.Name,
+		ID:   userID.(string),
 	}
 
 	err = a.DB.UpdateUser(user)
 
+	if err == gorm.ErrRecordNotFound {
+		return nil, BadRequest(errors.New("user does not exist"))
+	}
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, InternalServerError(err)
+		return nil, InternalServerError(errInternalServerError)
 	}
 
-	return ResponseMsg{Message: "updated successfully"}, Ok()
+	return ResponseMsg{Message: "user has been updated successfully"}, Ok()
 }
 
 func (a *App) getUser(ctx *gin.Context) (interface{}, Response) {
@@ -227,24 +264,29 @@ func (a *App) getUser(ctx *gin.Context) (interface{}, Response) {
 
 	user, err := a.DB.GetUserByID(userID.(string))
 
-	if err != nil {
-		log.Error().Err(err).Msg("")
-
+	if err == gorm.ErrRecordNotFound {
 		return nil, NotFound(errors.New("user is not found"))
 	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
 
-	return ResponseMsg{Message: "found", Data: user}, Ok()
+	return ResponseMsg{Message: "user is found", Data: user}, Ok()
 }
 
 func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 
 	token := ctx.GetHeader("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		return nil, UnAuthorized(errors.New("token is required"))
+	}
 
-	claims, err := internal.ValidateToken(token)
+	claims, err := internal.ValidateToken(secret, token)
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
 		return nil, UnAuthorized(err)
 	}
@@ -252,25 +294,25 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 	user, err := a.DB.GetUserByID(claims.ID)
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
 		return nil, NotFound(errors.New("user is not found"))
 	}
 
-	accessToken, err := internal.GenerateToken(user.ID, time.Now().Add(time.Minute*15))
+	accessToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Minute*time.Duration(tokenTimeout)))
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, InternalServerError(fmt.Errorf("error refreshing token: %v", err))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
-	refreshToken, err := internal.GenerateToken(user.ID, time.Now().Add(time.Hour*24*3))
+	refreshToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Hour*time.Duration(tokenTimeout)))
 
 	if err != nil {
-		log.Error().Err(err).Msg("")
+		log.Error().Err(err).Send()
 
-		return nil, InternalServerError(fmt.Errorf("error refreshing token: %v", err))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{

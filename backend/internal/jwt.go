@@ -14,7 +14,7 @@ type Claims struct {
 }
 
 // GenerateRefreshToken generates a refresh token
-func GenerateToken(userID string, expirationDate time.Time) (string, error) {
+func GenerateToken(secret, userID string, expirationDate time.Time) (string, error) {
 
 	tokenClaims := Claims{
 		ID: userID,
@@ -23,17 +23,17 @@ func GenerateToken(userID string, expirationDate time.Time) (string, error) {
 		},
 	}
 
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims)
 
-	return refreshToken.SignedString([]byte("cufe"))
+	return token.SignedString([]byte(secret))
 
 }
 
 // ValidateToken check that token is valid
-func ValidateToken(signedToken string) (*Claims, error) {
+func ValidateToken(secret, signedToken string) (*Claims, error) {
 
 	token, err := jwt.ParseWithClaims(signedToken, &Claims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte("cufe"), nil
+		return []byte(secret), nil
 	})
 
 	if err != nil {

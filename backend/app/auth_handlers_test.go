@@ -167,7 +167,6 @@ func TestSignin(t *testing.T) {
 		Email:           "omar12345678912@gmail.com",
 		Password:        "omar",
 		ConfirmPassword: "omar",
-		Verified:        true,
 	}
 
 	AddUserToDB(t, verifiedUser, &app)

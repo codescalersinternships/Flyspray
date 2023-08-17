@@ -39,7 +39,10 @@ func (app *App) Run(port int) error {
 
 func (app *App) setRoutes() {
 
-	project := app.router.Group("/project")
+	authGroup := app.router.Group("")
+	authGroup.Use(middleware.RequireAuth)
+
+	project := authGroup.Group("/project")
 	{
 		project.POST("", WrapFunc(app.createProject))
 		project.GET("/filters", WrapFunc(app.getProjects))
@@ -49,7 +52,7 @@ func (app *App) setRoutes() {
 
 	}
 
-	comment := app.router.Group("/comment")
+	comment := authGroup.Group("/comment")
 	{
 		comment.POST("", WrapFunc(app.createComment))
 		comment.GET("/:id", WrapFunc(app.getComment))
@@ -58,8 +61,8 @@ func (app *App) setRoutes() {
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
 
-	authUserGroup := app.router.Group("/user")
-	userGroup := authUserGroup.Group("")
+	authUserGroup := authGroup.Group("/user")
+	userGroup := app.router.Group("/user")
 
 	{
 		userGroup.POST("/signup", WrapFunc(app.signup))
@@ -69,7 +72,6 @@ func (app *App) setRoutes() {
 	}
 
 	{
-		authUserGroup.Use(middleware.RequireAuth)
 		authUserGroup.PUT("", WrapFunc(app.updateUser))
 		authUserGroup.GET("", WrapFunc(app.getUser))
 	}
