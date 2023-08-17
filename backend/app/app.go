@@ -60,7 +60,7 @@ func (app *App) setRoutes() {
 	memberRoutes := app.router.Group("/member")
 	{
 		memberRoutes.POST("", WrapFunc(app.createNewMember))
-		memberRoutes.GET("", WrapFunc(app.getAllMembers))
+		// memberRoutes.GET("", WrapFunc(app.getAllMembers))
 		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
 		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
