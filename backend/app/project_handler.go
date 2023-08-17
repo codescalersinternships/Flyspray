@@ -5,9 +5,11 @@ package app
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
+	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -38,18 +40,12 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 
 	newProject := models.Project{Name: input.Name, OwnerID: fmt.Sprint(userID)}
 
-	// check if project name exists before
-	_, err := a.DB.GetProjectByName(input.Name) // expected to return 'gorm.ErrRecordNotFound' if not exist
-	if err == nil {                             // project is found by name
+	newProject, err := a.DB.CreateProject(newProject)
+
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 		return nil, BadRequest(errors.New("project name must be unique"))
 	}
-	if err != gorm.ErrRecordNotFound { // there is some error other than not found
-		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
-	}
-
-	newProject, err = a.DB.CreateProject(newProject)
-
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -92,20 +88,20 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	// proceed to update project
-	updatedProject := models.Project{OwnerID: input.OwnerID, Name: input.Name}
-
-	// check if project name exists before
-	p, err = a.DB.GetProjectByName(input.Name) // expected to return 'gorm.ErrRecordNotFound' if not exist
-	if err == nil && fmt.Sprint(p.ID) != id {  // another project is found has the same name as the updated name
-		return nil, BadRequest(errors.New("project name must be unique"))
-	}
-	if err != nil && err != gorm.ErrRecordNotFound { // there is some error and it is other than not found
+	convId, err := strconv.Atoi(id)
+	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = a.DB.UpdateProject(id, updatedProject)
+	updatedProject := models.Project{ID: uint(convId), OwnerID: input.OwnerID, Name: input.Name}
 
+	err = a.DB.UpdateProject(updatedProject)
+
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+		return nil, BadRequest(errors.New("project name must be unique"))
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("project is not found"))
