@@ -24,10 +24,29 @@ updates:
     labels:
       - "gomod dependencies"
 
-    # maintain dependencies for docker
+    # maintain dependencies for backend docker
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
       interval: "weekly"
     labels:
-      - "docker dependencies"
+      - "backend docker dependencies"
+
+    # maintain dependencies for frontend docker
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "frontend docker dependencies"
+    
+    # maintain dependencies for npm
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "npm dependencies"
+
+
+    
