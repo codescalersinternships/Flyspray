@@ -20,7 +20,7 @@ func NewApp(dbFilePath string) (App, error) {
 		return App{}, err
 	}
 
-	return App{DB: database}, nil
+	return App{DB: database, router: gin.Default()}, nil
 }
 
 // App initializes the entire app
@@ -29,11 +29,8 @@ type App struct {
 	router *gin.Engine
 }
 
-
 // Run runs the server by seting the router and calling the internal setRoutes method
 func (app *App) Run(port int) error {
-
-	app.router = gin.Default()
 
 	app.setRoutes()
 
@@ -60,24 +57,21 @@ func (app *App) setRoutes() {
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
-  
-  
-  authUserGroup := app.router.Group("/user")
+
+	authUserGroup := app.router.Group("/user")
 	userGroup := authUserGroup.Group("")
-	
-  {
-    userGroup.POST("/signup", WrapFunc(a.signup))
-    userGroup.POST("/signin", WrapFunc(a.signIn))
-    userGroup.POST("/signup/verify", WrapFunc(a.verify))
-    userGroup.POST("/refresh_token", WrapFunc(a.refreshToken))
-   }
-  
-  {
-    authUserGroup.Use(middleware.RequireAuth)
-    authUserGroup.PUT("", WrapFunc(a.updateUser))
-    authUserGroup.GET("", WrapFunc(a.getUser))
-  }
+
+	{
+		userGroup.POST("/signup", WrapFunc(app.signup))
+		userGroup.POST("/signin", WrapFunc(app.signIn))
+		userGroup.POST("/signup/verify", WrapFunc(app.verify))
+		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
+	}
+
+	{
+		authUserGroup.Use(middleware.RequireAuth)
+		authUserGroup.PUT("", WrapFunc(app.updateUser))
+		authUserGroup.GET("", WrapFunc(app.getUser))
+	}
 
 }
-
-

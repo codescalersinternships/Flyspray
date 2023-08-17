@@ -67,10 +67,10 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	user.Password = hash
 
-	user.VerificationCode = a.client.GenerateVerificationCode()
+	user.VerificationCode = a.DB.GenerateVerificationCode()
 	fmt.Println(user.VerificationCode)
 
-	user, err = a.client.CreateUser(user)
+	user, err = a.DB.CreateUser(user)
 
 	if err != nil {
 		log.Error().Err(err).Msg("")
@@ -78,7 +78,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 		if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 
-			user, err := a.client.GetUserByEmail(requestBody.Email)
+			user, err := a.DB.GetUserByEmail(requestBody.Email)
 			if err != nil {
 				log.Error().Err(err).Msg("")
 				return nil, InternalServerError(err)
@@ -117,7 +117,7 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
-	msg, err := a.client.VerifyUser(requestBody.VerificationCode)
+	msg, err := a.DB.VerifyUser(requestBody.VerificationCode)
 
 	if err != nil {
 		log.Error().Err(err).Msg("")
@@ -138,7 +138,7 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("input data is invalid"))
 	}
 
-	user, err := a.client.GetUserByEmail(requestBody.Email)
+	user, err := a.DB.GetUserByEmail(requestBody.Email)
 
 	if err != nil {
 		log.Error().Err(err).Msg("")
@@ -182,7 +182,7 @@ func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("user is not found"))
 	}
 
-	_, err := a.client.GetUserByID(userID.(string))
+	_, err := a.DB.GetUserByID(userID.(string))
 	if err != nil {
 		log.Error().Err(err).Msg("")
 
@@ -206,7 +206,7 @@ func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
 		ID:    userID.(string),
 	}
 
-	err = a.client.UpdateUser(user)
+	err = a.DB.UpdateUser(user)
 
 	if err != nil {
 		log.Error().Err(err).Msg("")
@@ -225,7 +225,7 @@ func (a *App) getUser(ctx *gin.Context) (interface{}, Response) {
 		return nil, NotFound(errors.New("user is not found"))
 	}
 
-	user, err := a.client.GetUserByID(userID.(string))
+	user, err := a.DB.GetUserByID(userID.(string))
 
 	if err != nil {
 		log.Error().Err(err).Msg("")
@@ -249,7 +249,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(err)
 	}
 
-	user, err := a.client.GetUserByID(claims.ID)
+	user, err := a.DB.GetUserByID(claims.ID)
 
 	if err != nil {
 		log.Error().Err(err).Msg("")

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -105,8 +104,9 @@ func Ok() Response {
 
 // Error generic error response
 func Error(err error, code int) Response {
+	status := code
 	if code == 0 {
-	  status := http.StatusInternalServerError
+		status = http.StatusInternalServerError
 	}
 	return genericResponse{status: status, err: err}
 }

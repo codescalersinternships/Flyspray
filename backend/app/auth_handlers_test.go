@@ -17,8 +17,8 @@ func TestSignup(t *testing.T) {
 	dir := t.TempDir()
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
-
-	err = app.client.Migrate()
+	
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
@@ -108,7 +108,7 @@ func TestVerify(t *testing.T) {
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
-	err = app.client.Migrate()
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
@@ -150,7 +150,7 @@ func TestSignin(t *testing.T) {
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
-	err = app.client.Migrate()
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
@@ -235,7 +235,7 @@ func TestUpdateUser(t *testing.T) {
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
-	err = app.client.Migrate()
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
@@ -297,7 +297,7 @@ func TestGetUser(t *testing.T) {
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
-	err = app.client.Migrate()
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
@@ -353,7 +353,7 @@ func TestRefreshToken(t *testing.T) {
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
-	err = app.client.Migrate()
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
 
