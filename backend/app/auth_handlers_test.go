@@ -17,7 +17,7 @@ func TestSignup(t *testing.T) {
 	dir := t.TempDir()
 	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
-	
+
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
 	app.setRoutes()
