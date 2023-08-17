@@ -88,35 +88,6 @@ func TestGetMembersInProject(t *testing.T) {
 		c.Next()
 	})
 	app.setRoutes()
-	t.Run("getmembersinproject returns status 200", func(t *testing.T) {
-		createFirstMember(app, t)
-		//add another member to project
-		member := models.Member{UserID: "2", ProjectID: 2, Admin: false}
-		jsonData, err := json.Marshal(member)
-		assert.NoError(t, err, "failed to marshal json data")
-		req, err := http.NewRequest("POST", "/member", bytes.NewBuffer(jsonData))
-		assert.NoError(t, err, "failed to create http request")
-		resp := httptest.NewRecorder()
-		app.router.ServeHTTP(resp, req)
-		expectedResponse := ResponseMsg{
-			Message: "members in project retrieved successfully",
-			Data:    []models.Member{{ID: 1, UserID: "1", ProjectID: 2, Admin: true}, {ID:2, UserID: "2",ProjectID: 2, Admin: false}},
-		}
-		req, err = http.NewRequest("GET", "/member/2", nil)
-		assert.NoError(t, err, "failed to create http request")
-		resp = httptest.NewRecorder()
-		app.router.ServeHTTP(resp, req)
-		got := strings.ReplaceAll(resp.Body.String(), " ", "")
-		got = strings.ReplaceAll(got, "\n", "")
-		wantJson, err := json.Marshal(expectedResponse)
-		want := string(wantJson)
-		want = strings.ReplaceAll(want, " ", "")
-		assert.NoError(t, err, "failed to marshal json data")
-		assert.Equal(t, want, got)
-		if resp.Code != http.StatusOK {
-			t.Errorf("expected status code %d but got %d", http.StatusOK, resp.Code)
-		}
-	})
 	t.Run("getmembersinproject returns status 200 and empty slice", func(t *testing.T) {
 		expectedResponse := ResponseMsg{
 			Message: "members in project retrieved successfully",
@@ -137,6 +108,36 @@ func TestGetMembersInProject(t *testing.T) {
 			t.Errorf("expected status code %d but got %d", http.StatusOK, resp.Code)
 		}
 	})
+	t.Run("getmembersinproject returns status 200", func(t *testing.T) {
+		createFirstMember(app, t)
+		//add another member to project
+		member := models.Member{UserID: "2", ProjectID: 2, Admin: false}
+		jsonData, err := json.Marshal(member)
+		assert.NoError(t, err, "failed to marshal json data")
+		req, err := http.NewRequest("POST", "/member", bytes.NewBuffer(jsonData))
+		assert.NoError(t, err, "failed to create http request")
+		resp := httptest.NewRecorder()
+		app.router.ServeHTTP(resp, req)
+		expectedResponse := ResponseMsg{
+			Message: "members in project retrieved successfully",
+			Data:    []models.Member{{ID: 1, UserID: "1", ProjectID: 2, Admin: true}, {ID: 2, UserID: "2", ProjectID: 2, Admin: false}},
+		}
+		req, err = http.NewRequest("GET", "/member/2", nil)
+		assert.NoError(t, err, "failed to create http request")
+		resp = httptest.NewRecorder()
+		app.router.ServeHTTP(resp, req)
+		got := strings.ReplaceAll(resp.Body.String(), " ", "")
+		got = strings.ReplaceAll(got, "\n", "")
+		wantJson, err := json.Marshal(expectedResponse)
+		want := string(wantJson)
+		want = strings.ReplaceAll(want, " ", "")
+		assert.NoError(t, err, "failed to marshal json data")
+		assert.Equal(t, want, got)
+		if resp.Code != http.StatusOK {
+			t.Errorf("expected status code %d but got %d", http.StatusOK, resp.Code)
+		}
+	})
+
 }
 
 func TestUpdateMemberOwnership(t *testing.T) {
