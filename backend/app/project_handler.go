@@ -50,7 +50,18 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
+	// add project owner as a member in project
+	member := models.Member{ProjectID: int(newProject.ID), Admin: true, UserID: newProject.OwnerID}
+	err = a.DB.CreateNewMember(member)
+	if err == gorm.ErrDuplicatedKey {
+		log.Error().Err(err).Send()
+		return nil, Forbidden(errors.New("member already exists"))
+	}
 
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("cannot create new member"))
+	}
 	return ResponseMsg{
 		Message: "project is created successfully",
 		Data:    newProject,

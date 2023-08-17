@@ -8,7 +8,6 @@ import (
 // NewDBClient connects sqlite database and returns DBClient
 func NewDBClient(dbFilePath string) (DBClient, error) {
 	d := DBClient{}
-
 	// connect database
 	var err error
 	d.Client, err = gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
@@ -23,5 +22,5 @@ type DBClient struct {
 
 // Migrate makes migrations for the database
 func (d *DBClient) Migrate() error {
-	return d.Client.AutoMigrate(&Project{}, &Comment{})
+	return d.Client.AutoMigrate(&Project{}, &Comment{}, &Member{})
 }

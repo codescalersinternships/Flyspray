@@ -39,7 +39,6 @@ func (app *App) Run(port int) error {
 }
 
 func (app *App) setRoutes() {
-
 	project := app.router.Group("/project")
 	{
 		project.POST("", WrapFunc(app.createProject))
@@ -57,6 +56,12 @@ func (app *App) setRoutes() {
 		comment.DELETE("/:id", WrapFunc(app.deleteComment))
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
+	}
+	memberRoutes := app.router.Group("/member")
+	{
+		memberRoutes.POST("", WrapFunc(app.createNewMember))
+		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
+		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
 }
