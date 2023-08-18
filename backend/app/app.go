@@ -42,10 +42,10 @@ func (a *App) Run(port int) error {
 
 func (app *App) registerHandlers() {
 
-	bugGroup := app.router.Group("/bugs")
+	bugGroup := app.router.Group("/bug")
 	{
 		bugGroup.POST("/", WrapFunc(app.createBug))
-		bugGroup.GET("/filters", WrapFunc(app.getBugs))
+		bugGroup.GET("/filters", WrapFunc(app.getbug))
 		bugGroup.GET("/:id", WrapFunc(app.getSpecificBug))
 		bugGroup.PUT("/:id", WrapFunc(app.updateBug))
 		bugGroup.DELETE("/:id", WrapFunc(app.deleteBug))

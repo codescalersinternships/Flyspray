@@ -31,19 +31,21 @@ func (d *DBClient) GetSpecificBug(id string) (Bug, error) {
 	return p, d.Client.Where("id = ?", id).First(&p).Error
 }
 
-func (d *DBClient) UpdateBug(id string, updateBug Bug) *gorm.DB {
-	return d.Client.Model(&Bug{}).Where("id = ?", id).Updates(updateBug)
+func (d *DBClient) UpdateBug(id string, updatedBug Bug) error {
+	result := d.Client.Model(&updatedBug).Where("id = ?", id).
+		Update("component_id", updatedBug.ComponentID)
+
+	if result.Error == nil && result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
-// FilterBugs filters all bugs by user id, bug category, bug status, component id, opened,
-func (d *DBClient) FilterBugs(userId, category, status, component_id string) ([]Bug, error) {
-	bugs := []Bug{}
+// Filterbug filters all bug by user id, bug category, bug status, component id, opened,
+func (d *DBClient) Filterbug(category, status, component_id string) ([]Bug, error) {
+	bug := []Bug{}
 
 	query := d.Client
-
-	if userId != "" {
-		query = query.Where("user_id = ?", userId)
-	}
 
 	if category != "" {
 		query = query.Where("category = ?", category)
@@ -56,21 +58,18 @@ func (d *DBClient) FilterBugs(userId, category, status, component_id string) ([]
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
-
-	return bugs, query.Find(&bugs).Error
+	return bug, query.Find(&bug).Error
 }
 
 // DeleteBug delete bug from database
 func (d *DBClient) DeleteBug(id string) error {
 	bug := Bug{}
 
-	if result := d.Client.First(&bug, id); result.Error != nil {
-		return result.Error
+	result := d.Client.Delete(&bug, id)
+
+	if result.Error == nil && result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 
-	if result := d.Client.Delete(&bug, id); result.Error != nil {
-		return result.Error
-	}
-
-	return nil
+	return result.Error
 }

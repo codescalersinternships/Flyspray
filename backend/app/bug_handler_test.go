@@ -24,24 +24,27 @@ func TestCreateBug(t *testing.T) {
 
 	// Create a new HTTP request
 	router := gin.Default()
-	router.POST("/bugs", func(ctx *gin.Context) {
-		_, response := app.createBug(ctx)
-		ctx.JSON(response.Status(), response)
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "99")
+		c.Next()
 	})
+	router.POST("/bug", WrapFunc(app.createBug))
 
 	t.Run("create new bug successfully", func(t *testing.T) {
-		bugData := models.Bug{
-			UserID:      "12",
+		bugInput := createBugInput{
+			Summary:     "hello world!",
 			ComponentID: 13,
 		}
 
-		payload, err := json.Marshal(bugData)
+		payload, err := json.Marshal(bugInput)
 		if err != nil {
 			t.Fatal("failed to marshal bug payload")
 		}
 
-		req, err := http.NewRequest("POST", "/bugs", bytes.NewReader(payload))
+		req, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -51,17 +54,12 @@ func TestCreateBug(t *testing.T) {
 	})
 
 	t.Run("failed to create new bug", func(t *testing.T) {
-		bugData := models.Bug{
-			ComponentID: 13,
-		}
+		requestBody := []byte(`{"user_id": "99"}`)
 
-		payload, err := json.Marshal(bugData)
-		if err != nil {
-			t.Fatal("failed to marshal bug payload")
-		}
-
-		req, err := http.NewRequest("POST", "/bugs", bytes.NewReader(payload))
+		req, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -71,7 +69,7 @@ func TestCreateBug(t *testing.T) {
 	})
 }
 
-func TestGetBugs(t *testing.T) {
+func TestGetbug(t *testing.T) {
 	tempDir := t.TempDir()
 	path := path.Join(tempDir, "flyspray.db")
 	gin.SetMode(gin.TestMode)
@@ -82,19 +80,20 @@ func TestGetBugs(t *testing.T) {
 
 	// Create a new HTTP request
 	router := gin.Default()
-	router.POST("/bugs", func(ctx *gin.Context) {
-		_, response := app.createBug(ctx)
-		ctx.JSON(response.Status(), response)
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "99")
+		c.Next()
 	})
+	router.POST("/bug", WrapFunc(app.createBug))
 
-	router.GET("/bugs/filters", func(ctx *gin.Context) {
-		_, response := app.getBugs(ctx)
-		ctx.JSON(response.Status(), response)
-	})
+	router.GET("/bug/filters", WrapFunc(app.getbug))
 
-	t.Run("get all bugs successfully", func(t *testing.T) {
-		request, err := http.NewRequest("GET", "/bugs/filters", nil)
+	t.Run("get all bug successfully", func(t *testing.T) {
+		request, err := http.NewRequest("GET", "/bug/filters", nil)
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		rec := httptest.NewRecorder()
 
@@ -116,15 +115,15 @@ func TestGetBug(t *testing.T) {
 	// Create a new HTTP request
 	router := gin.Default()
 
-	router.POST("/bugs", func(ctx *gin.Context) {
-		_, response := app.createBug(ctx)
-		ctx.JSON(response.Status(), response)
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "99")
+		c.Next()
 	})
 
-	router.GET("/bugs/:id", func(ctx *gin.Context) {
-		_, response := app.getSpecificBug(ctx)
-		ctx.JSON(response.Status(), response)
-	})
+	router.POST("/bug", WrapFunc(app.createBug))
+
+	router.GET("/bug/:id", WrapFunc(app.getSpecificBug))
 
 	t.Run("get bug successfully", func(t *testing.T) {
 		bugData := models.Bug{
@@ -137,8 +136,10 @@ func TestGetBug(t *testing.T) {
 			t.Fatal("failed to marshal bug payload")
 		}
 
-		req, err := http.NewRequest(http.MethodPost, "/bugs", bytes.NewReader(payload))
+		req, err := http.NewRequest(http.MethodPost, "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -146,8 +147,10 @@ func TestGetBug(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		request, err := http.NewRequest("GET", "/bugs/1", nil)
+		request, err := http.NewRequest("GET", "/bug/1", nil)
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		rec := httptest.NewRecorder()
 
@@ -167,8 +170,10 @@ func TestGetBug(t *testing.T) {
 			t.Fatal("failed to marshal bug payload")
 		}
 
-		req, err := http.NewRequest("POST", "/bugs", bytes.NewReader(payload))
+		req, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -176,8 +181,10 @@ func TestGetBug(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		request, err := http.NewRequest("GET", "/bugs/5", nil)
+		request, err := http.NewRequest("GET", "/bug/5", nil)
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		rec := httptest.NewRecorder()
 
@@ -197,8 +204,10 @@ func TestGetBug(t *testing.T) {
 			t.Fatal("failed to marshal bug payload")
 		}
 
-		req, err := http.NewRequest(http.MethodPost, "/bugs", bytes.NewReader(payload))
+		req, err := http.NewRequest(http.MethodPost, "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -206,8 +215,10 @@ func TestGetBug(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		request, err := http.NewRequest("GET", "/bugs", nil)
+		request, err := http.NewRequest("GET", "/bug", nil)
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		rec := httptest.NewRecorder()
 
@@ -229,61 +240,78 @@ func TestUpdateBug(t *testing.T) {
 	// Create a new HTTP request
 	router := gin.Default()
 
-	router.POST("/bugs", func(ctx *gin.Context) {
-		_, response := app.createBug(ctx)
-		ctx.JSON(response.Status(), response)
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "99")
+		c.Next()
 	})
 
-	router.PUT("/bugs/:id", func(ctx *gin.Context) {
-		_, response := app.updateBug(ctx)
-		ctx.JSON(response.Status(), response)
-	})
+	router.POST("/bug", WrapFunc(app.createBug))
+
+	router.PUT("/bug/:id", WrapFunc(app.updateBug))
 
 	t.Run("update bug successfully", func(t *testing.T) {
-		bugData := models.Bug{
-			UserID:      "12",
-			ComponentID: 13,
+		bugInput := createBugInput{
+			Summary:     "hello from test",
+			ComponentID: 90,
 		}
 
-		payload, err := json.Marshal(bugData)
+		wantedBug := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput.Summary,
+			ComponentID: bugInput.ComponentID,
+		}
+
+		result := app.client.Client.Create(&wantedBug)
+		assert.NoError(t, result.Error)
+
+		bugUpdate := updateBugInput{
+			Summary: "update bug",
+		}
+
+		payload, err := json.Marshal(bugUpdate)
 		if err != nil {
 			t.Fatal("failed to marshal bug payload")
 		}
 
-		req, err := http.NewRequest(http.MethodPost, "/bugs", bytes.NewReader(payload))
+		request, err := http.NewRequest("PUT", "/bug/10", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
+		request.Header.Set("Content-Type", "application/json")
 
-		recorder := httptest.NewRecorder()
-
-		router.ServeHTTP(recorder, req)
-
-		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
-
-		updatedRequestBody := []byte(`{"user_id": "13", "component_id": 13}`)
-
-		request, err := http.NewRequest("PUT", "/bugs/1", bytes.NewReader(updatedRequestBody))
-		assert.NoError(t, err)
 		rec := httptest.NewRecorder()
-
 		router.ServeHTTP(rec, request)
 		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
 	})
 
 	t.Run("bug is not found", func(t *testing.T) {
-		updatedRequestBody := []byte(`{"user_id": "13", "component_id": 13}`)
 
-		request, err := http.NewRequest("PUT", "/bugs/4", bytes.NewReader(updatedRequestBody))
+		bugUpdate := updateBugInput{
+			Summary: "update bug",
+		}
+
+		payload, err := json.Marshal(bugUpdate)
+		if err != nil {
+			t.Fatal("failed to marshal bug payload")
+		}
+
+		request, err := http.NewRequest("PUT", "/bug/50", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
-		rec := httptest.NewRecorder()
 
+		request.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, request)
-		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 200", rec.Code)
+
+		assert.Equal(t, http.StatusNotFound, rec.Code, "got %d status code but want status code 404", rec.Code)
 	})
 
 	t.Run("failed to update bug as it is invalid", func(t *testing.T) {
-		requestBody := []byte(`{"id":50,"user_id": "12", "component_id":15}`)
-		request, err := http.NewRequest("POST", "/bugs", bytes.NewReader(requestBody))
+		requestBody := []byte(`{"id":50,"user_id": "99", "component_id":15}`)
+		request, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(requestBody))
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -291,9 +319,9 @@ func TestUpdateBug(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 
-		updatedRequestBody := []byte(`{"id":50,"user_id": 12, "component_id":14 }`)
+		updatedRequestBody := []byte(`{"id":50,"user_id": "99", "component_id" }`)
 
-		req, err := http.NewRequest("PUT", "/bugs/50", bytes.NewReader(updatedRequestBody))
+		req, err := http.NewRequest("PUT", "/bug/33", bytes.NewBuffer(updatedRequestBody))
 		assert.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -315,39 +343,44 @@ func TestDeleteBug(t *testing.T) {
 	// Create a new HTTP request
 	router := gin.Default()
 
-	router.POST("/bugs", func(ctx *gin.Context) {
-		_, response := app.createBug(ctx)
-		ctx.JSON(response.Status(), response)
+	// middleware to set the "user_id" in the gin context
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "99")
+		c.Next()
 	})
 
-	router.DELETE("/bugs/:id", func(ctx *gin.Context) {
-		_, response := app.deleteBug(ctx)
-		ctx.JSON(response.Status(), response)
-	})
+	router.DELETE("/bug/:id", WrapFunc(app.deleteBug))
 
 	t.Run("delete bug successfully", func(t *testing.T) {
-		requestBody := []byte(`{"id":51,"user_id": "12", "component_id":15}`)
-		request, err := http.NewRequest("POST", "/bugs", bytes.NewReader(requestBody))
+		bugInput := createBugInput{
+			Summary:     "hello from test",
+			ComponentID: 90,
+		}
+
+		wantedBug := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput.Summary,
+			ComponentID: bugInput.ComponentID,
+		}
+
+		result := app.client.Client.Create(&wantedBug)
+		assert.NoError(t, result.Error)
+
+		request, err := http.NewRequest("DELETE", "/bug/10", nil)
 		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
 		router.ServeHTTP(recorder, request)
 
-		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
-
-		req, err := http.NewRequest("DELETE", "/bugs/51", nil)
-		assert.NoError(t, err)
-
-		rec := httptest.NewRecorder()
-
-		router.ServeHTTP(rec, req)
-
-		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
+		assert.Equal(t, http.StatusOK, recorder.Code, "got %d status code but want status code 201", recorder.Code)
 	})
 
 	t.Run("bug is not found", func(t *testing.T) {
-		req, err := http.NewRequest("DELETE", "/bugs/50", nil)
+		req, err := http.NewRequest("DELETE", "/bug/50", nil)
 		assert.NoError(t, err)
 
 		rec := httptest.NewRecorder()
@@ -358,7 +391,7 @@ func TestDeleteBug(t *testing.T) {
 	})
 
 	t.Run("bug ID is not given", func(t *testing.T) {
-		request, err := http.NewRequest("DELETE", "/bugs/", nil)
+		request, err := http.NewRequest("DELETE", "/bug/", nil)
 		assert.NoError(t, err)
 
 		rec := httptest.NewRecorder()
