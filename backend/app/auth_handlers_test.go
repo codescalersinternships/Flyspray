@@ -153,8 +153,8 @@ func TestVerify(t *testing.T) {
 	AddUserToDB(t, newUser, &app)
 
 	testCases := []struct {
-		name        string
-		requestBody verifyBody
+		name               string
+		requestBody        verifyBody
 		expectedStatusCode int
 	}{
 		{
@@ -168,14 +168,14 @@ func TestVerify(t *testing.T) {
 			name: "user already verified",
 			requestBody: verifyBody{
 				VerificationCode: 12345,
-				Email:             "diaabadr@gmail.com",
+				Email:            "diaabadr@gmail.com",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-		},{
+		}, {
 			name: "user not found",
 			requestBody: verifyBody{
 				VerificationCode: 1234,
-				Email: "diaabadr8@gmail.com",
+				Email:            "diaabadr8@gmail.com",
 			},
 			expectedStatusCode: http.StatusNotFound,
 		},
