@@ -11,6 +11,7 @@ import (
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestCreateComponent(t *testing.T) {
@@ -48,6 +49,9 @@ func TestCreateComponent(t *testing.T) {
 		app.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
+		c, err := app.DB.GetComponent("1")
+		assert.Nil(t, err)
+		assert.Equal(t, c.Name, componentInput.Name)
 
 	})
 
@@ -140,6 +144,10 @@ func TestUpdateComponent(t *testing.T) {
 		app.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+
+		c, err := app.DB.GetComponent("1")
+		assert.Nil(t, err)
+		assert.Equal(t, c.Name, updatedComponent.Name)
 	})
 
 	t.Run("Bad Request", func(t *testing.T) {
@@ -237,7 +245,16 @@ func TestGetComponents(t *testing.T) {
 	})
 	app.router.GET("/component/filters", WrapFunc(app.getComponents))
 
-	t.Run("Success", func(t *testing.T) {
+	createComponent := models.Component{
+		ProjectID: "1",
+		Name:      "test",
+		UserID:    "1",
+	}
+
+	_, err = app.DB.CreateComponent(createComponent)
+	assert.Nil(t, err)
+
+	t.Run("Success, retrieve components by project id", func(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "/component/filters?project_id=1", nil)
 		assert.Nil(t, err)
@@ -250,6 +267,35 @@ func TestGetComponents(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
+
+	t.Run("Success, retrieve component by name", func(t *testing.T) {
+
+		req, err := http.NewRequest("GET", "/component/filters?name=test", nil)
+		assert.Nil(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("Success, retrieve component by name and project id", func(t *testing.T) {
+
+		req, err := http.NewRequest("GET", "/component/filters?name=test&project_id=1", nil)
+		assert.Nil(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		app.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
 }
 
 func TestDeleteComponent(t *testing.T) {
@@ -292,6 +338,10 @@ func TestDeleteComponent(t *testing.T) {
 		app.router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+
+		_, err = app.DB.GetComponent("1")
+
+		assert.Equal(t, gorm.ErrRecordNotFound, err)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
