@@ -10,8 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var errInternalServerError = errors.New("internal server error")
-
 type createBugInput struct {
 	Summary     string `json:"summary"`
 	ComponentID int    `json:"component_id" validate:"required"`
@@ -44,7 +42,7 @@ func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 
 	// TODO: add middleware to check if user is signed in
 
-	newBug, err := app.client.CreateNewBug(models.Bug{UserID: userID.(string), ComponentID: bug.ComponentID})
+	newBug, err := app.DB.CreateNewBug(models.Bug{UserID: userID.(string), ComponentID: bug.ComponentID})
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -56,7 +54,7 @@ func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 	}, Created()
 }
 
-func (a *App) getbug(ctx *gin.Context) (interface{}, Response) {
+func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
 	// TODO: add middleware to check if user is signed in
 
 	// filters
@@ -66,7 +64,7 @@ func (a *App) getbug(ctx *gin.Context) (interface{}, Response) {
 		componentId = ctx.Query("component_id")
 	)
 
-	bug, err := a.client.Filterbug(category, status, componentId)
+	bug, err := a.DB.Filterbug(category, status, componentId)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -86,7 +84,7 @@ func (app *App) getSpecificBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("bug id is required"))
 	}
 
-	bug, err := app.client.GetSpecificBug(id)
+	bug, err := app.DB.GetSpecificBug(id)
 
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
@@ -122,7 +120,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	_, err := app.client.GetSpecificBug(id)
+	_, err := app.DB.GetSpecificBug(id)
 
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
@@ -137,7 +135,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 	// proceed to update bug
 	updatedBug := models.Bug{Summary: input.Summary}
 
-	err = app.client.UpdateBug(id, updatedBug)
+	err = app.DB.UpdateBug(id, updatedBug)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errors.New("field to update bug"))
@@ -161,7 +159,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	bug, err := app.client.GetSpecificBug(id)
+	bug, err := app.DB.GetSpecificBug(id)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
@@ -177,7 +175,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, Forbidden(errors.New("you have no access to delete the bug"))
 	}
 
-	err = app.client.DeleteBug(id)
+	err = app.DB.DeleteBug(id)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()

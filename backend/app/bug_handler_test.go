@@ -44,7 +44,6 @@ func TestCreateBug(t *testing.T) {
 
 		req, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
 
@@ -87,7 +86,7 @@ func TestGetbug(t *testing.T) {
 	})
 	router.POST("/bug", WrapFunc(app.createBug))
 
-	router.GET("/bug/filters", WrapFunc(app.getbug))
+	router.GET("/bug/filters", WrapFunc(app.getbugs))
 
 	t.Run("get all bug successfully", func(t *testing.T) {
 		request, err := http.NewRequest("GET", "/bug/filters", nil)
@@ -263,7 +262,7 @@ func TestUpdateBug(t *testing.T) {
 			ComponentID: bugInput.ComponentID,
 		}
 
-		result := app.client.Client.Create(&wantedBug)
+		result := app.DB.Client.Create(&wantedBug)
 		assert.NoError(t, result.Error)
 
 		bugUpdate := updateBugInput{
@@ -364,7 +363,7 @@ func TestDeleteBug(t *testing.T) {
 			ComponentID: bugInput.ComponentID,
 		}
 
-		result := app.client.Client.Create(&wantedBug)
+		result := app.DB.Client.Create(&wantedBug)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("DELETE", "/bug/10", nil)

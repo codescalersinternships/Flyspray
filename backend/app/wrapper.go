@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -104,16 +103,11 @@ func Ok() Response {
 }
 
 // Error generic error response
-func Error(err error, code ...int) Response {
-	status := http.StatusInternalServerError
-	if len(code) > 0 {
-		status = code[0]
+func Error(err error, code int) Response {
+	status := code
+	if code == 0 {
+		status = http.StatusInternalServerError
 	}
-
-	if err == nil {
-		err = fmt.Errorf("no message")
-	}
-
 	return genericResponse{status: status, err: err}
 }
 
@@ -124,7 +118,12 @@ func BadRequest(err error) Response {
 
 // InternalServerError result
 func InternalServerError(err error) Response {
-	return Error(err, http.StatusInternalServerError)
+	return Error(err, 0)
+}
+
+// Conflict response
+func Conflict(err error) Response {
+	return Error(err, http.StatusConflict)
 }
 
 // NotFound response

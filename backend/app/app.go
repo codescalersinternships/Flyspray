@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	middleware "github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -10,44 +11,86 @@ import (
 // NewApp is the factory of App
 func NewApp(dbFilePath string) (App, error) {
 
-	client, err := models.NewDBClient(dbFilePath)
+	database, err := models.NewDBClient(dbFilePath)
 	if err != nil {
 		return App{}, err
 	}
 
-	if err := client.Migrate(); err != nil {
+	if err := database.Migrate(); err != nil {
 		return App{}, err
 	}
 
-	return App{client: client}, nil
+	return App{DB: database, router: gin.Default()}, nil
 }
 
 // App initializes the entire app
 type App struct {
-	client models.DBClient
+	DB     models.DBClient
 	router *gin.Engine
 }
 
-// Run runs server
-func (a *App) Run(port int) error {
-	a.router = gin.Default()
+// Run runs the server by seting the router and calling the internal setRoutes method
+func (app *App) Run(port int) error {
 
-	// set routes here
+	app.setRoutes()
 
-	// Bug routes
-	a.registerHandlers()
-
-	return a.router.Run(fmt.Sprintf(":%d", port))
+	return app.router.Run(fmt.Sprintf(":%d", port))
 }
 
-func (app *App) registerHandlers() {
+func (app *App) setRoutes() {
 
+	authGroup := app.router.Group("")
+	authGroup.Use(middleware.RequireAuth(""))
+
+	project := authGroup.Group("/project")
+
+	{
+		project.POST("", WrapFunc(app.createProject))
+		project.GET("/filters", WrapFunc(app.getProjects))
+		project.GET("/:id", WrapFunc(app.getProject))
+		project.PUT("/:id", WrapFunc(app.updateProject))
+		project.DELETE("/:id", WrapFunc(app.deleteProject))
+
+	}
+
+	comment := authGroup.Group("/comment")
+	{
+		comment.POST("", WrapFunc(app.createComment))
+		comment.GET("/:id", WrapFunc(app.getComment))
+		comment.DELETE("/:id", WrapFunc(app.deleteComment))
+		comment.GET("/filters", WrapFunc(app.listComments))
+		comment.PUT("/:id", WrapFunc(app.updateComment))
+	}
+	memberRoutes := authGroup.Group("/member")
+	{
+		memberRoutes.POST("", WrapFunc(app.createNewMember))
+		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
+		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
+	}
+
+	authUserGroup := authGroup.Group("/user")
+	userGroup := app.router.Group("/user")
+
+	{
+		userGroup.POST("/signup", WrapFunc(app.signup))
+		userGroup.POST("/signin", WrapFunc(app.signIn))
+		userGroup.POST("/signup/verify", WrapFunc(app.verify))
+		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
+	}
+
+	{
+		authUserGroup.PUT("", WrapFunc(app.updateUser))
+		authUserGroup.GET("", WrapFunc(app.getUser))
+	}
+
+	
 	bugGroup := app.router.Group("/bug")
 	{
-		bugGroup.POST("/", WrapFunc(app.createBug))
-		bugGroup.GET("/filters", WrapFunc(app.getbug))
+		bugGroup.POST("", WrapFunc(app.createBug))
+		bugGroup.GET("/filters", WrapFunc(app.getbugs))
 		bugGroup.GET("/:id", WrapFunc(app.getSpecificBug))
 		bugGroup.PUT("/:id", WrapFunc(app.updateBug))
 		bugGroup.DELETE("/:id", WrapFunc(app.deleteBug))
 	}
+
 }
