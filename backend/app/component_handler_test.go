@@ -118,15 +118,21 @@ func TestUpdateComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
-		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
 	assert.Nil(t, err)
 
+	createProject := models.Project{
+		Name:    "New Project",
+		OwnerID: "1",
+	}
+
+	_, err = app.DB.CreateProject(createProject)
+	assert.Nil(t, err)
+
 	updatedComponent := models.Component{
-		Name:   "Updated Component",
-		UserID: "1",
+		Name: "Updated Component",
 	}
 	requestBody, err := json.Marshal(updatedComponent)
 	if err != nil {
@@ -193,7 +199,6 @@ func TestGetComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
-		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
@@ -248,7 +253,6 @@ func TestGetComponents(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "test",
-		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
@@ -319,11 +323,19 @@ func TestDeleteComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
-		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
 	assert.Nil(t, err)
+
+	createProject := models.Project{
+		Name:    "New Project",
+		OwnerID: "1",
+	}
+
+	_, err = app.DB.CreateProject(createProject)
+	assert.Nil(t, err)
+
 	app.router.DELETE("/component/:id", WrapFunc(app.deleteComponent))
 
 	t.Run("Success", func(t *testing.T) {

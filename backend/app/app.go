@@ -68,8 +68,8 @@ func (app *App) setRoutes() {
 	{
 		component.POST("", WrapFunc(app.createComponent))
 		component.GET("/:id", WrapFunc(app.getComponent))
-		component.DELETE("/:id", WrapFunc(app.deleteComment))
-		component.PUT("/:id", WrapFunc(app.updateComment))
+		component.DELETE("/:id", WrapFunc(app.deleteComponent))
+		component.PUT("/:id", WrapFunc(app.updateComponent))
 		component.GET("/filters", WrapFunc(app.getComponents))
 	}
 

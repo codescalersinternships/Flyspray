@@ -18,8 +18,7 @@ type createComponentInput struct {
 }
 
 type updateComponentInput struct {
-	UserID string `json:"user_id" binding:"required"`
-	Name   string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
@@ -30,12 +29,12 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("failed to read component data"))
 	}
 
-	userID, exists := ctx.Get("user_id")
+	_, exists := ctx.Get("user_id")
 	if !exists {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID, UserID: userID.(string)}
+	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID}
 
 	newComponent, err := a.DB.CreateComponent(newComponent)
 
@@ -79,7 +78,13 @@ func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if userID != c.UserID {
+	project, err := a.DB.GetProject(c.ProjectID)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if userID != project.OwnerID {
 		return nil, Forbidden(errors.New("have not access to update component"))
 	}
 
@@ -145,7 +150,13 @@ func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if fmt.Sprint(userID) != fmt.Sprint(c.UserID) {
+	project, err := a.DB.GetProject(c.ProjectID)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if fmt.Sprint(userID) != fmt.Sprint(project.OwnerID) {
 		return nil, Forbidden(errors.New("have not access to delete component"))
 	}
 
