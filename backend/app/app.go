@@ -43,7 +43,7 @@ func (app *App) setRoutes() {
 	authGroup.Use(middleware.RequireAuth(""))
 
 	project := authGroup.Group("/project")
-t
+
 	{
 		project.POST("", WrapFunc(app.createProject))
 		project.GET("/filters", WrapFunc(app.getProjects))
