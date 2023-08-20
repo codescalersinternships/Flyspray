@@ -35,6 +35,11 @@ type signinBody struct {
 	Password string `json:"password" validate:"nonzero"`
 }
 
+type verifyBody struct {
+	VerificationCode int    `json:"verification_code"`
+	Email            string `json:"email"`
+}
+
 func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody signupBody
@@ -123,10 +128,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 
-	var requestBody struct {
-		VerificationCode int    `json:"verification_code"`
-		Email            string `json:"email"`
-	}
+	var requestBody verifyBody
 
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 

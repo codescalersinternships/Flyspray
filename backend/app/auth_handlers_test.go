@@ -61,7 +61,7 @@ func TestSignup(t *testing.T) {
 				"confirm_password": "diaabadr",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-		},  {
+		}, {
 			name: "passwords do not match",
 			requestBody: map[string]string{
 				"name":             "diaa",
@@ -127,7 +127,6 @@ func TestVerify(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-
 	// adding verified user
 	newUser := signupBody{
 		Name:            "diaa",
@@ -144,8 +143,7 @@ func TestVerify(t *testing.T) {
 	err = app.DB.VerifyUser(user.ID)
 	assert.Nil(t, err)
 
-
-	newUser=signupBody{
+	newUser = signupBody{
 		Name:            "diaa",
 		Email:           "diaabadr82@gmail.com",
 		Password:        "diaabadr",
@@ -155,24 +153,31 @@ func TestVerify(t *testing.T) {
 	AddUserToDB(t, newUser, &app)
 
 	testCases := []struct {
-		name               string
-		requestBody        map[string]string
+		name        string
+		requestBody verifyBody
 		expectedStatusCode int
 	}{
 		{
 			name: "verify with wrong code",
-			requestBody: map[string]string{
-				"verification_code": "12345",
-				"email":"diaabadr82@gmail.com",
+			requestBody: verifyBody{
+				VerificationCode: 12345,
+				Email:            "diaabadr82@gmail.com",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "user already verified",
+			requestBody: verifyBody{
+				VerificationCode: 12345,
+				Email:             "diaabadr@gmail.com",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		},{
-			name: "user already verified",
-			requestBody: map[string]string{
-				"verification_code":"12345",
-				"email":"diaabadr@gmail.com",
+			name: "user not found",
+			requestBody: verifyBody{
+				VerificationCode: 1234,
+				Email: "diaabadr8@gmail.com",
 			},
-			expectedStatusCode: http.StatusBadRequest,
+			expectedStatusCode: http.StatusNotFound,
 		},
 	}
 
@@ -188,6 +193,7 @@ func TestVerify(t *testing.T) {
 			res := httptest.NewRecorder()
 
 			app.router.ServeHTTP(res, req)
+			fmt.Println(res.Body)
 
 			assert.Equal(t, tc.expectedStatusCode, res.Code)
 		})
