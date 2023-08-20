@@ -2,7 +2,7 @@ package app
 
 import (
 	"errors"
-	"fmt"
+	"strconv"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/mattn/go-sqlite3"
@@ -34,17 +34,19 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	project, err := a.DB.GetProject(input.ProjectID)
+	projectIdInt, err := strconv.Atoi(input.ProjectID)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if userID != project.OwnerID {
-		return nil, Forbidden(errors.New("have not access to update component"))
+	err = a.DB.CheckUserAccess(projectIdInt, userID.(string))
+
+	if err != nil {
+		return nil, Forbidden(errors.New("have not access to create component"))
 	}
 
-	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID}
+	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID, UserID: userID.(string)}
 
 	newComponent, err = a.DB.CreateComponent(newComponent)
 
@@ -94,7 +96,7 @@ func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if userID != project.OwnerID {
+	if userID != c.UserID && userID != project.OwnerID {
 		return nil, Forbidden(errors.New("have not access to update component"))
 	}
 
@@ -166,7 +168,7 @@ func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if fmt.Sprint(userID) != fmt.Sprint(project.OwnerID) {
+	if userID != c.UserID && userID != project.OwnerID {
 		return nil, Forbidden(errors.New("have not access to delete component"))
 	}
 

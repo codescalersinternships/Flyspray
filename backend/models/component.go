@@ -10,6 +10,8 @@ import (
 type Component struct {
 	// ID uniqe for each Component
 	ID uint `json:"id" gorm:"primaryKey;autoIncrement:true"`
+	// UserID descripe user create copmonent
+	UserID string `json:"user_id" validate:"required"`
 	// ProjectID descripe id project
 	ProjectID string `json:"project_id" validate:"required"`
 	// Name descripe each Component
