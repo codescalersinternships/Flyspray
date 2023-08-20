@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	middleware "github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +20,7 @@ func NewApp(dbFilePath string) (App, error) {
 		return App{}, err
 	}
 
-	return App{DB: database}, nil
+	return App{DB: database, router: gin.Default()}, nil
 }
 
 // App initializes the entire app
@@ -31,15 +32,18 @@ type App struct {
 // Run runs the server by seting the router and calling the internal setRoutes method
 func (app *App) Run(port int) error {
 
-	app.router = gin.Default()
-
 	app.setRoutes()
 
 	return app.router.Run(fmt.Sprintf(":%d", port))
 }
 
 func (app *App) setRoutes() {
-	project := app.router.Group("/project")
+
+	authGroup := app.router.Group("")
+	authGroup.Use(middleware.RequireAuth(""))
+
+	project := authGroup.Group("/project")
+
 	{
 		project.POST("", WrapFunc(app.createProject))
 		project.GET("/filters", WrapFunc(app.getProjects))
@@ -49,7 +53,7 @@ func (app *App) setRoutes() {
 
 	}
 
-	comment := app.router.Group("/comment")
+	comment := authGroup.Group("/comment")
 	{
 		comment.POST("", WrapFunc(app.createComment))
 		comment.GET("/:id", WrapFunc(app.getComment))
@@ -57,7 +61,7 @@ func (app *App) setRoutes() {
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
-	memberRoutes := app.router.Group("/member")
+	memberRoutes := authGroup.Group("/member")
 	{
 		memberRoutes.POST("", WrapFunc(app.createNewMember))
 		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
