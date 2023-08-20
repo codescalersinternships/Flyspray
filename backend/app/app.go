@@ -66,7 +66,7 @@ func (app *App) setRoutes() {
 
 	component := app.router.Group("/component")
 	{
-		component.POST("/", WrapFunc(app.createComponent))
+		component.POST("", WrapFunc(app.createComponent))
 		component.GET("/:id", WrapFunc(app.getComponent))
 		component.DELETE("/:id", WrapFunc(app.deleteComment))
 		component.PUT("/:id", WrapFunc(app.updateComment))
