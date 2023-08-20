@@ -61,7 +61,7 @@ func (app *App) setRoutes() {
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
-	memberRoutes := app.router.Group("/member")
+	memberRoutes := authGroup.Group("/member")
 	{
 		memberRoutes.POST("", WrapFunc(app.createNewMember))
 		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
