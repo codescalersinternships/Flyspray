@@ -68,6 +68,21 @@ func (app *App) setRoutes() {
 		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
+	authUserGroup := authGroup.Group("/user")
+	userGroup := app.router.Group("/user")
+
+	{
+		userGroup.POST("/signup", WrapFunc(app.signup))
+		userGroup.POST("/signin", WrapFunc(app.signIn))
+		userGroup.POST("/signup/verify", WrapFunc(app.verify))
+		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
+	}
+
+	{
+		authUserGroup.PUT("", WrapFunc(app.updateUser))
+		authUserGroup.GET("", WrapFunc(app.getUser))
+	}
+
 	component := app.router.Group("/component")
 	{
 		component.POST("", WrapFunc(app.createComponent))
