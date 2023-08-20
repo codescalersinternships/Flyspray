@@ -37,7 +37,7 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 	projectIdInt, err := strconv.Atoi(input.ProjectID)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
+		return nil, BadRequest(errors.New("invalid project id"))
 	}
 
 	err = a.DB.CheckMembers(projectIdInt, userID.(string))
@@ -189,11 +189,11 @@ func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
 }
 
 func (a *App) getComponents(ctx *gin.Context) (interface{}, Response) {
-	userId := ctx.Query("project_id")
+	projectId := ctx.Query("project_id")
 	componentName := ctx.Query("name")
 	creationDate := ctx.Query("after")
 
-	components, err := a.DB.FilterComponents(userId, componentName, creationDate)
+	components, err := a.DB.FilterComponents(projectId, componentName, creationDate)
 
 	if err != nil {
 		log.Error().Err(err).Send()

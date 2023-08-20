@@ -83,7 +83,7 @@ func (app *App) setRoutes() {
 		authUserGroup.GET("", WrapFunc(app.getUser))
 	}
 
-	component := app.router.Group("/component")
+	component := authGroup.Group("/component")
 	{
 		component.POST("", WrapFunc(app.createComponent))
 		component.GET("/:id", WrapFunc(app.getComponent))
