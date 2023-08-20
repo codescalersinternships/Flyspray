@@ -85,16 +85,12 @@ func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
 
 	updatedComponent := models.Component{Name: input.Name}
 
-	c, err = a.DB.GetComponentByName(input.Name)
-	if err == nil && fmt.Sprint(c.ID) != id {
+	err = a.DB.UpdateComponent(id, updatedComponent)
+
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 		return nil, BadRequest(errors.New("component name must be unique"))
 	}
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
-	}
-
-	err = a.DB.UpdateComponent(id, updatedComponent)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
