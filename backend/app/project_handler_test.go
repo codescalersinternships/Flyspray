@@ -25,7 +25,7 @@ func TestCreateProject(t *testing.T) {
 		ctx.Set("user_id", "1")
 		ctx.Next()
 	})
-	app.setRoutes()
+	app.router.POST("/project", WrapFunc(app.createProject))
 
 	tests := []struct {
 		name               string
@@ -97,7 +97,7 @@ func TestUpdateProject(t *testing.T) {
 		ctx.Set("user_id", "1")
 		ctx.Next()
 	})
-	app.setRoutes()
+	app.router.PUT("/project/:id", WrapFunc(app.updateProject))
 
 	tests := []struct {
 		name               string
@@ -175,7 +175,7 @@ func TestGetProject(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.router.GET("/project/:id", WrapFunc(app.getProject))
 
 	tests := []struct {
 		name               string
@@ -240,7 +240,7 @@ func TestGetProjects(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.router.GET("/project/filters", WrapFunc(app.getProjects))
 
 	t.Run("valid", func(t *testing.T) {
 		defer app.DB.Client.Exec("DELETE FROM projects")
@@ -290,7 +290,7 @@ func TestDeleteProject(t *testing.T) {
 		ctx.Set("user_id", "1")
 		ctx.Next()
 	})
-	app.setRoutes()
+	app.router.DELETE("/project/:id", WrapFunc(app.deleteProject))
 
 	tests := []struct {
 		name               string
