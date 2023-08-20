@@ -193,7 +193,6 @@ func TestVerify(t *testing.T) {
 			res := httptest.NewRecorder()
 
 			app.router.ServeHTTP(res, req)
-			fmt.Println(res.Body)
 
 			assert.Equal(t, tc.expectedStatusCode, res.Code)
 		})
@@ -516,7 +515,6 @@ func SigninUser(t testing.TB, user signinBody, app *App) string {
 
 	app.router.ServeHTTP(res, request)
 
-	fmt.Println(res.Body)
 	assert.Equal(t, http.StatusOK, res.Code)
 
 	var responseBody struct {
@@ -524,7 +522,6 @@ func SigninUser(t testing.TB, user signinBody, app *App) string {
 			AccessToken string `json:"access_token"`
 		}
 	}
-	fmt.Println(user)
 	err = json.NewDecoder(res.Body).Decode(&responseBody)
 	assert.Nil(t, err)
 	return responseBody.Data.AccessToken

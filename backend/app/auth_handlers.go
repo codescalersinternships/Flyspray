@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -72,13 +71,12 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, BadRequest(errors.New("failed to hash password"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	user.Password = string(hash)
 
 	user.VerificationCode = a.DB.GenerateVerificationCode()
-	fmt.Println(user.VerificationCode)
 
 	user, err = a.DB.CreateUser(user)
 
@@ -96,13 +94,13 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 			err = a.DB.UpdateVerificationCode(user.ID, verifivationCode, timeout)
 			if err != nil {
 				log.Error().Err(err).Send()
-				return "", InternalServerError(errInternalServerError)
+				return nil, InternalServerError(errInternalServerError)
 			}
 
 			err = internal.SendEmail(apiKey, apiEmail, user.Email, verifivationCode)
 			if err != nil {
 				log.Error().Err(err).Send()
-				return "", InternalServerError(errInternalServerError)
+				return nil, InternalServerError(errInternalServerError)
 			}
 			return ResponseMsg{Message: "your email exists but not verified. check you mailbox for verification code"}, nil
 		}
@@ -148,18 +146,15 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	if user.Verified {
-		return "", BadRequest(errors.New("user already verified"))
+		return nil, BadRequest(errors.New("user already verified"))
 	}
 
 	if user.VerificationCode != requestBody.VerificationCode {
-		return "", BadRequest(errors.New("wrong verification code"))
+		return nil, BadRequest(errors.New("wrong verification code"))
 	}
 
-	fmt.Println(user.VerificationCodeTimeout)
-	fmt.Println(time.Now().Add(time.Duration(0)))
-
 	if user.VerificationCodeTimeout.Before(time.Now()) {
-		return "", BadRequest(errors.New("verification code has expired"))
+		return nil, BadRequest(errors.New("verification code has expired"))
 	}
 
 	err = a.DB.VerifyUser(user.ID)
