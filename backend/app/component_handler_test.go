@@ -31,17 +31,21 @@ func TestCreateComponent(t *testing.T) {
 	app.router.POST("/component", WrapFunc(app.createComponent))
 
 	createProject := models.Project{
-		Name:    "New Project",
+		Name:    "Project",
 		OwnerID: "1",
 	}
 
-	_, err = app.DB.CreateProject(createProject)
+	createProject, err = app.DB.CreateProject(createProject)
+	assert.Nil(t, err)
+
+	member := models.Member{ProjectID: int(createProject.ID), Admin: true, UserID: createProject.OwnerID}
+	err = app.DB.CreateNewMember(member)
 	assert.Nil(t, err)
 
 	t.Run("Success", func(t *testing.T) {
 		componentInput := createComponentInput{
-			ProjectID: "1",
 			Name:      "Test Component",
+			ProjectID: "1",
 		}
 		payload, err := json.Marshal(componentInput)
 		if err != nil {
@@ -126,6 +130,7 @@ func TestUpdateComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
+		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
@@ -207,6 +212,7 @@ func TestGetComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
+		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
@@ -261,6 +267,7 @@ func TestGetComponents(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "test",
+		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)
@@ -331,6 +338,7 @@ func TestDeleteComponent(t *testing.T) {
 	createComponent := models.Component{
 		ProjectID: "1",
 		Name:      "New Component",
+		UserID:    "1",
 	}
 
 	_, err = app.DB.CreateComponent(createComponent)

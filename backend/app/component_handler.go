@@ -40,7 +40,7 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = a.DB.CheckUserAccess(projectIdInt, userID.(string))
+	err = a.DB.CheckMembers(projectIdInt, userID.(string))
 
 	if err != nil {
 		return nil, Forbidden(errors.New("have not access to create component"))
