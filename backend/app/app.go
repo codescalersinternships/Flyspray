@@ -82,8 +82,6 @@ func (app *App) setRoutes() {
 		authUserGroup.PUT("", WrapFunc(app.updateUser))
 		authUserGroup.GET("", WrapFunc(app.getUser))
 	}
-
-	
 	bugGroup := app.router.Group("/bug")
 	{
 		bugGroup.POST("", WrapFunc(app.createBug))
