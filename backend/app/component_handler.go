@@ -29,14 +29,24 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("failed to read component data"))
 	}
 
-	_, exists := ctx.Get("user_id")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
+	project, err := a.DB.GetProject(input.ProjectID)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if userID != project.OwnerID {
+		return nil, Forbidden(errors.New("have not access to update component"))
+	}
+
 	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID}
 
-	newComponent, err := a.DB.CreateComponent(newComponent)
+	newComponent, err = a.DB.CreateComponent(newComponent)
 
 	var sqliteErr sqlite3.Error
 	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {

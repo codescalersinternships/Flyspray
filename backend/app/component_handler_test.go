@@ -30,6 +30,14 @@ func TestCreateComponent(t *testing.T) {
 	})
 	app.router.POST("/component", WrapFunc(app.createComponent))
 
+	createProject := models.Project{
+		Name:    "New Project",
+		OwnerID: "1",
+	}
+
+	_, err = app.DB.CreateProject(createProject)
+	assert.Nil(t, err)
+
 	t.Run("Success", func(t *testing.T) {
 		componentInput := createComponentInput{
 			ProjectID: "1",
