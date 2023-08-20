@@ -23,7 +23,7 @@ func TestCreateNewMember(t *testing.T) {
 		c.Set("user_id", "1")
 		c.Next()
 	})
-	app.setRoutes()
+	app.router.POST("/member", WrapFunc(app.createNewMember))
 	createFirstMember(app, t)
 	t.Run("creating valid member returns status 201 and correct response", func(t *testing.T) {
 		member := models.Member{UserID: "2", ProjectID: 2, Admin: false}
@@ -87,7 +87,8 @@ func TestGetMembersInProject(t *testing.T) {
 		c.Set("user_id", "1")
 		c.Next()
 	})
-	app.setRoutes()
+	app.router.POST("/member", WrapFunc(app.createNewMember))
+	app.router.GET("/member/:project_id", WrapFunc(app.getMembersInProject))
 	t.Run("getmembersinproject returns status 200 and empty slice", func(t *testing.T) {
 		expectedResponse := ResponseMsg{
 			Message: "members in project retrieved successfully",
@@ -149,7 +150,7 @@ func TestUpdateMemberOwnership(t *testing.T) {
 		c.Set("user_id", "1")
 		c.Next()
 	})
-	app.setRoutes()
+	app.router.PUT("/member/:id", WrapFunc(app.updateMemberOwnership))
 	createFirstMember(app, t)
 	jsonData, err := json.Marshal(updateMemberInput{Admin: true, ProjectID: 2})
 	assert.NoError(t, err, "failed to marshal json data")
@@ -185,6 +186,7 @@ func TestUpdateMemberOwnership(t *testing.T) {
 }
 
 func createFirstMember(app App, t *testing.T) {
+	app.router.POST("/project", WrapFunc(app.createProject))
 	p := createProjectInput{Name: "test project"}
 	_, err := app.DB.CreateProject(models.Project{})
 	assert.Nil(t, err)
