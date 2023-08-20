@@ -51,7 +51,7 @@ func TestCreateComponent(t *testing.T) {
 
 	})
 
-	t.Run("Bad Request", func(t *testing.T) {
+	t.Run("Bad Request, name is aleardy exist", func(t *testing.T) {
 
 		componentInput := createComponentInput{
 			ProjectID: "1",
@@ -74,7 +74,7 @@ func TestCreateComponent(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("Bad Request", func(t *testing.T) {
+	t.Run("Bad Request, empty body", func(t *testing.T) {
 
 		requestBody := []byte(`{}`)
 		payload, err := json.Marshal(requestBody)
