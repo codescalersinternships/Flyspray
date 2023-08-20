@@ -8,7 +8,7 @@ import (
 )
 
 // SendEmail sends an email to the user with the verification code
-func SendEmail(apiKey,apiEmail, email string, verificationCode int) error {
+func SendEmail(apiKey, apiEmail, email string, verificationCode int) error {
 	from := mail.NewEmail("Fly Spray", apiEmail)
 	subject := "Verify your account"
 	to := mail.NewEmail("user", email)
