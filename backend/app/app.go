@@ -43,6 +43,7 @@ func (app *App) setRoutes() {
 	authGroup.Use(middleware.RequireAuth(""))
 
 	project := authGroup.Group("/project")
+t
 	{
 		project.POST("", WrapFunc(app.createProject))
 		project.GET("/filters", WrapFunc(app.getProjects))
@@ -59,6 +60,12 @@ func (app *App) setRoutes() {
 		comment.DELETE("/:id", WrapFunc(app.deleteComment))
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
+	}
+	memberRoutes := app.router.Group("/member")
+	{
+		memberRoutes.POST("", WrapFunc(app.createNewMember))
+		memberRoutes.PUT("/:id", WrapFunc(app.updateMemberOwnership))
+		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
 	authUserGroup := authGroup.Group("/user")
