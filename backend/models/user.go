@@ -93,9 +93,7 @@ func (db *DBClient) UpdateVerificationCode(userID string, newVerificationCode in
 }
 
 func (db *DBClient) VerifyUser(userID string) error {
-
 	return db.Client.Model(&User{}).Where("id = ?", userID).Update("verified", true).Error
-
 }
 
 func (db *DBClient) GetUserByEmail(email string) (User, error) {

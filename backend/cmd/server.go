@@ -5,9 +5,15 @@ import (
 	"log"
 
 	"github.com/codescalersinternships/Flyspray/app"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// take port number and db filepath as flags
 	var dbFilePath string

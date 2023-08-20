@@ -40,7 +40,7 @@ func (app *App) Run(port int) error {
 func (app *App) setRoutes() {
 
 	authGroup := app.router.Group("")
-	authGroup.Use(middleware.RequireAuth)
+	authGroup.Use(middleware.RequireAuth(""))
 
 	project := authGroup.Group("/project")
 	{

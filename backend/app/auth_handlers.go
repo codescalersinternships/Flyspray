@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -72,6 +73,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 	user.Password = string(hash)
 
 	user.VerificationCode = a.DB.GenerateVerificationCode()
+	fmt.Println(user.VerificationCode)
 
 	user, err = a.DB.CreateUser(user)
 
@@ -151,7 +153,10 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 		return "", BadRequest(errors.New("wrong verification code"))
 	}
 
-	if user.VerificationCodeTimeout.After(time.Now()) {
+	fmt.Println(user.VerificationCodeTimeout)
+	fmt.Println(time.Now().Add(time.Duration(0)))
+
+	if user.VerificationCodeTimeout.Before(time.Now()) {
 		return "", BadRequest(errors.New("verification code has expired"))
 	}
 
@@ -162,7 +167,7 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errInternalServerError)
 	}
 
-	return ResponseMsg{Message: "updated"}, Ok()
+	return ResponseMsg{Message: "verified"}, Ok()
 
 }
 

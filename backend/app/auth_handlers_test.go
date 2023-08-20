@@ -23,15 +23,20 @@ func TestSignup(t *testing.T) {
 	app.setRoutes()
 
 	// adding verified user
-	user := signupBody{
+	newUser := signupBody{
 		Name:            "diaa",
 		Email:           "diaabadr@gmail.com",
 		Password:        "diaabadr",
 		ConfirmPassword: "diaabadr",
-		Verified:        true,
 	}
 
-	AddUserToDB(t, user, &app)
+	AddUserToDB(t, newUser, &app)
+
+	user, err := app.DB.GetUserByEmail(newUser.Email)
+
+	assert.Nil(t, err)
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
 
 	testCases := []struct {
 		name               string
@@ -56,7 +61,17 @@ func TestSignup(t *testing.T) {
 				"confirm_password": "diaabadr",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-		}, {
+		},  {
+			name: "passwords do not match",
+			requestBody: map[string]string{
+				"name":             "diaa",
+				"email":            "diaabadr82@gmail.com",
+				"password":         "diaabadr",
+				"confirm_password": "diaa",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
 			name: "missing field in body",
 			requestBody: map[string]string{
 				"name":  "diaa",
@@ -171,6 +186,12 @@ func TestSignin(t *testing.T) {
 
 	AddUserToDB(t, verifiedUser, &app)
 
+	user, err := app.DB.GetUserByEmail(verifiedUser.Email)
+	assert.Nil(t, err)
+
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
+
 	testCases := []struct {
 		name               string
 		requestBody        map[string]string
@@ -238,20 +259,28 @@ func TestUpdateUser(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	user := signupBody{
+	newUser := signupBody{
 		Name:            "diaa",
 		Email:           "diaa12345678912@gmail.com",
 		Password:        "diaa",
 		ConfirmPassword: "diaa",
-		Verified:        true,
 	}
 
-	AddUserToDB(t, user, &app)
+	AddUserToDB(t, newUser, &app)
 
-	body, err := json.Marshal(user)
+	user, err := app.DB.GetUserByEmail(newUser.Email)
 	assert.Nil(t, err)
-	t.Run("unauthorized user", func(t *testing.T) {
 
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
+
+	t.Run("unauthorized user", func(t *testing.T) {
+		body, err := json.Marshal(struct {
+			Name string `json:"name"`
+		}{
+			Name: "omar",
+		})
+		assert.Nil(t, err)
 		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
 
 		assert.Nil(t, err)
@@ -263,20 +292,20 @@ func TestUpdateUser(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	user.Password = "diaa"
 	// login user
 	reqBody := signinBody{
 		Email:    user.Email,
 		Password: user.Password,
 	}
+
 	token := SigninUser(t, reqBody, &app)
 	t.Run("authorized user", func(t *testing.T) {
 		requestBody := signupBody{
-			Name:     "Omar",
-			Email:    "omar@gmail.com",
-			Password: "omar ahmed",
+			Name: "Omar",
 		}
 
-		body, err = json.Marshal(requestBody)
+		body, err := json.Marshal(requestBody)
 		assert.Nil(t, err)
 		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
 		assert.Nil(t, err)
@@ -300,16 +329,21 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	user := signupBody{
+	newUser := signupBody{
 		Name:            "diaa",
 		Email:           "diaa12345678912@gmail.com",
 		Password:        "diaa",
 		ConfirmPassword: "diaa",
-		Verified:        true,
 	}
 
-	AddUserToDB(t, user, &app)
+	AddUserToDB(t, newUser, &app)
 
+	user, err := app.DB.GetUserByEmail(newUser.Email)
+
+	assert.Nil(t, err)
+
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
 	t.Run("unauthorized user", func(t *testing.T) {
@@ -325,6 +359,7 @@ func TestGetUser(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
+	user.Password = "diaa"
 	reqBody := signinBody{
 		Email:    user.Email,
 		Password: user.Password,
@@ -356,15 +391,21 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
-	user := signupBody{
+	newUser := signupBody{
 		Name:            "diaa",
 		Email:           "diaa12345678912@gmail.com",
 		Password:        "diaa",
 		ConfirmPassword: "diaa",
-		Verified:        true,
 	}
 
-	AddUserToDB(t, user, &app)
+	AddUserToDB(t, newUser, &app)
+
+	user, err := app.DB.GetUserByEmail(newUser.Email)
+	assert.Nil(t, err)
+
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
+	user.Password = "diaa"
 	reqBody := signinBody{
 		Email:    user.Email,
 		Password: user.Password,
@@ -434,6 +475,7 @@ func SigninUser(t testing.TB, user signinBody, app *App) string {
 
 	app.router.ServeHTTP(res, request)
 
+	fmt.Println(res.Body)
 	assert.Equal(t, http.StatusOK, res.Code)
 
 	var responseBody struct {
@@ -441,6 +483,7 @@ func SigninUser(t testing.TB, user signinBody, app *App) string {
 			AccessToken string `json:"access_token"`
 		}
 	}
+	fmt.Println(user)
 	err = json.NewDecoder(res.Body).Decode(&responseBody)
 	assert.Nil(t, err)
 	return responseBody.Data.AccessToken
