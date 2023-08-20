@@ -127,6 +127,33 @@ func TestVerify(t *testing.T) {
 	assert.Nil(t, err)
 	app.setRoutes()
 
+
+	// adding verified user
+	newUser := signupBody{
+		Name:            "diaa",
+		Email:           "diaabadr@gmail.com",
+		Password:        "diaabadr",
+		ConfirmPassword: "diaabadr",
+	}
+
+	AddUserToDB(t, newUser, &app)
+
+	user, err := app.DB.GetUserByEmail(newUser.Email)
+
+	assert.Nil(t, err)
+	err = app.DB.VerifyUser(user.ID)
+	assert.Nil(t, err)
+
+
+	newUser=signupBody{
+		Name:            "diaa",
+		Email:           "diaabadr82@gmail.com",
+		Password:        "diaabadr",
+		ConfirmPassword: "diaabadr",
+	}
+
+	AddUserToDB(t, newUser, &app)
+
 	testCases := []struct {
 		name               string
 		requestBody        map[string]string
@@ -136,6 +163,14 @@ func TestVerify(t *testing.T) {
 			name: "verify with wrong code",
 			requestBody: map[string]string{
 				"verification_code": "12345",
+				"email":"diaabadr82@gmail.com",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},{
+			name: "user already verified",
+			requestBody: map[string]string{
+				"verification_code":"12345",
+				"email":"diaabadr@gmail.com",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		},
