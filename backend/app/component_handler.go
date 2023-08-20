@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 
@@ -36,17 +37,12 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 
 	newComponent := models.Component{Name: input.Name, ProjectID: input.ProjectID, UserID: userID.(string)}
 
-	_, err := a.DB.GetComponentByName(input.Name)
-	if err == nil {
+	newComponent, err := a.DB.CreateComponent(newComponent)
+
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 		return nil, BadRequest(errors.New("component name must be unique"))
 	}
-	if err != gorm.ErrRecordNotFound {
-		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
-	}
-
-	newComponent, err = a.DB.CreateComponent(newComponent)
-
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
