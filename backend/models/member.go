@@ -68,3 +68,14 @@ func (db *DBClient) CheckUserAccess(project_id int, userId string) error {
 	}
 	return nil
 }
+
+// CheckMembers checks if user is a member or not
+func (db *DBClient) CheckMembers(project_id int, userId string) error {
+	var authMember Member
+	rows := db.Client.Model(&Member{}).Where("user_id = ? AND project_id = ?", userId, project_id).First(&authMember)
+
+	if rows.RowsAffected == 0 {
+		return ErrAccessDenied
+	}
+	return nil
+}
