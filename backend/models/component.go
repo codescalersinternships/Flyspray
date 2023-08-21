@@ -43,12 +43,6 @@ func (d *DBClient) GetComponent(id string) (Component, error) {
 	return c, d.Client.First(&c, id).Error
 }
 
-// GetComponentByName gets component by name
-func (d *DBClient) GetComponentByName(name string) (Component, error) {
-	p := Component{}
-	return p, d.Client.Where("name = ?", name).First(&p).Error
-}
-
 // FilterComponents filters all components by project id, component name, creation date
 func (d *DBClient) FilterComponents(ProjectID, componentName, date string) ([]Component, error) {
 	projects := []Component{}
