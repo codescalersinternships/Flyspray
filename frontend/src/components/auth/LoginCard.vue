@@ -16,7 +16,7 @@
               label="Email"
               v-model="email"
               required
-              :rules="[validateEmail]"
+              :rules="[validateEmailRule]"
             ></v-text-field>
             <v-text-field
               type="password"
@@ -24,11 +24,11 @@
               label="Password"
               v-model="password"
               required
-              :rules="[validatePassword]"
+              :rules="[validatePasswordRule]"
             ></v-text-field>
 
             <div class="forgot-password-container">
-              <router-link to="/forget" class="link"
+              <router-link to="/forget-password" class="link"
                 >Forgot Password?</router-link
               >
             </div>
@@ -43,7 +43,7 @@
           <hr class="form-separator" />
 
           <p class="signin-text">
-            Don't have account? please
+            Don't have an account? please
             <router-link to="/signup" class="link">Sign Up</router-link>
           </p>
         </v-sheet></input-form
@@ -55,6 +55,11 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import InputForm from "./InputForm.vue";
+import {
+  validateEmail,
+  ValidationResult,
+  validatePassword,
+} from "../../utils/validations";
 
 export default defineComponent({
   components: {
@@ -64,30 +69,43 @@ export default defineComponent({
     return {
       email: "" as string,
       password: "" as string,
+      emailValidationResult: {} as ValidationResult,
+      passwordValidationResult: {} as ValidationResult,
     };
   },
   computed: {
     errorEmail(): boolean {
-      const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      return !pattern.test(this.email);
+      return !validateEmail(this.email).isValid;
     },
     errorPassword(): boolean {
-      return this.password.length < 8;
+      return !validatePassword(this.password).isValid;
+    },
+    validateEmailRule() {
+      return (value: string) => {
+        this.emailValidationResult = validateEmail(value);
+        return (
+          this.emailValidationResult.isValid ||
+          this.emailValidationResult.errorMessage
+        );
+      };
+    },
+    validatePasswordRule() {
+      return (value: string) => {
+        this.passwordValidationResult = validatePassword(value);
+        return (
+          this.passwordValidationResult.isValid ||
+          this.passwordValidationResult.errorMessage
+        );
+      };
     },
   },
   methods: {
-    validateEmail(value: string) {
-      if (!value) return "Email is required";
-      const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      return pattern.test(value) || "Invalid email format";
-    },
-    validatePassword(value: string) {
-      if (!value) return "Password is required";
-      return value.length >= 8 || "Password must be at least 8 characters long";
-    },
     submitForm() {
-      console.log("Email:", this.email);
-      console.log("Password:", this.password);
+      if (!this.errorEmail && !this.errorPassword) {
+        console.log("Email:", this.email);
+      } else {
+        console.log("Form is not valid");
+      }
     },
   },
 });
