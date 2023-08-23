@@ -6,6 +6,7 @@ import (
 	"github.com/codescalersinternships/Flyspray/internal"
 	middleware "github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,6 +44,8 @@ func (app *App) Run() error {
 }
 
 func (app *App) setRoutes() {
+	app.router.Use(cors.Default())
+
 	authGroup := app.router.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
 
