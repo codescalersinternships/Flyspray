@@ -1,12 +1,8 @@
 <template>
   <div>
-    <v-img src="../assets/logo.png" alt="logo" class="img"></v-img>
+    <v-img src="../assets/auth_logo.png" alt="logo" class="img"></v-img>
   </div>
 </template>
-
-<script>
-export default {};
-</script>
 
 <style scoped>
 .img {
