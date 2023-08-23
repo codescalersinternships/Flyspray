@@ -9,22 +9,26 @@
     <div class="form-box">
       <p class="signin-text">Sign in to start managing your projects</p>
       <v-sheet width="300" class="mx-auto">
-        <v-form @submit.prevent>
+        <v-form @submit.prevent="submitForm">
           <v-text-field
             prepend-inner-icon="mdi-email"
             label="Email"
+            v-model="email"
           ></v-text-field>
           <v-text-field
             type="password"
             prepend-inner-icon="mdi-lock"
             label="Password"
+            v-model="password"
           ></v-text-field>
           <div class="forgot-password-container">
             <router-link to="/forget" class="link"
               >Forgot Password?</router-link
             >
           </div>
-          <v-btn type="submit" block class="mt-2 btn">Sign In</v-btn>
+          <v-btn type="submit" block class="mt-2 btn" :disabled="disable"
+            >Sign In</v-btn
+          >
         </v-form>
         <hr class="form-separator" />
 
@@ -38,7 +42,35 @@
 </template>
 
 <script lang="ts">
-export default {};
+export default {
+  data() {
+    return {
+      email: "" as string,
+      password: "" as string,
+      errorEmail: true as boolean,
+      errorPassword: false as boolean,
+      disable: true as boolean,
+    };
+  },
+  watch: {
+    email() {
+      const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      this.errorEmail = !pattern.test(this.email);
+      this.disable = this.errorEmail || this.errorPassword;
+    },
+    password() {
+      this.errorPassword = this.password.length < 8;
+      this.disable = this.errorEmail || this.errorPassword;
+    },
+  },
+  methods: {
+    submitForm() {
+      if (!this.disable) {
+        console.log("login");
+      }
+    },
+  },
+};
 </script>
 
 <style scoped>
