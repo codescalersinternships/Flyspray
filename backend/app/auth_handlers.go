@@ -16,12 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const timeout = 120
-const tokenTimeout = 15
-const apiKey = ""
-const apiEmail = ""
-const secret = ""
-
 type signupBody struct {
 	Name            string `json:"name"`
 	Email           string `json:"email"`
@@ -58,7 +52,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 		Name:                    requestBody.Name,
 		Email:                   requestBody.Email,
 		Password:                requestBody.Password,
-		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(a.config.MailSender.Timeout)),
 	}
 
 	err = user.Validate()
@@ -90,14 +84,14 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 			return nil, InternalServerError(errInternalServerError)
 		}
 		if !user.Verified {
-			verifivationCode := a.DB.GenerateVerificationCode()
-			err = a.DB.UpdateVerificationCode(user.ID, verifivationCode, timeout)
+			verificationCode := a.DB.GenerateVerificationCode()
+			err = a.DB.UpdateVerificationCode(user.ID, verificationCode, a.config.MailSender.Timeout)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
 			}
 
-			err = internal.SendEmail(apiKey, apiEmail, user.Email, verifivationCode)
+			err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, verificationCode)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
@@ -112,7 +106,7 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = internal.SendEmail(apiKey, apiEmail, user.Email, user.VerificationCode)
+	err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, user.VerificationCode)
 	if err != nil {
 		log.Error().Err(err).Send()
 
@@ -205,7 +199,7 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 		return nil, Forbidden(errors.New("account is not verified yet, please check the verification email in your inbox"))
 	}
 	// generate tokens
-	accessToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Minute*time.Duration(tokenTimeout)))
+	accessToken, err := internal.GenerateToken(a.config.JWT.Secret, user.ID, time.Now().Add(time.Minute*time.Duration(a.config.JWT.Timeout)))
 
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -285,7 +279,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("token is required"))
 	}
 
-	claims, err := internal.ValidateToken(secret, token)
+	claims, err := internal.ValidateToken(a.config.JWT.Secret, token)
 
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -301,7 +295,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		return nil, NotFound(errors.New("user is not found"))
 	}
 
-	accessToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Minute*time.Duration(tokenTimeout)))
+	accessToken, err := internal.GenerateToken(a.config.JWT.Secret, user.ID, time.Now().Add(time.Minute*time.Duration(a.config.JWT.Timeout)))
 
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -309,7 +303,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	refreshToken, err := internal.GenerateToken(secret, user.ID, time.Now().Add(time.Hour*time.Duration(tokenTimeout)))
+	refreshToken, err := internal.GenerateToken(a.config.JWT.Secret, user.ID, time.Now().Add(time.Hour*time.Duration(a.config.JWT.Timeout)))
 
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -321,7 +315,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		Message: "token has been refreshed successfully",
 		Data: struct {
 			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"resfresh_token"`
+			RefreshToken string `json:"refresh_token"`
 		}{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
