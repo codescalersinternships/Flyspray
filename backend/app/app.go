@@ -37,12 +37,12 @@ type App struct {
 
 // Run runs the server by setting the router and calling the internal setRoutes method
 func (app *App) Run() error {
-	app.setRoutes()
+	app.registerRoutes()
 
 	return app.router.Run(fmt.Sprintf(":%d", app.config.Server.Port))
 }
 
-func (app *App) setRoutes() {
+func (app *App) registerRoutes() {
 	authGroup := app.router.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
 

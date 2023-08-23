@@ -28,7 +28,7 @@ func TestSignup(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	// adding verified user
 	newUser := signupBody{
@@ -138,7 +138,7 @@ func TestVerify(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	// adding verified user
 	newUser := signupBody{
@@ -225,7 +225,7 @@ func TestSignin(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	unverifiedUser := signupBody{
 		Name:            "diaa",
@@ -320,7 +320,7 @@ func TestUpdateUser(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15
@@ -398,7 +398,7 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15
@@ -468,7 +468,7 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
-	app.setRoutes()
+	app.registerRoutes()
 
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15

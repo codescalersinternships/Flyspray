@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -16,13 +17,15 @@ import (
 func TestCreateBug(t *testing.T) {
 	tempDir := t.TempDir()
 	path := path.Join(tempDir, "flyspray.db")
-	gin.SetMode(gin.TestMode)
+	//gin.SetMode(gin.TestMode)
 
-	// Create a new instance of your App
-	app, err := NewApp(path)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(path)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
-	// Create a new HTTP request
 	router := gin.Default()
 	// middleware to set the "user_id" in the gin context
 	router.Use(func(c *gin.Context) {
@@ -35,6 +38,9 @@ func TestCreateBug(t *testing.T) {
 		bugInput := createBugInput{
 			Summary:     "hello world!",
 			ComponentID: 13,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
 		}
 
 		payload, err := json.Marshal(bugInput)
@@ -68,16 +74,19 @@ func TestCreateBug(t *testing.T) {
 	})
 }
 
-func TestGetbug(t *testing.T) {
+func TestFilterbug(t *testing.T) {
 	tempDir := t.TempDir()
 	path := path.Join(tempDir, "flyspray.db")
 	gin.SetMode(gin.TestMode)
 
 	// Create a new instance of your App
-	app, err := NewApp(path)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(path)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
-	// Create a new HTTP request
 	router := gin.Default()
 	// middleware to set the "user_id" in the gin context
 	router.Use(func(c *gin.Context) {
@@ -108,10 +117,13 @@ func TestGetBug(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a new instance of your App
-	app, err := NewApp(path)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(path)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
-	// Create a new HTTP request
 	router := gin.Default()
 
 	// middleware to set the "user_id" in the gin context
@@ -233,10 +245,13 @@ func TestUpdateBug(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a new instance of your App
-	app, err := NewApp(path)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(path)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
-	// Create a new HTTP request
 	router := gin.Default()
 
 	// middleware to set the "user_id" in the gin context
@@ -253,6 +268,9 @@ func TestUpdateBug(t *testing.T) {
 		bugInput := createBugInput{
 			Summary:     "hello from test",
 			ComponentID: 90,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
 		}
 
 		wantedBug := models.Bug{
@@ -260,13 +278,19 @@ func TestUpdateBug(t *testing.T) {
 			UserID:      "99",
 			Summary:     bugInput.Summary,
 			ComponentID: bugInput.ComponentID,
+			Category:    bugInput.Category,
+			Severity:    bugInput.Severity,
+			Status:      bugInput.Status,
 		}
 
 		result := app.DB.Client.Create(&wantedBug)
 		assert.NoError(t, result.Error)
 
 		bugUpdate := updateBugInput{
-			Summary: "update bug",
+			Summary:  "update bug",
+			Category: "tests",
+			Severity: "low",
+			Status:   "not solved yet",
 		}
 
 		payload, err := json.Marshal(bugUpdate)
@@ -286,7 +310,10 @@ func TestUpdateBug(t *testing.T) {
 	t.Run("bug is not found", func(t *testing.T) {
 
 		bugUpdate := updateBugInput{
-			Summary: "update bug",
+			Summary:  "update bug",
+			Category: "tests",
+			Severity: "low",
+			Status:   "not solved yet",
 		}
 
 		payload, err := json.Marshal(bugUpdate)
@@ -336,10 +363,13 @@ func TestDeleteBug(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a new instance of your App
-	app, err := NewApp(path)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(path)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
-	// Create a new HTTP request
 	router := gin.Default()
 
 	// middleware to set the "user_id" in the gin context
@@ -351,9 +381,42 @@ func TestDeleteBug(t *testing.T) {
 	router.DELETE("/bug/:id", WrapFunc(app.deleteBug))
 
 	t.Run("delete bug successfully", func(t *testing.T) {
+
+		projectInput := createProjectInput{
+			Name: "flyspray",
+		}
+
+		project := models.Project{
+			OwnerID: "99",
+			Name:    projectInput.Name,
+		}
+
+		result := app.DB.Client.Create(&project)
+		assert.NoError(t, result.Error)
+
+		projectId := fmt.Sprintf("%x", project.ID)
+
+		componentInput := createComponentInput{
+			Name:      "backend",
+			ProjectID: projectId,
+		}
+
+		component := models.Component{
+			ID:        90,
+			UserID:    "99",
+			Name:      componentInput.Name,
+			ProjectID: componentInput.ProjectID,
+		}
+
+		result = app.DB.Client.Create(&component)
+		assert.NoError(t, result.Error)
+
 		bugInput := createBugInput{
 			Summary:     "hello from test",
 			ComponentID: 90,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
 		}
 
 		wantedBug := models.Bug{
@@ -361,9 +424,12 @@ func TestDeleteBug(t *testing.T) {
 			UserID:      "99",
 			Summary:     bugInput.Summary,
 			ComponentID: bugInput.ComponentID,
+			Category:    bugInput.Category,
+			Severity:    bugInput.Severity,
+			Status:      bugInput.Status,
 		}
 
-		result := app.DB.Client.Create(&wantedBug)
+		result = app.DB.Client.Create(&wantedBug)
 		assert.NoError(t, result.Error)
 
 		request, err := http.NewRequest("DELETE", "/bug/10", nil)
