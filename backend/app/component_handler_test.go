@@ -67,7 +67,7 @@ func TestCreateComponent(t *testing.T) {
 
 	})
 
-	t.Run("Bad Request, name is aleardy exist", func(t *testing.T) {
+	t.Run("Bad Request, name is already exist", func(t *testing.T) {
 
 		componentInput := createComponentInput{
 			ProjectID: "1",

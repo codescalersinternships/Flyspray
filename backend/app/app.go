@@ -29,7 +29,7 @@ type App struct {
 	router *gin.Engine
 }
 
-// Run runs the server by seting the router and calling the internal setRoutes method
+// Run runs the server by setting the router and calling the internal setRoutes method
 func (app *App) Run(port int) error {
 
 	app.setRoutes()

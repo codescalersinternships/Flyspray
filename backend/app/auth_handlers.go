@@ -90,14 +90,14 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 			return nil, InternalServerError(errInternalServerError)
 		}
 		if !user.Verified {
-			verifivationCode := a.DB.GenerateVerificationCode()
-			err = a.DB.UpdateVerificationCode(user.ID, verifivationCode, timeout)
+			verificationCode := a.DB.GenerateVerificationCode()
+			err = a.DB.UpdateVerificationCode(user.ID, verificationCode, timeout)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
 			}
 
-			err = internal.SendEmail(apiKey, apiEmail, user.Email, verifivationCode)
+			err = internal.SendEmail(apiKey, apiEmail, user.Email, verificationCode)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
@@ -321,7 +321,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		Message: "token has been refreshed successfully",
 		Data: struct {
 			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"resfresh_token"`
+			RefreshToken string `json:"refresh_token"`
 		}{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
