@@ -17,7 +17,12 @@ import (
 
 func TestCreateProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
@@ -89,7 +94,12 @@ func TestCreateProject(t *testing.T) {
 
 func TestUpdateProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
@@ -171,7 +181,12 @@ func TestUpdateProject(t *testing.T) {
 
 func TestGetProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
@@ -236,7 +251,12 @@ func TestGetProject(t *testing.T) {
 
 func TestGetProjects(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
@@ -282,7 +302,12 @@ func TestGetProjects(t *testing.T) {
 
 func TestDeleteProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()

@@ -16,8 +16,12 @@ import (
 
 func TestCreateNewMember(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
 		c.Set("user_id", "1")
@@ -77,8 +81,12 @@ func TestCreateNewMember(t *testing.T) {
 
 func TestGetMembersInProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	member := models.Member{UserID: "1", ProjectID: 2}
 	_, err = json.Marshal(member)
 	assert.NoError(t, err, "failed to marshal json data")
@@ -143,8 +151,12 @@ func TestGetMembersInProject(t *testing.T) {
 
 func TestUpdateMemberOwnership(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
-	assert.NoError(t, err)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
 		c.Set("user_id", "1")

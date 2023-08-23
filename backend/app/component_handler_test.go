@@ -20,7 +20,11 @@ func TestCreateComponent(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
 	app.router = gin.Default()
@@ -115,10 +119,12 @@ func TestUpdateComponent(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
@@ -197,10 +203,12 @@ func TestGetComponent(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
@@ -252,10 +260,12 @@ func TestGetComponents(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
@@ -323,10 +333,12 @@ func TestDeleteComponent(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
-	if err != nil {
-		t.Fatalf("Error: %v", err)
-	}
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
+	assert.Nil(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
