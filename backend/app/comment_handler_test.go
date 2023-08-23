@@ -19,8 +19,12 @@ func TestCreateComment(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	router := gin.Default()
 
@@ -114,8 +118,12 @@ func TestUpdateComment(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	router := gin.Default()
 
@@ -263,8 +271,12 @@ func TestGetComment(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	router := gin.Default()
 
@@ -338,8 +350,12 @@ func TestDeleteComment(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	router := gin.Default()
 
@@ -418,8 +434,12 @@ func TestListComments(t *testing.T) {
 
 	dbPath := filepath.Join(tempDir, "testing.db")
 
-	app, err := NewApp(dbPath)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(dbPath)
 	assert.NoError(t, err)
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 
 	router := gin.Default()
 

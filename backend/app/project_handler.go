@@ -1,5 +1,3 @@
-// TODO: check duplicated project name when create & update in a better way
-
 package app
 
 import (

@@ -8,15 +8,15 @@ import (
 
 // Component is a struct representing a Component
 type Component struct {
-	// ID uniqe for each Component
+	// ID unique for each Component
 	ID uint `json:"id" gorm:"primaryKey;autoIncrement:true"`
-	// UserID descripe user create copmonent
+	// UserID describe user create component
 	UserID string `json:"user_id" validate:"required"`
-	// ProjectID descripe id project
+	// ProjectID describe id project
 	ProjectID string `json:"project_id" validate:"required"`
-	// Name descripe each Component
+	// Name describe each Component
 	Name string `json:"name" gorm:"unique" validate:"required "`
-	// CreatedAt descripe time for the component
+	// CreatedAt describe time for the component
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -37,7 +37,7 @@ func (d *DBClient) UpdateComponent(id string, updatedComponent Component) error 
 	return result.Error
 }
 
-// GetComponent gets compoennt by id
+// GetComponent gets component by id
 func (d *DBClient) GetComponent(id string) (Component, error) {
 	c := Component{}
 	return c, d.Client.First(&c, id).Error

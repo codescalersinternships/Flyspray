@@ -9,17 +9,25 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/codescalersinternships/Flyspray/internal"
+	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSignup(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
 
 	// adding verified user
@@ -120,11 +128,16 @@ func TestSignup(t *testing.T) {
 func TestVerify(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
 
 	// adding verified user
@@ -202,11 +215,16 @@ func TestVerify(t *testing.T) {
 func TestSignin(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
 
 	unverifiedUser := signupBody{
@@ -292,12 +310,20 @@ func TestSignin(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
+
+	app.config = internal.Configuration{}
+	app.config.JWT.Timeout = 15
 
 	newUser := signupBody{
 		Name:            "diaa",
@@ -362,12 +388,20 @@ func TestUpdateUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
+
+	app.config = internal.Configuration{}
+	app.config.JWT.Timeout = 15
 
 	newUser := signupBody{
 		Name:            "diaa",
@@ -424,12 +458,20 @@ func TestGetUser(t *testing.T) {
 func TestRefreshToken(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "flyspray.db"))
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.router = gin.Default()
 	app.setRoutes()
+
+	app.config = internal.Configuration{}
+	app.config.JWT.Timeout = 15
 
 	newUser := signupBody{
 		Name:            "diaa",
