@@ -10,24 +10,33 @@
       <p class="signin-text">Sign in to start managing your projects</p>
       <input-form>
         <v-sheet width="300" class="mx-auto">
-          <v-form @submit.prevent="submitForm">
+          <v-form ref="form" @submit.prevent="submitForm">
             <v-text-field
               prepend-inner-icon="mdi-email"
               label="Email"
               v-model="email"
+              required
+              :rules="[validateEmail]"
             ></v-text-field>
             <v-text-field
               type="password"
               prepend-inner-icon="mdi-lock"
               label="Password"
               v-model="password"
+              required
+              :rules="[validatePassword]"
             ></v-text-field>
+
             <div class="forgot-password-container">
               <router-link to="/forget" class="link"
                 >Forgot Password?</router-link
               >
             </div>
-            <v-btn type="submit" block class="mt-2 btn" :disabled="disable"
+            <v-btn
+              type="submit"
+              block
+              class="mt-2 btn"
+              :disabled="errorPassword || errorEmail"
               >Sign In</v-btn
             >
           </v-form>
@@ -55,27 +64,30 @@ export default defineComponent({
     return {
       email: "" as string,
       password: "" as string,
-      errorEmail: true as boolean,
-      errorPassword: false as boolean,
-      disable: true as boolean,
     };
   },
-  watch: {
-    email() {
+  computed: {
+    errorEmail(): boolean {
       const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      this.errorEmail = !pattern.test(this.email);
-      this.disable = this.errorEmail || this.errorPassword;
+      return !pattern.test(this.email);
     },
-    password() {
-      this.errorPassword = this.password.length < 8;
-      this.disable = this.errorEmail || this.errorPassword;
+    errorPassword(): boolean {
+      return this.password.length < 8;
     },
   },
   methods: {
+    validateEmail(value: string) {
+      if (!value) return "Email is required";
+      const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return pattern.test(value) || "Invalid email format";
+    },
+    validatePassword(value: string) {
+      if (!value) return "Password is required";
+      return value.length >= 8 || "Password must be at least 8 characters long";
+    },
     submitForm() {
-      if (!this.disable) {
-        console.log("login");
-      }
+      console.log("Email:", this.email);
+      console.log("Password:", this.password);
     },
   },
 });
