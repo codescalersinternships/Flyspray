@@ -36,14 +36,14 @@ type App struct {
 	router *gin.Engine
 }
 
-// Run runs the server by setting the router and calling the internal setRoutes method
+// Run runs the server by setting the router and calling the internal registerRoutes method
 func (app *App) Run() error {
-	app.setRoutes()
+	app.registerRoutes()
 
 	return app.router.Run(fmt.Sprintf(":%d", app.config.Server.Port))
 }
 
-func (app *App) setRoutes() {
+func (app *App) registerRoutes() {
 	app.router.Use(cors.Default())
 
 	authGroup := app.router.Group("")
