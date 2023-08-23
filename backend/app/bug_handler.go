@@ -191,7 +191,43 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	if userId != bug.UserID {
+	component, err := app.DB.GetComponent(id)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("component is not found"))
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	project, err := app.DB.GetProject(component.ProjectID)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	members, err := app.DB.GetMembersInProject(int(project.ID))
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	adminMember := false
+
+	// loop over the members to check admin state
+	for _, member := range members {
+
+		if userId == member.ID && member.Admin {
+
+			adminMember = true
+			break
+
+		}
+	}
+
+	if userId != bug.UserID && userId != project.OwnerID && !adminMember {
 		return nil, Forbidden(errors.New("you have no access to delete the bug"))
 	}
 
