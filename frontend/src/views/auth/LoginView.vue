@@ -10,13 +10,15 @@
 </template>
 
 <script lang="ts">
-import LoginCard from "../../components/LoginCard.vue";
-export default {
+import LoginCard from "../../components/auth/LoginCard.vue";
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "LoginPage",
   components: {
     LoginCard,
   },
-};
+});
 </script>
 <style scoped>
 .row {
