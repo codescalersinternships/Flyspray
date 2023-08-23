@@ -82,11 +82,12 @@ func (app *App) setRoutes() {
 		authUserGroup.PUT("", WrapFunc(app.updateUser))
 		authUserGroup.GET("", WrapFunc(app.getUser))
 	}
-	bugGroup := app.router.Group("/bug")
+
+	bugGroup := authGroup.Group("/bug")
 	{
 		bugGroup.POST("", WrapFunc(app.createBug))
 		bugGroup.GET("/filters", WrapFunc(app.getbugs))
-		bugGroup.GET("/:id", WrapFunc(app.getSpecificBug))
+		bugGroup.GET("/:id", WrapFunc(app.getBug))
 		bugGroup.PUT("/:id", WrapFunc(app.updateBug))
 		bugGroup.DELETE("/:id", WrapFunc(app.deleteBug))
 	}

@@ -2,6 +2,8 @@ package app
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-gonic/gin"
@@ -13,10 +15,16 @@ import (
 type createBugInput struct {
 	Summary     string `json:"summary"`
 	ComponentID int    `json:"component_id" validate:"required"`
+	Category    string `json:"category"`
+	Severity    string `json:"severity"`
+	Status      string `json:"status"`
 }
 
 type updateBugInput struct {
-	Summary string `json:"summary"`
+	Summary  string `json:"summary"`
+	Category string `json:"category"`
+	Severity string `json:"severity"`
+	Status   string `json:"status"`
 }
 
 func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
@@ -40,9 +48,7 @@ func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("validation error: " + err.Error()))
 	}
 
-	// TODO: add middleware to check if user is signed in
-
-	newBug, err := app.DB.CreateNewBug(models.Bug{UserID: userID.(string), ComponentID: bug.ComponentID})
+	newBug, err := app.DB.CreateNewBug(models.Bug{UserID: userID.(string), ComponentID: bug.ComponentID, Summary: bug.Summary, Category: bug.Category, Status: bug.Status, Severity: bug.Severity, Opened: true, OpenedAt: time.Now()})
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -55,7 +61,11 @@ func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 }
 
 func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
-	// TODO: add middleware to check if user is signed in
+
+	_, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
 
 	// filters
 	var (
@@ -76,15 +86,20 @@ func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
-func (app *App) getSpecificBug(ctx *gin.Context) (interface{}, Response) {
-	// TODO: add middleware to check if user is signed in
+func (app *App) getBug(ctx *gin.Context) (interface{}, Response) {
+
+	_, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
 	id := ctx.Param("id")
 
 	if id == "" {
 		return nil, BadRequest(errors.New("bug id is required"))
 	}
 
-	bug, err := app.DB.GetSpecificBug(id)
+	bug, err := app.DB.GetBug(id)
 
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
@@ -115,12 +130,12 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("bug id is required"))
 	}
 
-	_, exists := ctx.Get("user_id")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	_, err := app.DB.GetSpecificBug(id)
+	bug, err := app.DB.GetBug(id)
 
 	if err == gorm.ErrRecordNotFound {
 		log.Error().Err(err).Send()
@@ -132,8 +147,13 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
+	// check if user is autherized to update the bug or not
+	if fmt.Sprint(userID) != fmt.Sprint(bug.UserID) {
+		return nil, Forbidden(errors.New("you have no access to update the bug"))
+	}
+
 	// proceed to update bug
-	updatedBug := models.Bug{Summary: input.Summary}
+	updatedBug := models.Bug{Summary: input.Summary, Category: input.Category, Severity: input.Severity, Status: input.Status, UpdatedAt: time.Now()}
 
 	err = app.DB.UpdateBug(id, updatedBug)
 	if err != nil {
@@ -147,7 +167,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 }
 
 func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
-	// TODO: add middleware to check if user is signed in
+
 	id := ctx.Param("id")
 
 	if id == "" {
@@ -159,7 +179,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
 
-	bug, err := app.DB.GetSpecificBug(id)
+	bug, err := app.DB.GetBug(id)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()

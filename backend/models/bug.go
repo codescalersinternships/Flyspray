@@ -26,7 +26,7 @@ func (d *DBClient) CreateNewBug(p Bug) (Bug, error) {
 }
 
 // GetSpecificBug get bug using id from database
-func (d *DBClient) GetSpecificBug(id string) (Bug, error) {
+func (d *DBClient) GetBug(id string) (Bug, error) {
 	p := Bug{}
 	return p, d.Client.Where("id = ?", id).First(&p).Error
 }

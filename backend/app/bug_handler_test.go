@@ -122,7 +122,7 @@ func TestGetBug(t *testing.T) {
 
 	router.POST("/bug", WrapFunc(app.createBug))
 
-	router.GET("/bug/:id", WrapFunc(app.getSpecificBug))
+	router.GET("/bug/:id", WrapFunc(app.getBug))
 
 	t.Run("get bug successfully", func(t *testing.T) {
 		bugData := models.Bug{
