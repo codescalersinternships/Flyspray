@@ -8,43 +8,49 @@
     </div>
     <div class="form-box">
       <p class="signin-text">Sign in to start managing your projects</p>
-      <v-sheet width="300" class="mx-auto">
-        <v-form @submit.prevent="submitForm">
-          <v-text-field
-            prepend-inner-icon="mdi-email"
-            label="Email"
-            v-model="email"
-          ></v-text-field>
-          <v-text-field
-            type="password"
-            prepend-inner-icon="mdi-lock"
-            label="Password"
-            v-model="password"
-          ></v-text-field>
-          <div class="forgot-password-container">
-            <router-link to="/forget" class="link"
-              >Forgot Password?</router-link
+      <input-form>
+        <v-sheet width="300" class="mx-auto">
+          <v-form @submit.prevent="submitForm">
+            <v-text-field
+              prepend-inner-icon="mdi-email"
+              label="Email"
+              v-model="email"
+            ></v-text-field>
+            <v-text-field
+              type="password"
+              prepend-inner-icon="mdi-lock"
+              label="Password"
+              v-model="password"
+            ></v-text-field>
+            <div class="forgot-password-container">
+              <router-link to="/forget" class="link"
+                >Forgot Password?</router-link
+              >
+            </div>
+            <v-btn type="submit" block class="mt-2 btn" :disabled="disable"
+              >Sign In</v-btn
             >
-          </div>
-          <v-btn type="submit" block class="mt-2 btn" :disabled="disable"
-            >Sign In</v-btn
-          >
-        </v-form>
-        <hr class="form-separator" />
+          </v-form>
+          <hr class="form-separator" />
 
-        <p class="signin-text">
-          Don't have account? please
-          <router-link to="/signup" class="link">Sign Up</router-link>
-        </p>
-      </v-sheet>
+          <p class="signin-text">
+            Don't have account? please
+            <router-link to="/signup" class="link">Sign Up</router-link>
+          </p>
+        </v-sheet></input-form
+      >
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import InputForm from "./InputForm.vue";
 
 export default defineComponent({
+  components: {
+    InputForm,
+  },
   data() {
     return {
       email: "" as string,

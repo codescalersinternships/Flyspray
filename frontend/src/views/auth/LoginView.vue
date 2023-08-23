@@ -1,8 +1,6 @@
 <template>
   <div class="row">
-    <div class="child1">
-      <v-img src="../../assets/logo.png" alt="logo" class="img"></v-img>
-    </div>
+    <logo-image class="child1"></logo-image>
     <div class="child2">
       <login-card></login-card>
     </div>
@@ -11,12 +9,14 @@
 
 <script lang="ts">
 import LoginCard from "../../components/auth/LoginCard.vue";
+import LogoImage from "../../components/LogoImage.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "LoginPage",
   components: {
     LoginCard,
+    LogoImage,
   },
 });
 </script>
@@ -36,11 +36,6 @@ export default defineComponent({
   width: 50%;
   text-align: center;
   margin-top: 5rem;
-}
-.img {
-  width: 50%;
-  margin: auto;
-  margin-top: 30vh;
 }
 
 @media (max-width: 1100px) {
