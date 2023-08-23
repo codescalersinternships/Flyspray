@@ -32,9 +32,7 @@ func (d *DBClient) GetBug(id string) (Bug, error) {
 }
 
 func (d *DBClient) UpdateBug(id string, updatedBug Bug) error {
-	result := d.Client.Model(&updatedBug).Where("id = ?", id).
-		Update("component_id", updatedBug.ComponentID)
-
+	result := d.Client.Model(&updatedBug).Where("id = ?", id).Updates(updatedBug)
 	if result.Error == nil && result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}

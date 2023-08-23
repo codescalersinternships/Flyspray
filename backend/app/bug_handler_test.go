@@ -51,11 +51,41 @@ func TestCreateBug(t *testing.T) {
 		req, err := http.NewRequest("POST", "/bug", bytes.NewBuffer(payload))
 		assert.NoError(t, err)
 
+		wantedBug := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput.Summary,
+			ComponentID: bugInput.ComponentID,
+			Category:    bugInput.Category,
+			Severity:    bugInput.Severity,
+			Status:      bugInput.Status,
+		}
+
 		recorder := httptest.NewRecorder()
 
 		router.ServeHTTP(recorder, req)
 
 		assert.Equal(t, http.StatusCreated, recorder.Code, "got %d status code but want status code 201", recorder.Code)
+
+		var response ResponseMsg
+		err = json.Unmarshal(recorder.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		bug := response.Data
+		bugMap := bug.(map[string]interface{})
+		userID := bugMap["user_id"]
+		componentID := int(bugMap["component_id"].(float64))
+		summary := bugMap["summary"]
+		category := bugMap["category"]
+		severity := bugMap["severity"]
+		status := bugMap["status"]
+
+		assert.Equal(t, userID, wantedBug.UserID, "got %d user id but wanted %d", userID, wantedBug.UserID)
+		assert.Equal(t, componentID, wantedBug.ComponentID, "got %d component but wanted %d", componentID, wantedBug.ComponentID)
+		assert.Equal(t, summary, wantedBug.Summary, "got %d as a summary but wanted %d", summary, wantedBug.Summary)
+		assert.Equal(t, category, wantedBug.Category, "got %d category but wanted %d", category, wantedBug.Category)
+		assert.Equal(t, severity, wantedBug.Severity, "got %d severity but wanted %d", severity, wantedBug.Severity)
+		assert.Equal(t, status, wantedBug.Status, "got %d status but wanted %d", status, wantedBug.Status)
 	})
 
 	t.Run("failed to create new bug", func(t *testing.T) {
@@ -93,12 +123,224 @@ func TestFilterbug(t *testing.T) {
 		c.Set("user_id", "99")
 		c.Next()
 	})
+
 	router.POST("/bug", WrapFunc(app.createBug))
 
 	router.GET("/bug/filters", WrapFunc(app.getbugs))
 
-	t.Run("get all bug successfully", func(t *testing.T) {
+	t.Run("get all bugs successfully", func(t *testing.T) {
+
+		bugInput1 := createBugInput{
+			Summary:     "first",
+			ComponentID: 90,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
+		}
+
+		wantedBug1 := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput1.Summary,
+			ComponentID: bugInput1.ComponentID,
+			Category:    bugInput1.Category,
+			Severity:    bugInput1.Severity,
+			Status:      bugInput1.Status,
+		}
+
+		result := app.DB.Client.Create(&wantedBug1)
+		assert.NoError(t, result.Error)
+
+		bugInput2 := createBugInput{
+			Summary:     "second bug",
+			ComponentID: 100,
+			Category:    "parts",
+			Severity:    "high",
+			Status:      "nearly solved",
+		}
+
+		wantedBug2 := models.Bug{
+			ID:          11,
+			UserID:      "99",
+			Summary:     bugInput2.Summary,
+			ComponentID: bugInput2.ComponentID,
+			Category:    bugInput2.Category,
+			Severity:    bugInput2.Severity,
+			Status:      bugInput2.Status,
+		}
+
+		result = app.DB.Client.Create(&wantedBug2)
+		assert.NoError(t, result.Error)
+
 		request, err := http.NewRequest("GET", "/bug/filters", nil)
+		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, request)
+
+		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
+	})
+
+	t.Run("get all bugs for a specific component", func(t *testing.T) {
+
+		bugInput1 := createBugInput{
+			Summary:     "first",
+			ComponentID: 90,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
+		}
+
+		wantedBug1 := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput1.Summary,
+			ComponentID: bugInput1.ComponentID,
+			Category:    bugInput1.Category,
+			Severity:    bugInput1.Severity,
+			Status:      bugInput1.Status,
+		}
+
+		result := app.DB.Client.Create(&wantedBug1)
+		assert.NoError(t, result.Error)
+
+		bugInput2 := createBugInput{
+			Summary:     "second bug",
+			ComponentID: 90,
+			Category:    "parts",
+			Severity:    "high",
+			Status:      "In progress",
+		}
+
+		wantedBug2 := models.Bug{
+			ID:          11,
+			UserID:      "99",
+			Summary:     bugInput2.Summary,
+			ComponentID: bugInput2.ComponentID,
+			Category:    bugInput2.Category,
+			Severity:    bugInput2.Severity,
+			Status:      bugInput2.Status,
+		}
+
+		result = app.DB.Client.Create(&wantedBug2)
+		assert.NoError(t, result.Error)
+
+		request, err := http.NewRequest("GET", "/bug/filters?component_id=90", nil)
+		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, request)
+
+		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
+	})
+
+	t.Run("get all bugs for a specific category", func(t *testing.T) {
+
+		bugInput1 := createBugInput{
+			Summary:     "first",
+			ComponentID: 100,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "In progress",
+		}
+
+		wantedBug1 := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput1.Summary,
+			ComponentID: bugInput1.ComponentID,
+			Category:    bugInput1.Category,
+			Severity:    bugInput1.Severity,
+			Status:      bugInput1.Status,
+		}
+
+		result := app.DB.Client.Create(&wantedBug1)
+		assert.NoError(t, result.Error)
+
+		bugInput2 := createBugInput{
+			Summary:     "second bug",
+			ComponentID: 90,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "not solved yet",
+		}
+
+		wantedBug2 := models.Bug{
+			ID:          11,
+			UserID:      "99",
+			Summary:     bugInput2.Summary,
+			ComponentID: bugInput2.ComponentID,
+			Category:    bugInput2.Category,
+			Severity:    bugInput2.Severity,
+			Status:      bugInput2.Status,
+		}
+
+		result = app.DB.Client.Create(&wantedBug2)
+		assert.NoError(t, result.Error)
+
+		request, err := http.NewRequest("GET", "/bug/filters?category=tests", nil)
+		assert.NoError(t, err)
+
+		request.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, request)
+
+		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
+	})
+
+	t.Run("get all bugs for a specific status", func(t *testing.T) {
+
+		bugInput1 := createBugInput{
+			Summary:     "first",
+			ComponentID: 100,
+			Category:    "tests",
+			Severity:    "low",
+			Status:      "In progress",
+		}
+
+		wantedBug1 := models.Bug{
+			ID:          10,
+			UserID:      "99",
+			Summary:     bugInput1.Summary,
+			ComponentID: bugInput1.ComponentID,
+			Category:    bugInput1.Category,
+			Severity:    bugInput1.Severity,
+			Status:      bugInput1.Status,
+		}
+
+		result := app.DB.Client.Create(&wantedBug1)
+		assert.NoError(t, result.Error)
+
+		bugInput2 := createBugInput{
+			Summary:     "second bug",
+			ComponentID: 90,
+			Category:    "parts",
+			Severity:    "high",
+			Status:      "In progress",
+		}
+
+		wantedBug2 := models.Bug{
+			ID:          11,
+			UserID:      "99",
+			Summary:     bugInput2.Summary,
+			ComponentID: bugInput2.ComponentID,
+			Category:    bugInput2.Category,
+			Severity:    bugInput2.Severity,
+			Status:      bugInput2.Status,
+		}
+
+		result = app.DB.Client.Create(&wantedBug2)
+		assert.NoError(t, result.Error)
+
+		request, err := http.NewRequest("GET", "/bug/filters?status=In progress", nil)
 		assert.NoError(t, err)
 
 		request.Header.Set("Content-Type", "application/json")
@@ -305,6 +547,7 @@ func TestUpdateBug(t *testing.T) {
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, request)
 		assert.Equal(t, http.StatusOK, rec.Code, "got %d status code but want status code 200", rec.Code)
+
 	})
 
 	t.Run("bug is not found", func(t *testing.T) {
