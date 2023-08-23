@@ -182,8 +182,6 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 
 	bug, err := app.DB.GetBug(id)
 
-	fmt.Println("Bug", bug)
-
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("bug is not found"))
@@ -196,8 +194,6 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 
 	component, err := app.DB.GetComponent(strconv.Itoa(bug.ComponentID))
 
-	fmt.Println("Component", component)
-
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
 		return nil, NotFound(errors.New("component is not found"))
@@ -208,7 +204,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	project, err := app.DB.GetProject(component.ProjectID)
-	fmt.Println("project", project)
+
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)

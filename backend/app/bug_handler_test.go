@@ -195,7 +195,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug1 := models.Bug{
-			ID:          10,
+			ID:          12,
 			UserID:      "99",
 			Summary:     bugInput1.Summary,
 			ComponentID: bugInput1.ComponentID,
@@ -216,7 +216,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug2 := models.Bug{
-			ID:          11,
+			ID:          13,
 			UserID:      "99",
 			Summary:     bugInput2.Summary,
 			ComponentID: bugInput2.ComponentID,
@@ -251,7 +251,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug1 := models.Bug{
-			ID:          10,
+			ID:          14,
 			UserID:      "99",
 			Summary:     bugInput1.Summary,
 			ComponentID: bugInput1.ComponentID,
@@ -272,7 +272,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug2 := models.Bug{
-			ID:          11,
+			ID:          15,
 			UserID:      "99",
 			Summary:     bugInput2.Summary,
 			ComponentID: bugInput2.ComponentID,
@@ -307,7 +307,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug1 := models.Bug{
-			ID:          10,
+			ID:          16,
 			UserID:      "99",
 			Summary:     bugInput1.Summary,
 			ComponentID: bugInput1.ComponentID,
@@ -328,7 +328,7 @@ func TestFilterbug(t *testing.T) {
 		}
 
 		wantedBug2 := models.Bug{
-			ID:          11,
+			ID:          17,
 			UserID:      "99",
 			Summary:     bugInput2.Summary,
 			ComponentID: bugInput2.ComponentID,
