@@ -9,7 +9,7 @@ import (
 
 func main() {
 	var configFilePath string
-	flag.StringVar(&configFilePath, "f", "", "Specify the filepath of json configuration file")
+	flag.StringVar(&configFilePath, "f", "config.json", "Specify the filepath of json configuration file")
 	flag.Parse()
 
 	app, err := app.NewApp(configFilePath)

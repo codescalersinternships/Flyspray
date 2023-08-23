@@ -11,7 +11,7 @@ import (
 // Configuration is app configuration data
 type Configuration struct {
 	Server     Server     `json:"server"`
-	MailSender MailSender `json:"mailSender"`
+	MailSender MailSender `json:"mail_sender"`
 	DB         DB         `json:"db"`
 	JWT        JWT        `json:"jwt"`
 }

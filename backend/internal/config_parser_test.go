@@ -14,7 +14,7 @@ var validConfig = `
     "host": "localhost",
     "port": 8080
   },
-  "mailSender": {
+  "mail_sender": {
     "email": "email",
     "sendgrid_key": "key",
     "timeout": 30
@@ -67,7 +67,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -86,7 +86,7 @@ func TestReadConfigFile(t *testing.T) {
 				"server": {
 					"host": "localhost",
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -106,7 +106,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -126,7 +126,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "",
 					"timeout": 30
@@ -146,7 +146,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 				},
@@ -165,7 +165,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -185,7 +185,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -205,7 +205,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
@@ -225,7 +225,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 29
@@ -245,7 +245,7 @@ func TestReadConfigFile(t *testing.T) {
 					"host": "localhost",
 					"port": 8080
 				},
-				"mailSender": {
+				"mail_sender": {
 					"email": "email",
 					"sendgrid_key": "key",
 					"timeout": 30
