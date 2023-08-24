@@ -5,10 +5,6 @@ export type ValidationResult = {
   errorMessage: string;
 };
 
-function isValidEmailFormat(value: string): boolean {
-  return R_PASSWORD.test(value);
-}
-
 export function validateEmail(value: string): ValidationResult {
   if (!value || value.trim() === "") {
     return {
@@ -17,7 +13,7 @@ export function validateEmail(value: string): ValidationResult {
     };
   }
 
-  if (!isValidEmailFormat(value)) {
+  if (!R_PASSWORD.test(value)) {
     return {
       isValid: false,
       errorMessage: "Invalid email format",
