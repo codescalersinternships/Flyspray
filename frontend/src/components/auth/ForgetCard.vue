@@ -21,11 +21,13 @@
             ></v-text-field>
 
             <v-btn type="submit" block class="mt-2 btn" :disabled="errorEmail"
-              >Continue</v-btn
+              >Reset password</v-btn
             >
           </v-form>
           <div class="container">
-            <p class="signin-text">We will send forget password link to you.</p>
+            <p class="signin-text">
+              We'll send you a link to reset your password
+            </p>
           </div>
         </v-sheet></input-form
       >

@@ -1,11 +1,12 @@
+const R_PASSWORD = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export type ValidationResult = {
   isValid: boolean;
   errorMessage: string;
 };
 
 function isValidEmailFormat(value: string): boolean {
-  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return pattern.test(value);
+  return R_PASSWORD.test(value);
 }
 
 export function validateEmail(value: string): ValidationResult {
