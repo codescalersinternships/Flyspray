@@ -29,18 +29,59 @@ export function validateEmail(value: string): ValidationResult {
   };
 }
 
-function isValidPassword(value: string): boolean {
-  return value.length >= 8;
+function isValidPassword(value: string): ValidationResult {
+  if (!isEightCharsLong(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must be at least eight characters long",
+    };
+  }
+  if (!containsOneLetter(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one letter",
+    };
+  }
+  if (!containsOneNumber(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one number",
+    };
+  }
+  if (!containsOneSymbol(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one special character",
+    };
+  }
+  return {
+    isValid: true,
+    errorMessage: "",
+  };
 }
 
-function isValidPasswordRegister(value: string): boolean {
-  const regexPattern =
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[_@$!%*#?&])[A-Za-z\d_@$!%*#?&]{8,}$/;
-  const regexValidate: boolean = regexPattern.test(value);
-  if (value.length >= 8 && regexValidate) {
-    return true;
-  }
+//isEightCharsLong checks if password is at least eight characters
+function isEightCharsLong(value: string): boolean {
+  if (value.length >= 8) return true;
   return false;
+}
+
+//containsOneLetter checks if password contains at least one letter
+function containsOneLetter(value: string): boolean {
+  const regexPattern = /[A-Za-z]/;
+  return regexPattern.test(value);
+}
+
+//containsOneNumber checks if password contains at least one number
+function containsOneNumber(value: string): boolean {
+  const regexPattern = /\d/;
+  return regexPattern.test(value);
+}
+
+//containsOneSymbol checks if password contains at least one special character
+function containsOneSymbol(value: string): boolean {
+  const regexPattern = /[_@$!%*#?&]/;
+  return regexPattern.test(value);
 }
 export function validatePassword(value: string): ValidationResult {
   if (!value || value.trim() === "") {
@@ -49,19 +90,9 @@ export function validatePassword(value: string): ValidationResult {
       errorMessage: "Password is required",
     };
   }
-
-  if (!isValidPassword(value)) {
-    return {
-      isValid: false,
-      errorMessage: "Password must be at least 8 characters long",
-    };
-  }
-
-  return {
-    isValid: true,
-    errorMessage: "",
-  };
+  return isValidPassword(value);
 }
+
 export function validateUsername(value: string): ValidationResult {
   if (!value || value.trim() === "") {
     return {
@@ -69,29 +100,13 @@ export function validateUsername(value: string): ValidationResult {
       errorMessage: "Username is required",
     };
   }
+  if (!(value.length >= 4 && value.length <= 20)) {
+    return {
+      isValid: false,
+      errorMessage: "Username should be four to twenty characters long",
+    };
+  }
   //TODO: add check that username does not already exist
-  return {
-    isValid: true,
-    errorMessage: "",
-  };
-}
-
-export function validatePasswordRegister(value: string): ValidationResult {
-  if (!value || value.trim() === "") {
-    return {
-      isValid: false,
-      errorMessage: "Password is required",
-    };
-  }
-
-  if (!isValidPasswordRegister(value)) {
-    return {
-      isValid: false,
-      errorMessage:
-        "Password must be at least 8 characters long, contain at least one letter, one number, and one special character",
-    };
-  }
-
   return {
     isValid: true,
     errorMessage: "",
