@@ -10,10 +10,13 @@
         <v-sheet width="300" class="mx-auto">
           <v-form ref="form" @submit.prevent="submitForm">
             <v-text-field
+              :class="{ 'error-field': errorEmail && isEmailClicked }"
               prepend-inner-icon="mdi-account"
               label="Email"
               v-model="email"
               required
+              @click="isEmailClicked = true"
+              class="input-label"
               :rules="[validateEmailRule]"
             ></v-text-field>
 
@@ -43,6 +46,7 @@ export default defineComponent({
     return {
       email: "" as string,
       emailValidationResult: {} as ValidationResult,
+      isEmailClicked: false as boolean,
     };
   },
   computed: {
@@ -72,15 +76,19 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css?family=Inter");
 .header-box {
-  margin: 2rem;
+  margin: 1rem;
 }
 .header-text {
-  font-size: 2rem;
-  font-weight: 200;
-  margin-bottom: 1rem;
-  color: #8e73d3;
-  font-family: "Fira Sans Extra Condensed", sans-serif;
+  color: #6945c4;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  text-transform: capitalize;
 }
 .sub-header-text {
   font-size: 1rem;
@@ -90,15 +98,52 @@ export default defineComponent({
   font-family: "Poppins", sans-serif;
 }
 .signin-text {
-  color: #7d7d7d;
-  margin-bottom: 1rem;
+  margin-top: 2rem;
+  color: #525252;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal;
+  line-height: normal;
+  margin-bottom: 3rem;
+}
+.input-label {
+  color: var(--white-gray, #8f8f8f);
+  font-family: Poppins;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  border-radius: 0.25rem;
+  width: 100%;
+  flex-shrink: 0;
 }
 .btn {
-  background-color: #8473f3;
-  color: #ffffff;
+  border-radius: 8px;
+  background: linear-gradient(134deg, #9181f4 0%, #5038ed 100%);
+  box-shadow: 0px 8px 21px 0px rgba(0, 0, 0, 0.16);
+  color: #ffff;
 }
 .container {
   text-align: right;
   margin-bottom: 1rem;
+}
+
+.link {
+  color: var(--main-button, #8457f7);
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 100;
+  line-height: normal;
+  text-decoration: none;
+}
+.error-field {
+  margin-bottom: 2rem;
+  text-align: start;
+  align-items: start;
+}
+.v-input__details {
+  display: none !important;
 }
 </style>
