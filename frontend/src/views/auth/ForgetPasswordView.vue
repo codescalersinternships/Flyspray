@@ -2,20 +2,20 @@
   <div class="row">
     <logo-image class="child1"></logo-image>
     <div class="child2">
-      <forget-card></forget-card>
+      <forget-password-component></forget-password-component>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import ForgetCard from "../../components/auth/ForgetCard.vue";
+import ForgetPasswordComponent from "../../components/auth/ForgetPasswordComponent.vue";
 import LogoImage from "../../components/LogoImage.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "ForgetPage",
+  name: "ForgetPasswordPage",
   components: {
-    ForgetCard,
+    ForgetPasswordComponent,
     LogoImage,
   },
 });

@@ -1,4 +1,5 @@
 const R_PASSWORD = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export type ValidationResult = {
   isValid: boolean;
   errorMessage: string;

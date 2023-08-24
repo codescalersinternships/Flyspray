@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import LoginView from "../views/auth/LoginView.vue";
-import ForgetView from "../views/auth/ForgetView.vue";
+import ForgetPasswordView from "../views/auth/ForgetPasswordView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 
 const routes: Array<RouteRecordRaw> = [
@@ -12,7 +12,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/forget-password",
     name: "ForgetPassowrd",
-    component: ForgetView,
+    component: ForgetPasswordView,
   },
   {
     path: "/signup",
