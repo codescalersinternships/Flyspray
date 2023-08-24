@@ -1,0 +1,20 @@
+version: '3.5'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: backend
+    image: backend
+    ports:
+      - 8080:8080
+    volumes:
+      - ./backend/data:/app/data
+
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend
+    image: frontend
+    ports:
+      - 5173:5173
