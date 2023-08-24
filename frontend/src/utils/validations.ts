@@ -30,10 +30,6 @@ export function validateEmail(value: string): ValidationResult {
   };
 }
 
-function isValidPassword(value: string): boolean {
-  return value.length >= 8;
-}
-
 export function validatePassword(value: string): ValidationResult {
   if (!value || value.trim() === "") {
     return {
@@ -42,7 +38,7 @@ export function validatePassword(value: string): ValidationResult {
     };
   }
 
-  if (!isValidPassword(value)) {
+  if (!(value.length >= 8)) {
     return {
       isValid: false,
       errorMessage: "Password must be at least 8 characters long",
