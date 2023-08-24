@@ -10,4 +10,4 @@ COPY . .
 
 RUN go build -a -o server ./cmd/server.go
 
-CMD [ "./server", "-f", "./config.json" ]
+CMD [ "./server" ]
