@@ -1,7 +1,9 @@
 <template>
   <div class="register-box">
     <div class="header-box">
-      <p class="header-text" id="register-card-title">Create Your Account</p>
+      <p class="header-text" id="register-component-title">
+        Create Your Account
+      </p>
     </div>
     <div>
       <input-form>

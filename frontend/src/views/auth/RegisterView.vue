@@ -2,21 +2,21 @@
   <div class="row">
     <logo-image class="child1"></logo-image>
     <div class="child2">
-      <register-card></register-card>
+      <register-component></register-component>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import LogoImage from "../../components/LogoImage.vue";
-import RegisterCard from "../../components/auth/RegisterCard.vue";
+import RegisterComponent from "../../components/auth/RegisterComponent.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "LoginPage",
   components: {
     LogoImage,
-    RegisterCard,
+    RegisterComponent,
   },
 });
 </script>

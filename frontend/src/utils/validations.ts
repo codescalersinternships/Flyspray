@@ -1,12 +1,8 @@
+const R_PASSWORD = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export type ValidationResult = {
   isValid: boolean;
   errorMessage: string;
 };
-
-function isValidEmailFormat(value: string): boolean {
-  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return pattern.test(value);
-}
 
 export function validateEmail(value: string): ValidationResult {
   if (!value || value.trim() === "") {
@@ -16,44 +12,13 @@ export function validateEmail(value: string): ValidationResult {
     };
   }
 
-  if (!isValidEmailFormat(value)) {
+  if (!R_PASSWORD.test(value)) {
     return {
       isValid: false,
       errorMessage: "Invalid email format",
     };
   }
 
-  return {
-    isValid: true,
-    errorMessage: "",
-  };
-}
-
-function isValidPassword(value: string): ValidationResult {
-  if (!isEightCharsLong(value)) {
-    return {
-      isValid: false,
-      errorMessage: "Password must be at least eight characters long",
-    };
-  }
-  if (!containsOneLetter(value)) {
-    return {
-      isValid: false,
-      errorMessage: "Password must contain at least one letter",
-    };
-  }
-  if (!containsOneNumber(value)) {
-    return {
-      isValid: false,
-      errorMessage: "Password must contain at least one number",
-    };
-  }
-  if (!containsOneSymbol(value)) {
-    return {
-      isValid: false,
-      errorMessage: "Password must contain at least one special character",
-    };
-  }
   return {
     isValid: true,
     errorMessage: "",
@@ -90,7 +55,34 @@ export function validatePassword(value: string): ValidationResult {
       errorMessage: "Password is required",
     };
   }
-  return isValidPassword(value);
+  if (!isEightCharsLong(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must be at least eight characters long",
+    };
+  }
+  if (!containsOneLetter(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one letter",
+    };
+  }
+  if (!containsOneNumber(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one number",
+    };
+  }
+  if (!containsOneSymbol(value)) {
+    return {
+      isValid: false,
+      errorMessage: "Password must contain at least one special character",
+    };
+  }
+  return {
+    isValid: true,
+    errorMessage: "",
+  };
 }
 
 export function validateUsername(value: string): ValidationResult {
@@ -106,7 +98,7 @@ export function validateUsername(value: string): ValidationResult {
       errorMessage: "Username should be four to twenty characters long",
     };
   }
-  //TODO: add check that username does not already exist
+  //to be implemented: add check that username does not already exist
   return {
     isValid: true,
     errorMessage: "",
