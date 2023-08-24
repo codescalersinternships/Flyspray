@@ -16,8 +16,12 @@ import (
 
 func TestCreateNewMember(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
 		c.Set("user_id", "1")
@@ -77,8 +81,12 @@ func TestCreateNewMember(t *testing.T) {
 
 func TestGetMembersInProject(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
 	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	member := models.Member{UserID: "1", ProjectID: 2}
 	_, err = json.Marshal(member)
 	assert.NoError(t, err, "failed to marshal json data")
@@ -89,7 +97,7 @@ func TestGetMembersInProject(t *testing.T) {
 	})
 	app.router.POST("/member", WrapFunc(app.createNewMember))
 	app.router.GET("/member/:project_id", WrapFunc(app.getMembersInProject))
-	t.Run("getmembersinproject returns status 200 and empty slice", func(t *testing.T) {
+	t.Run("get members in project returns status 200 and empty slice", func(t *testing.T) {
 		expectedResponse := ResponseMsg{
 			Message: "members in project retrieved successfully",
 			Data:    []models.Member{},
@@ -109,7 +117,7 @@ func TestGetMembersInProject(t *testing.T) {
 			t.Errorf("expected status code %d but got %d", http.StatusOK, resp.Code)
 		}
 	})
-	t.Run("getmembersinproject returns status 200", func(t *testing.T) {
+	t.Run("get members in project returns status 200", func(t *testing.T) {
 		createFirstMember(app, t)
 		//add another member to project
 		member := models.Member{UserID: "2", ProjectID: 2, Admin: false}
@@ -143,8 +151,12 @@ func TestGetMembersInProject(t *testing.T) {
 
 func TestUpdateMemberOwnership(t *testing.T) {
 	dir := t.TempDir()
-	app, err := NewApp(filepath.Join(dir, "test.db"))
-	assert.NoError(t, err)
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "test.db"))
+	assert.NoError(t, err, "failed to connect to database")
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
 	app.router = gin.Default()
 	app.router.Use(func(c *gin.Context) {
 		c.Set("user_id", "1")

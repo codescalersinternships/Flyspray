@@ -3,15 +3,21 @@ package app
 import (
 	"fmt"
 
+	"github.com/codescalersinternships/Flyspray/internal"
 	middleware "github.com/codescalersinternships/Flyspray/middlewares"
 	"github.com/codescalersinternships/Flyspray/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 // NewApp is the factory of App
-func NewApp(dbFilePath string) (App, error) {
+func NewApp(configFilePath string) (App, error) {
+	config, err := internal.ReadConfigFile(configFilePath)
+	if err != nil {
+		return App{}, err
+	}
 
-	database, err := models.NewDBClient(dbFilePath)
+	database, err := models.NewDBClient(config.DB.File)
 	if err != nil {
 		return App{}, err
 	}
@@ -20,30 +26,30 @@ func NewApp(dbFilePath string) (App, error) {
 		return App{}, err
 	}
 
-	return App{DB: database, router: gin.Default()}, nil
+	return App{config: config, DB: database, router: gin.Default()}, nil
 }
 
 // App initializes the entire app
 type App struct {
+	config internal.Configuration
 	DB     models.DBClient
 	router *gin.Engine
 }
 
-// Run runs the server by seting the router and calling the internal setRoutes method
-func (app *App) Run(port int) error {
+// Run runs the server by setting the router and calling the internal registerRoutes method
+func (app *App) Run() error {
+	app.registerRoutes()
 
-	app.setRoutes()
-
-	return app.router.Run(fmt.Sprintf(":%d", port))
+	return app.router.Run(fmt.Sprintf(":%d", app.config.Server.Port))
 }
 
-func (app *App) setRoutes() {
+func (app *App) registerRoutes() {
+	app.router.Use(cors.Default())
 
 	authGroup := app.router.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
 
 	project := authGroup.Group("/project")
-
 	{
 		project.POST("", WrapFunc(app.createProject))
 		project.GET("/filters", WrapFunc(app.getProjects))
@@ -61,6 +67,7 @@ func (app *App) setRoutes() {
 		comment.GET("/filters", WrapFunc(app.listComments))
 		comment.PUT("/:id", WrapFunc(app.updateComment))
 	}
+
 	memberRoutes := authGroup.Group("/member")
 	{
 		memberRoutes.POST("", WrapFunc(app.createNewMember))
@@ -68,9 +75,7 @@ func (app *App) setRoutes() {
 		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
-	authUserGroup := authGroup.Group("/user")
 	userGroup := app.router.Group("/user")
-
 	{
 		userGroup.POST("/signup", WrapFunc(app.signup))
 		userGroup.POST("/signin", WrapFunc(app.signIn))
@@ -78,6 +83,7 @@ func (app *App) setRoutes() {
 		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
 	}
 
+	authUserGroup := authGroup.Group("/user")
 	{
 		authUserGroup.PUT("", WrapFunc(app.updateUser))
 		authUserGroup.GET("", WrapFunc(app.getUser))
@@ -91,5 +97,4 @@ func (app *App) setRoutes() {
 		component.PUT("/:id", WrapFunc(app.updateComponent))
 		component.GET("/filters", WrapFunc(app.getComponents))
 	}
-
 }
