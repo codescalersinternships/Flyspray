@@ -23,7 +23,8 @@ export default defineComponent({
 <style scoped>
 .row {
   display: flex;
-  height: 100vh;
+  height: auto;
+  min-height: 100vh;
 }
 .child1 {
   flex-basis: 50%;
