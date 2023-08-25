@@ -13,7 +13,7 @@ import RegisterComponent from "../../components/auth/RegisterComponent.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "LoginPage",
+  name: "RegisterPage",
   components: {
     LogoImage,
     RegisterComponent,

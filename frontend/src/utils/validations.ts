@@ -1,4 +1,7 @@
 const R_PASSWORD = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const R_CONTAIN_ONE_LETTER = /[A-Za-z]/;
+const R_CONTAIN_ONE_NUMBER = /\d/;
+const R_CONTAIN_ONE_SYMBOL = /[_@$!%*#?&]/;
 
 export type ValidationResult = {
   isValid: boolean;
@@ -34,20 +37,17 @@ function isEightCharsLong(value: string): boolean {
 
 //containsOneLetter checks if password contains at least one letter
 function containsOneLetter(value: string): boolean {
-  const regexPattern = /[A-Za-z]/;
-  return regexPattern.test(value);
+  return R_CONTAIN_ONE_LETTER.test(value);
 }
 
 //containsOneNumber checks if password contains at least one number
 function containsOneNumber(value: string): boolean {
-  const regexPattern = /\d/;
-  return regexPattern.test(value);
+  return R_CONTAIN_ONE_NUMBER.test(value);
 }
 
 //containsOneSymbol checks if password contains at least one special character
 function containsOneSymbol(value: string): boolean {
-  const regexPattern = /[_@$!%*#?&]/;
-  return regexPattern.test(value);
+  return R_CONTAIN_ONE_SYMBOL.test(value);
 }
 export function validatePassword(value: string): ValidationResult {
   if (!value || value.trim() === "") {
