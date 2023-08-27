@@ -110,13 +110,14 @@ export default defineComponent({
   margin-bottom: 3rem;
 }
 .input-label {
-  color: var(--white-gray, #8f8f8f);
+  color: var(--white-gray, #494747);
   font-family: Poppins;
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
   border-radius: 0.25rem;
+  background: rgba(240, 237, 255, 0.2);
   width: 100%;
   flex-shrink: 0;
 }

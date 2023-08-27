@@ -1,26 +1,37 @@
 <template>
-  <div class="login-box">
+  <div class="register-box">
     <div class="header-box">
-      <p class="header-text" id="login-card-title">Welcome Back to FLYSPRAY</p>
-      <p class="sub-header-text" id="login-card-title">
-        Web-based bug tracker system
+      <p class="header-text" id="register-component-title">
+        Create Your Account
       </p>
     </div>
-    <div class="form-box">
-      <p class="signin-text">Sign in to start managing your projects</p>
+    <div>
       <input-form>
         <v-sheet width="300" class="mx-auto">
-          <v-form ref="form" @submit.prevent="submitForm">
+          <v-form class="form-box" ref="form" @submit.prevent="submitForm">
             <v-text-field
+              class="input-label"
+              :class="{ 'error-field': errorUsername && isUsernameClicked }"
+              prepend-inner-icon="mdi-account-outline"
+              label="Username"
+              required
+              v-model="username"
+              @click="isUsernameClicked = true"
+              :rules="[validateUsernameRule]"
+            ></v-text-field>
+            <v-text-field
+              flat
+              solo
+              class="input-label"
               :class="{ 'error-field': errorEmail && isEmailClicked }"
               prepend-inner-icon="mdi-email-outline"
               label="Email"
               v-model="email"
               required
-              class="input-label"
               @click="isEmailClicked = true"
               :rules="[validateEmailRule]"
             ></v-text-field>
+
             <v-text-field
               type="password"
               class="input-label"
@@ -32,27 +43,39 @@
               @click="isPasswordClicked = true"
               :rules="[validatePasswordRule]"
             ></v-text-field>
-
-            <div class="forgot-password-container">
-              <router-link to="/forget-password" class="link"
-                >Forgot Password?</router-link
-              >
-            </div>
+            <v-text-field
+              type="password"
+              class="input-label"
+              :class="{ 'error-field': isConfirmPasswordClicked }"
+              prepend-inner-icon="mdi-lock-outline"
+              label="Confirm Password"
+              required
+              @click="isConfirmPasswordClicked = true"
+              :rules="[confirmPasswordRule]"
+            ></v-text-field>
+            <v-checkbox type="checkbox" hide-details v-model="termsCheck">
+              <template v-slot:label>
+                <span class="terms-checkbox"
+                  >I agree to all the <a id="terms-link">Terms</a> and
+                  <a id="privacy-policy-link">Privacy policy.</a></span
+                >
+              </template>
+            </v-checkbox>
             <v-btn
-              type="submit"
+              type="Register"
               block
               class="mt-2 btn"
-              :disabled="errorPassword || errorEmail"
-              >Sign In</v-btn
+              :disabled="
+                errorPassword || errorEmail || errorUsername || errorTermsCheck
+              "
+              >Sign Up</v-btn
             >
           </v-form>
           <hr class="form-separator" />
 
           <p class="signin-text">
-            Don't have an account? please
-            <router-link to="/signup" class="link signin-link"
-              >Sign Up</router-link
-            >
+            Already have an account?
+            <router-link to="/login" id="signin-link">Sign in</router-link>
           </p>
         </v-sheet></input-form
       >
@@ -67,6 +90,7 @@ import {
   validateEmail,
   ValidationResult,
   validatePassword,
+  validateUsername,
 } from "../../utils/validations";
 
 export default defineComponent({
@@ -77,10 +101,15 @@ export default defineComponent({
     return {
       email: "" as string,
       password: "" as string,
-      emailValidationResult: {} as ValidationResult,
-      passwordValidationResult: {} as ValidationResult,
+      username: "" as string,
+      termsCheck: false as boolean,
+      isUsernameClicked: false as boolean,
       isEmailClicked: false as boolean,
       isPasswordClicked: false as boolean,
+      isConfirmPasswordClicked: false as boolean,
+      emailValidationResult: {} as ValidationResult,
+      passwordValidationResult: {} as ValidationResult,
+      usernameValidationResult: {} as ValidationResult,
     };
   },
   computed: {
@@ -89,6 +118,12 @@ export default defineComponent({
     },
     errorPassword(): boolean {
       return !validatePassword(this.password).isValid;
+    },
+    errorUsername(): boolean {
+      return !validateUsername(this.username).isValid;
+    },
+    errorTermsCheck(): boolean {
+      return !this.termsCheck;
     },
     validateEmailRule() {
       return (value: string) => {
@@ -108,10 +143,24 @@ export default defineComponent({
         );
       };
     },
+    confirmPasswordRule() {
+      return (value: string) => {
+        return this.password == value || "Passwords do not match";
+      };
+    },
+    validateUsernameRule() {
+      return (value: string) => {
+        this.usernameValidationResult = validateUsername(value);
+        return (
+          this.usernameValidationResult.isValid ||
+          this.usernameValidationResult.errorMessage
+        );
+      };
+    },
   },
   methods: {
     submitForm() {
-      if (!this.errorEmail && !this.errorPassword) {
+      if (!this.errorEmail && !this.errorPassword && !this.errorUsername) {
         console.log("Email:", this.email);
       } else {
         console.log("Form is not valid");
@@ -124,7 +173,7 @@ export default defineComponent({
 <style scoped>
 @import url("https://fonts.googleapis.com/css?family=Inter");
 .header-box {
-  margin: 1rem;
+  margin: 2rem;
 }
 .header-text {
   color: #6945c4;
@@ -143,16 +192,20 @@ export default defineComponent({
   color: #525252;
   font-family: "Poppins", sans-serif;
 }
-.signin-text {
+.register-text {
+  color: #7d7d7d;
   margin-bottom: 1rem;
+}
+.signin-text {
   color: #525252;
   text-align: center;
   font-family: Poppins;
   font-size: 1rem;
   font-style: normal;
+  font-weight: 400;
   line-height: normal;
-  margin-bottom: 3rem;
 }
+
 .input-label {
   color: var(--white-gray, #494747);
   font-family: Poppins;
@@ -163,7 +216,17 @@ export default defineComponent({
   border-radius: 0.25rem;
   background: rgba(240, 237, 255, 0.2);
   width: 100%;
+  height: 3rem;
   flex-shrink: 0;
+}
+.terms-checkbox {
+  color: var(--body-text, #2d3748);
+  font-family: Inter;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 140%; /* 1.05rem */
+  letter-spacing: -0.015rem;
 }
 .btn {
   border-radius: 8px;
@@ -171,23 +234,35 @@ export default defineComponent({
   box-shadow: 0px 8px 21px 0px rgba(0, 0, 0, 0.16);
   color: #ffff;
 }
+#terms-link,
+#privacy-policy-link {
+  color: #8457f7;
+  font-family: Inter;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 140%;
+  letter-spacing: -0.015rem;
+}
 .forgot-password-container {
   text-align: right;
   margin-bottom: 1rem;
 }
 
-.link {
-  color: var(--main-button, #8457f7);
+#signin-link {
+  color: var(--main-button, #9181f4);
   font-family: Poppins;
   font-size: 1rem;
   font-style: normal;
-  font-weight: 100;
+  font-weight: 600;
   line-height: normal;
   text-decoration: none;
 }
-.signin-link {
-  color: #8457f7;
-  font-weight: 400;
+.form-box {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
 }
 .form-separator {
   border: none;
