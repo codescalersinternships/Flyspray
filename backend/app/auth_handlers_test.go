@@ -530,6 +530,88 @@ func TestRefreshToken(t *testing.T) {
 
 }
 
+func TestForgetPassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	app.router = gin.Default()
+	app.registerRoutes()
+
+	testCases := []struct {
+		name               string
+		preCreatedUser     models.User
+		input              emailInput
+		expectedStatusCode int
+	}{
+		{
+			name: "invalid input",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              emailInput{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "not exist",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              emailInput{Email: "another@gmail.com"},
+			expectedStatusCode: http.StatusNotFound,
+		}, {
+			name: "not verified",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              emailInput{Email: "omar@gmail.com"},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+				Verified: true,
+			},
+			input:              emailInput{Email: "omar@gmail.com"},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer app.DB.Client.Exec("DELETE FROM users")
+
+			_, err := app.DB.CreateUser(tc.preCreatedUser)
+			assert.Nil(t, err)
+
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPost, "/user/forget_password", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
+}
+
 func AddUserToDB(t testing.TB, user signupBody, app *App) {
 	t.Helper()
 

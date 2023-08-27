@@ -33,6 +33,10 @@ type verifyBody struct {
 	Email            string `json:"email"`
 }
 
+type emailInput struct {
+	Email string `json:"email" binding:"required"`
+}
+
 func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody signupBody
@@ -324,4 +328,44 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		},
 	}, Created()
 
+}
+
+func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
+	var input emailInput
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	user, err := a.DB.GetUserByEmail(input.Email)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("email does not exist"))
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if !user.Verified {
+		return nil, BadRequest(errors.New("your account is not verified, please verify your account first"))
+	}
+
+	verificationCode := a.DB.GenerateVerificationCode()
+
+	if err := a.DB.UpdateVerificationCode(user.ID, verificationCode, a.config.MailSender.Timeout); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	mailSubject, mailBody := internal.ForgetPasswordMailContent(verificationCode)
+	if err := internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "forget password code has been sent to your email"}, Ok()
 }

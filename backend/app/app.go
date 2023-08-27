@@ -81,6 +81,7 @@ func (app *App) registerRoutes() {
 		userGroup.POST("/signin", WrapFunc(app.signIn))
 		userGroup.POST("/signup/verify", WrapFunc(app.verify))
 		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
+		userGroup.POST("/forget_password", WrapFunc(app.forgetPassword))
 	}
 
 	authUserGroup := authGroup.Group("/user")
