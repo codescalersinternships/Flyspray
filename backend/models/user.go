@@ -59,7 +59,7 @@ func (db *DBClient) GetUserByID(id string) (User, error) {
 func (db *DBClient) UpdateUser(user User) error {
 
 	result := db.Client.Model(&user).Updates(User{
-		Name: user.Name,
+		Name:     user.Name,
 		Password: user.Password,
 	})
 	if result.RowsAffected == 0 {

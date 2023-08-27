@@ -12,7 +12,7 @@ func SendEmail(apiKey, sender, receiver, subject, body string) error {
 	from := mail.NewEmail("Fly Spray", sender)
 	to := mail.NewEmail("user", receiver)
 	message := mail.NewSingleEmail(from, subject, to, "", body)
-	
+
 	client := sendgrid.NewSendClient(apiKey)
 	_, err := client.Send(message)
 	return err
