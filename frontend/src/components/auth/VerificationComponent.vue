@@ -14,14 +14,14 @@
           <v-form ref="form" @submit.prevent="submitForm">
             <div class="verification-code-container">
               <v-text-field
-                v-for="(digit, index) in verificationCode"
+                v-for="(digit, index) in code"
                 :key="index"
-                v-model="verificationCode[index]"
+                v-model="code[index]"
                 outlined
                 dense
                 class="verification-code-input"
                 :ref="`digit${index}`"
-                @input="formatVerificationCode()"
+                @input="formatcode()"
               ></v-text-field>
             </div>
             <div class="center">
@@ -50,23 +50,20 @@ export default defineComponent({
   },
   data() {
     return {
-      verificationCode: ["", "", "", ""] as string[],
+      code: ["", "", "", ""] as string[],
       error: false as boolean,
     };
   },
   methods: {
-    formatVerificationCode() {
+    formatcode() {
       for (let index = 0; index < 4; index++) {
-        if (this.verificationCode[index].length > 1) {
-          this.verificationCode[index] = this.verificationCode[index].slice(
-            0,
-            1
-          );
+        if (this.code[index].length > 1) {
+          this.code[index] = this.code[index].slice(0, 1);
         }
       }
 
       //   for (let index = 0; index < 3; index++) {
-      //     if (this.verificationCode[index].length === 1) {
+      //     if (this.code[index].length === 1) {
       //       (this.$refs["digit" + (index + 1)] as any)[0].focus();
       //     }
       //   }
@@ -76,11 +73,11 @@ export default defineComponent({
     },
     submitForm() {
       this.error = false;
-      if (this.verificationCode.every((code: string) => code !== "")) {
-        console.log("Verification code is filled:", this.verificationCode);
+      if (this.code.every((code: string) => code !== "")) {
+        console.log("Verification code is filled:", this.code);
       } else {
         this.error = true;
-        console.log("Verification code is not filled:", this.verificationCode);
+        console.log("Verification code is not filled:", this.code);
       }
     },
   },
