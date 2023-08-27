@@ -91,7 +91,8 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 				return nil, InternalServerError(errInternalServerError)
 			}
 
-			err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, verificationCode)
+			mailSubject, mailBody := internal.VerifyMailContent(verificationCode)
+			err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
@@ -106,7 +107,8 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, user.VerificationCode)
+	mailSubject, mailBody := internal.VerifyMailContent(user.VerificationCode)
+	err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody)
 	if err != nil {
 		log.Error().Err(err).Send()
 
