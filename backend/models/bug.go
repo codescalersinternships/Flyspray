@@ -43,8 +43,7 @@ func (d *DBClient) UpdateBug(id string, updatedBug Bug) error {
 	return result.Error
 }
 
-// Filterbug filters all bug by user id, bug category, bug status, component id
-// Filterbug filters all bug by user id, bug category, bug status, component id, opened,
+// Filterbug filters all bugs by user id, bug category, bug status, component id
 func (d *DBClient) Filterbug(category, status, component_id string) ([]Bug, error) {
 	bug := []Bug{}
 
