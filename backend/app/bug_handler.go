@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -75,21 +74,21 @@ func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
 		componentId = ctx.Query("component_id")
 	)
 
-	bug, err := a.DB.Filterbug(category, status, componentId)
+	bugs, err := a.DB.Filterbug(category, status, componentId)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
-		Message: "bug is retrieved successfully",
-		Data:    bug,
+		Message: "bugs are retrieved successfully",
+		Data:    bugs,
 	}, Ok()
 }
 
 func (app *App) getBug(ctx *gin.Context) (interface{}, Response) {
 
-	_, exists := ctx.Get("user_id")
+	userId, exists := ctx.Get("user_id")
 	if !exists {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
@@ -110,6 +109,35 @@ func (app *App) getBug(ctx *gin.Context) (interface{}, Response) {
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
+	}
+
+	members, err := app.getMemberstoAccessBug(bug)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("failed to find members that have access to this bug"))
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	memberInProject := false
+
+	// loop over the members to check admin state
+	for _, member := range members {
+
+		if userId == member.ID {
+
+			memberInProject = true
+			break
+
+		}
+	}
+
+	if userId != bug.UserID && !memberInProject {
+		return nil, Forbidden(errors.New("you have no access to get the bug"))
 	}
 
 	return ResponseMsg{
@@ -131,7 +159,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("bug id is required"))
 	}
 
-	userID, exists := ctx.Get("user_id")
+	userId, exists := ctx.Get("user_id")
 	if !exists {
 		return nil, UnAuthorized(errors.New("authentication is required"))
 	}
@@ -149,7 +177,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	// check if user is autherized to update the bug or not
-	if fmt.Sprint(userID) != fmt.Sprint(bug.UserID) {
+	if userId != bug.UserID {
 		return nil, Forbidden(errors.New("you have no access to update the bug"))
 	}
 
@@ -159,7 +187,7 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 	err = app.DB.UpdateBug(id, updatedBug)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return nil, InternalServerError(errors.New("field to update bug"))
+		return nil, InternalServerError(errInternalServerError)
 	}
 
 	return ResponseMsg{
@@ -192,25 +220,13 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	component, err := app.DB.GetComponent(strconv.Itoa(bug.ComponentID))
+	members, err := app.getMemberstoAccessBug(bug)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().Err(err).Send()
-		return nil, NotFound(errors.New("component is not found"))
-	}
-	if err != nil {
-		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
+		return nil, NotFound(errors.New("failed to find members that have access to this bug"))
 	}
 
-	project, err := app.DB.GetProject(component.ProjectID)
-
-	if err != nil {
-		log.Error().Err(err).Send()
-		return nil, InternalServerError(errInternalServerError)
-	}
-
-	members, err := app.DB.GetMembersInProject(int(project.ID))
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
@@ -229,7 +245,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 		}
 	}
 
-	if userId != bug.UserID && userId != project.OwnerID && !adminMember {
+	if userId != bug.UserID && !adminMember {
 		return nil, Forbidden(errors.New("you have no access to delete the bug"))
 	}
 
@@ -249,4 +265,34 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 	return ResponseMsg{
 		Message: "bug is deleted successfully",
 	}, Ok()
+}
+
+func (app *App) getMemberstoAccessBug(bug models.Bug) ([]models.Member, error) {
+
+	component, err := app.DB.GetComponent(strconv.Itoa(bug.ComponentID))
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error().Err(err).Send()
+		return nil, errors.New("component is not found")
+	}
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, errors.New("failed to get component due to internal server error")
+	}
+
+	project, err := app.DB.GetProject(component.ProjectID)
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, errors.New("failed to get project due to internal server error")
+	}
+
+	members, err := app.DB.GetMembersInProject(int(project.ID))
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, errors.New("failed to get members in the project due to internal server error")
+	}
+
+	return members, nil
+
 }

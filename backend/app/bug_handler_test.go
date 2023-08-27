@@ -104,7 +104,7 @@ func TestCreateBug(t *testing.T) {
 	})
 }
 
-func TestFilterbug(t *testing.T) {
+func TestGetbugs(t *testing.T) {
 	tempDir := t.TempDir()
 	path := path.Join(tempDir, "flyspray.db")
 	gin.SetMode(gin.TestMode)
@@ -379,8 +379,36 @@ func TestGetBug(t *testing.T) {
 	router.GET("/bug/:id", WrapFunc(app.getBug))
 
 	t.Run("get bug successfully", func(t *testing.T) {
+		projectInput := createProjectInput{
+			Name: "flyspray",
+		}
+
+		project := models.Project{
+			OwnerID: "99",
+			Name:    projectInput.Name,
+		}
+
+		result := app.DB.Client.Create(&project)
+		assert.NoError(t, result.Error)
+
+		projectId := fmt.Sprintf("%x", project.ID)
+
+		componentInput := createComponentInput{
+			Name:      "backend",
+			ProjectID: projectId,
+		}
+
+		component := models.Component{
+			ID:        13,
+			UserID:    "99",
+			Name:      componentInput.Name,
+			ProjectID: componentInput.ProjectID,
+		}
+
+		result = app.DB.Client.Create(&component)
+		assert.NoError(t, result.Error)
 		bugData := models.Bug{
-			UserID:      "12",
+			UserID:      "99",
 			ComponentID: 13,
 		}
 

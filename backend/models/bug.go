@@ -1,10 +1,14 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+// ErrNoAccess is returned when a user not allowed to get certain bugs tries to get them
+var ErrNoAccess = errors.New("user has no access to get bugs")
 
 type Bug struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement:true"`
@@ -39,6 +43,7 @@ func (d *DBClient) UpdateBug(id string, updatedBug Bug) error {
 	return result.Error
 }
 
+// Filterbug filters all bug by user id, bug category, bug status, component id
 // Filterbug filters all bug by user id, bug category, bug status, component id, opened,
 func (d *DBClient) Filterbug(category, status, component_id string) ([]Bug, error) {
 	bug := []Bug{}
