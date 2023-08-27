@@ -97,4 +97,14 @@ func (app *App) registerRoutes() {
 		component.PUT("/:id", WrapFunc(app.updateComponent))
 		component.GET("/filters", WrapFunc(app.getComponents))
 	}
+
+	bugGroup := authGroup.Group("/bug")
+	{
+		bugGroup.POST("", WrapFunc(app.createBug))
+		bugGroup.GET("/filters", WrapFunc(app.getbugs))
+		bugGroup.GET("/:id", WrapFunc(app.getBug))
+		bugGroup.PUT("/:id", WrapFunc(app.updateBug))
+		bugGroup.DELETE("/:id", WrapFunc(app.deleteBug))
+	}
+
 }
