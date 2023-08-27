@@ -60,6 +60,7 @@ func (db *DBClient) UpdateUser(user User) error {
 
 	result := db.Client.Model(&user).Updates(User{
 		Name: user.Name,
+		Password: user.Password,
 	})
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound

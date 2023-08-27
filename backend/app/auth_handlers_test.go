@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/codescalersinternships/Flyspray/models"
@@ -602,6 +603,167 @@ func TestForgetPassword(t *testing.T) {
 			assert.Nil(t, err)
 
 			req, err := http.NewRequest(http.MethodPost, "/user/forget_password", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
+}
+
+func TestVerifyForgetPassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	app.router = gin.Default()
+	app.registerRoutes()
+
+	timeout := 15
+
+	testCases := []struct {
+		name               string
+		preCreatedUser     models.User
+		input              verifyForgetPasswordBody
+		expectedStatusCode int
+	}{
+		{
+			name: "invalid input",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input:              verifyForgetPasswordBody{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "not exist",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "another@gmail.com",
+				VerificationCode: 100001,
+				Password:         "changed-123456!Abc",
+				ConfirmPassword:  "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusNotFound,
+		}, {
+			name: "not verified",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                false,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+				Password:         "changed-123456!Abc",
+				ConfirmPassword:  "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "passwords do not match",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+				Password:         "changed-a-123456!Abc",
+				ConfirmPassword:  "changed-b-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "wrong verification code",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100003,
+				Password:         "changed-123456!Abc",
+				ConfirmPassword:  "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "verification code expired",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now(),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+				Password:         "changed-123456!Abc",
+				ConfirmPassword:  "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			preCreatedUser: models.User{
+				Name:                    "omar",
+				Email:                   "omar@gmail.com",
+				Password:                "123456!Abc",
+				Verified:                true,
+				VerificationCode:        100001,
+				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyForgetPasswordBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+				Password:         "changed-123456!Abc",
+				ConfirmPassword:  "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer app.DB.Client.Exec("DELETE FROM users")
+
+			_, err := app.DB.CreateUser(tc.preCreatedUser)
+			assert.Nil(t, err)
+
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPut, "/user/forget_password/verify", bytes.NewReader(body))
 			assert.Nil(t, err)
 
 			res := httptest.NewRecorder()

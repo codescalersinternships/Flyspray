@@ -37,6 +37,13 @@ type emailInput struct {
 	Email string `json:"email" binding:"required"`
 }
 
+type verifyForgetPasswordBody struct {
+	Email            string `json:"email" binding:"required"`
+	VerificationCode int    `json:"verification_code" binding:"required"`
+	Password         string `json:"password" binding:"required"`
+	ConfirmPassword  string `json:"confirm_password" binding:"required"`
+}
+
 func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody signupBody
@@ -368,4 +375,55 @@ func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	return ResponseMsg{Message: "forget password code has been sent to your email"}, Ok()
+}
+
+func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
+	var input verifyForgetPasswordBody
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	if input.Password != input.ConfirmPassword {
+		return nil, BadRequest(errors.New("passwords do not match"))
+	}
+
+	user, err := a.DB.GetUserByEmail(input.Email)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("email does not exist"))
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if !user.Verified {
+		return nil, BadRequest(errors.New("your account is not verified, please verify your account first"))
+	}
+
+	if user.VerificationCode != input.VerificationCode {
+		return nil, BadRequest(errors.New("wrong verification code"))
+	}
+
+	if user.VerificationCodeTimeout.Before(time.Now()) {
+		return nil, BadRequest(errors.New("verification code has expired"))
+	}
+
+	hashedPassword, err := internal.HashPassword([]byte(input.Password))
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+	user.Password = string(hashedPassword)
+
+	if err := a.DB.UpdateUser(user); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "password has been updated successfully"}, Ok()
 }
