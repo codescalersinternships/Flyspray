@@ -4,7 +4,7 @@ lint:
 
 test:
 	cd backend; go test ./...
-	cd frontend; npm run test
+	cd frontend; npm run test:e2e
 
 coverage:
 	cd backend; go test ./... --cover

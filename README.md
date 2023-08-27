@@ -8,6 +8,8 @@ Flyspray is a web-based bug tracking system.
 -   [Configuration](#Configuration)
 -   [Installation](#installation)
 -   [Testing](#testing)
+-   [Frontend README](#frontend)
+-   [Backend README](#backend)
 
 ## Introduction
 
@@ -80,3 +82,10 @@ npm install
 ```bash
 make test
 ```
+## Frontend
+
+Check frontend [README](frontend/README.md)
+
+## Backend
+
+Check backend [README](backend/README.md)
