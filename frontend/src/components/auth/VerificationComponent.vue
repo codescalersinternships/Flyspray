@@ -19,7 +19,7 @@
                 v-model="verificationCode[index]"
                 outlined
                 dense
-                class="verification-code-input custom-input"
+                class="verification-code-input"
                 :ref="`digit${index}`"
                 @input="formatVerificationCode()"
               ></v-text-field>
@@ -65,11 +65,11 @@ export default defineComponent({
         }
       }
 
-      for (let index = 0; index < 3; index++) {
-        if (this.verificationCode[index].length === 1) {
-          (this.$refs["digit" + (index + 1)] as any)[0].focus();
-        }
-      }
+      //   for (let index = 0; index < 3; index++) {
+      //     if (this.verificationCode[index].length === 1) {
+      //       (this.$refs["digit" + (index + 1)] as any)[0].focus();
+      //     }
+      //   }
     },
     resendCode() {
       console.log("resend code");
