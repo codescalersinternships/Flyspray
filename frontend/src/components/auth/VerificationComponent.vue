@@ -4,7 +4,7 @@
       <p class="header-text" id="login-card-title">Verify Your Email</p>
       <div class="sub-box">
         <p class="sub-header-text" id="verification-card-title">
-          Please enter the 4 digit code sent to your email your...@domain.com.
+          Please enter the 4-digit code sent to your email your...@domain.com.
         </p>
       </div>
     </div>
@@ -29,11 +29,18 @@
             </div>
             <v-btn type="submit" block class="mt-2 btn">Submit</v-btn>
           </v-form>
-          <hr class="form-separator" />
+          <div v-if="showResend">
+            <hr class="form-separator" />
 
-          <button class="link signin-link" @click="resendCode()">
-            Resend Code
-          </button>
+            <button
+              class="link"
+              :class="countDown != 0 ? 'disable' : ''"
+              @click="resendCode()"
+            >
+              Resend Code
+            </button>
+            <p class="count-down">{{ countDown }}</p>
+          </div>
         </v-sheet></input-form
       >
     </div>
@@ -50,31 +57,48 @@ export default defineComponent({
   },
   data() {
     return {
-      code: ["", "", "", ""] as string[],
+      code: [null, null, null, null] as (number | null)[],
       error: false as boolean,
+      showResend: false as boolean,
+      countDown: 90 as number,
     };
   },
   methods: {
     formatcode() {
-      for (let index = 0; index < 4; index++) {
-        if (this.code[index].length > 1) {
-          this.code[index] = this.code[index].slice(0, 1);
+      for (let index = 0; index < 3; index++) {
+        if (this.code[index] != null) {
+          (this.$refs["digit" + (index + 1)] as any)[0].focus();
         }
       }
-
-      //   for (let index = 0; index < 3; index++) {
-      //     if (this.code[index].length === 1) {
-      //       (this.$refs["digit" + (index + 1)] as any)[0].focus();
-      //     }
-      //   }
     },
     resendCode() {
-      console.log("resend code");
+      if (this.countDown === 0) {
+        console.log("resend code");
+        this.countDown = 90;
+
+        this.startCountDown();
+      } else {
+        console.log("not allowed to resend code");
+      }
+    },
+    startCountDown() {
+      const countdownInterval = setInterval(() => {
+        if (this.countDown > 0) {
+          this.countDown--;
+        } else {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
     },
     submitForm() {
       this.error = false;
-      if (this.code.every((code: string) => code !== "")) {
+      if (this.code.every((code: number | null) => code != null)) {
         console.log("Verification code is filled:", this.code);
+        this.showResend = true;
+        if (this.countDown == 0 || this.countDown == 90) {
+          this.countDown = 90;
+          this.startCountDown();
+        }
       } else {
         this.error = true;
         console.log("Verification code is not filled:", this.code);
@@ -127,6 +151,17 @@ export default defineComponent({
   font-weight: 100;
   line-height: normal;
   text-decoration: none;
+  display: inline;
+}
+.count-down {
+  display: inline;
+  margin-left: 2rem;
+  font-family: Poppins;
+  color: #c31031;
+}
+.disable {
+  color: gray;
+  cursor: not-allowed;
 }
 .form-separator {
   border: none;
