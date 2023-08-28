@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/codescalersinternships/Flyspray/app"
+	_ "github.com/codescalersinternships/Flyspray/docs"
 )
 
 func main() {
