@@ -22,6 +22,7 @@
                 class="verification-code-input"
                 :ref="`digit${index}`"
                 @input="formatcode()"
+                @keypress="validateInput($event, index)"
               ></v-text-field>
             </div>
             <div class="center">
@@ -69,6 +70,14 @@ export default defineComponent({
         if (this.code[index] != null) {
           (this.$refs["digit" + (index + 1)] as any)[0].focus();
         }
+      }
+    },
+    validateInput(event: KeyboardEvent, index: number) {
+      if (this.code[index]) {
+        event.preventDefault();
+      }
+      if (!/^\d$/.test(event.key)) {
+        event.preventDefault();
       }
     },
     resendCode() {
