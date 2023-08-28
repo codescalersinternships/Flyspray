@@ -4,7 +4,7 @@
       <p class="header-text" id="login-card-title">Verify Your Email</p>
       <div class="sub-box">
         <p class="sub-header-text" id="verification-card-title">
-          Please enter the 4-digit code sent to your email your...@domain.com.
+          Please enter the 4-digit code sent to your email.
         </p>
       </div>
     </div>
