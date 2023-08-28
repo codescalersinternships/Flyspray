@@ -119,6 +119,11 @@ definitions:
       - name
       - owner_id
     type: object
+  app.updateUserBody:
+    properties:
+      name:
+        type: string
+    type: object
   app.verifyBody:
     properties:
       email:
@@ -128,7 +133,7 @@ definitions:
     type: object
 swagger: "2.0"
 info:
-  title: Todo App
+  title: Flyspray
   version: 1.0.0
   contact: {}
 paths:
@@ -965,12 +970,12 @@ paths:
         - application/json
       description: Updates the user's information
       parameters:
-        - description: New name for the user
+        - description: Update user request body
           in: body
-          name: name
+          name: request
           required: true
           schema:
-            type: string
+            $ref: "#/definitions/app.updateUserBody"
       produces:
         - application/json
       responses:

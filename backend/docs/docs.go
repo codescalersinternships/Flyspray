@@ -1250,12 +1250,12 @@ const docTemplate = `{
                 "summary": "Update user information",
                 "parameters": [
                     {
-                        "description": "New name for the user",
-                        "name": "name",
+                        "description": "Update user request body",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/app.updateUserBody"
                         }
                     }
                 ],
@@ -1662,6 +1662,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "owner_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "app.updateUserBody": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

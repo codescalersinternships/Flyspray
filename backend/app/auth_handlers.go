@@ -33,6 +33,10 @@ type verifyBody struct {
 	Email            string `json:"email"`
 }
 
+type updateUserBody struct {
+	Name string `json:"name"`
+}
+
 // signup creates a new user account and sends a verification code to the user's email
 // @Summary Create a new user account
 // @Description Creates a new user account and sends a verification code to the user's email
@@ -259,7 +263,7 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param name body string true "New name for the user"
+// @Param request body updateUserBody true "Update user request body"
 // @Success 200 {object} ResponseMsg "user has been updated successfully"
 // @Failure 400 {object} Response "Bad request"
 // @Failure 401 {object} Response "Unauthorized"
@@ -267,15 +271,15 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 // @Failure 500 {object} Response "Internal server error"
 // @Router /user [put]
 func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
+
+	var requestBody updateUserBody
+
 	userID, exists := ctx.Get("user_id")
 
 	if !exists {
 		return nil, UnAuthorized(errors.New("user is not found"))
 	}
 
-	var requestBody struct {
-		Name string `json:"name"`
-	}
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 	if err != nil {
 		log.Error().Err(err).Send()

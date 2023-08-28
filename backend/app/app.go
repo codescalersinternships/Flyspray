@@ -51,8 +51,6 @@ func (app *App) registerRoutes() {
 	authGroup := app.router.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
 
-	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
-
 	project := authGroup.Group("/project")
 	{
 		project.POST("", WrapFunc(app.createProject))
@@ -86,6 +84,8 @@ func (app *App) registerRoutes() {
 		userGroup.POST("/signup/verify", WrapFunc(app.verify))
 		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
 	}
+
+	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	authUserGroup := authGroup.Group("/user")
 	{
