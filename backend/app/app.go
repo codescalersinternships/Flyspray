@@ -8,6 +8,8 @@ import (
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swagFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // NewApp is the factory of App
@@ -48,6 +50,8 @@ func (app *App) registerRoutes() {
 
 	authGroup := app.router.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
+
+	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	project := authGroup.Group("/project")
 	{

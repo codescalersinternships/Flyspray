@@ -23,6 +23,21 @@ type updateProjectInput struct {
 	Name    string `json:"name" binding:"required"`
 }
 
+// createProject creates a new project
+// @Summary Create a new project
+// @Description Create a new project
+// @Tags Projects
+// @Accept json
+// @Produce json
+// @Param input body createProjectInput true "Project data"
+// @Security ApiKeyAuth
+// @Success 201 {object} ResponseMsg "Project is created successfully (Project details in the 'Data' field)"
+// @Failure 400 {object} Response "Failed to read project data"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Access denied to create project"
+// @Failure 409 {object} Response "Project name must be unique"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /project [post]
 func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	var input createProjectInput
 
@@ -66,6 +81,23 @@ func (a *App) createProject(ctx *gin.Context) (interface{}, Response) {
 	}, Created()
 }
 
+// updateProject updates a project
+// @Summary Update a project
+// @Description Update an existing project
+// @Tags Projects
+// @Accept json
+// @Produce json
+// @Param id path string true "Project ID"
+// @Param input body updateProjectInput true "Project data"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "Project is updated successfully"
+// @Failure 400 {object} Response "Failed to read project data"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Access denied to update project"
+// @Failure 404 {object} Response "Project is not found"
+// @Failure 409 {object} Response "Project name must be unique"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /project/{id} [put]
 func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 	var input updateProjectInput
@@ -125,6 +157,16 @@ func (a *App) updateProject(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// getProject retrieves a project
+// @Summary Get a project
+// @Description Get details of a project
+// @Tags Projects
+// @Produce json
+// @Param id path string true "Project ID"
+// @Success 200 {object} ResponseMsg "project is retrieved successfully (Project details in the 'Data' field)"
+// @Failure 404 {object} Response "Project is not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /project/{id} [get]
 func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 
@@ -145,6 +187,17 @@ func (a *App) getProject(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// getProjects retrieves projects based on filters
+// @Summary Get projects
+// @Description Get a list of projects based on filters
+// @Tags Projects
+// @Produce json
+// @Param userid query string false "User ID"
+// @Param name query string false "Project name"
+// @Param after query string false "Creation date (after)"
+// @Success 200 {object} ResponseMsg "Projects are retrieved successfully (Projects details in the 'Data' field)"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /project/filters [get]
 func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 	userId := ctx.Query("userid")
 	projectName := ctx.Query("name")
@@ -163,6 +216,19 @@ func (a *App) getProjects(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// deleteProject deletes a project
+// @Summary Delete a project
+// @Description Delete an existing project
+// @Tags Projects
+// @Produce json
+// @Param id path string true "Project ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "Project is deleted successfully"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Access denied to delete project"
+// @Failure 404 {object} Response "Project is not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /project/{id} [delete]
 func (a *App) deleteProject(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 
