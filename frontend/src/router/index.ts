@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import LoginView from "../views/auth/LoginView.vue";
 import ForgetPasswordView from "../views/auth/ForgetPasswordView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
+import RegisterVerificationView from "../views/auth/RegisterVerificationView.vue";
 import HomeLoggedInView from "../views/HomeLoggedInView.vue";
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,6 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/signup",
     name: "signup",
     component: RegisterView,
+  },
+  {
+    path: "/register-verification",
+    name: "register-verification",
+    component: RegisterVerificationView,
   },
   {
     path: "/",

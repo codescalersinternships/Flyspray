@@ -8,6 +8,8 @@ import (
 	"github.com/codescalersinternships/Flyspray/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swagFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // NewApp is the factory of App
@@ -82,6 +84,8 @@ func (app *App) registerRoutes() {
 		userGroup.POST("/signup/verify", WrapFunc(app.verify))
 		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
 	}
+
+	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	authUserGroup := authGroup.Group("/user")
 	{

@@ -27,6 +27,19 @@ type updateBugInput struct {
 	Status   string `json:"status"`
 }
 
+// createBug creates a new bug
+// @Summary Create a bug
+// @Description Creates a new bug with the provided input
+// @Tags bugs
+// @Accept json
+// @Produce json
+// @Param bug body createBugInput true "Bug data"
+// @Security ApiKeyAuth
+// @Success 201 {object} ResponseMsg "bug is created successfully (Bug details in the 'Data' field)"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /bug [post]
 func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 	var bug createBugInput
 
@@ -60,6 +73,19 @@ func (app *App) createBug(ctx *gin.Context) (interface{}, Response) {
 	}, Created()
 }
 
+// getbugs retrieves bugs based on the provided filters
+// @Summary Get bugs
+// @Description Retrieves bugs based on the provided filters
+// @Tags bugs
+// @Produce json
+// @Param category query string false "Bug category"
+// @Param status query string false "Bug status"
+// @Param component_id query string false "Component ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "bugs are retrieved successfully (Bugs details in the 'Data' field)"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /bug/filters [get]
 func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
 
 	_, exists := ctx.Get("user_id")
@@ -86,6 +112,19 @@ func (a *App) getbugs(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// getBug retrieves a bug by its ID
+// @Summary Get a bug
+// @Description Retrieves a bug by its ID
+// @Tags bugs
+// @Produce json
+// @Param id path string true "Bug ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "bug is retrieved successfully (Bug details in the 'Data' field)"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /bug/{id} [get]
 func (app *App) getBug(ctx *gin.Context) (interface{}, Response) {
 
 	userId, exists := ctx.Get("user_id")
@@ -146,6 +185,21 @@ func (app *App) getBug(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// updateBug updates a bug with the provided data
+// @Summary Update a bug
+// @Description Updates a bug with the provided data
+// @Tags bugs
+// @Accept json
+// @Produce json
+// @Param id path string true "Bug ID"
+// @Param bug body updateBugInput true "Bug data"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "bug is updated successfully"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /bug/{id} [put]
 func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 	var input updateBugInput
 
@@ -195,6 +249,19 @@ func (app *App) updateBug(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// deleteBug deletes a bug by its ID
+// @Summary Delete a bug
+// @Description Deletes a bug by its ID
+// @Tags bugs
+// @Produce json
+// @Param id path string true "Bug ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "bug is deleted successfully"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /bug/{id} [delete]
 func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 
 	id := ctx.Param("id")
@@ -267,6 +334,7 @@ func (app *App) deleteBug(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// getMemberstoAccessBug a helper method that uses other methods to get members allowed to access a bug
 func (app *App) getMemberstoAccessBug(bug models.Bug) ([]models.Member, error) {
 
 	component, err := app.DB.GetComponent(strconv.Itoa(bug.ComponentID))
