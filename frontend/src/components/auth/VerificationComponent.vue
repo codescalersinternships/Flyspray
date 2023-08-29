@@ -36,7 +36,7 @@
               block
               class="mt-2 btn"
               :disabled="
-                (error && isCodeClicked) || (countDown != 0 && countDown != 60)
+                (error && isCodeClicked) || (countDown != 0 && countDown != -1)
               "
               >Submit</v-btn
             >
@@ -71,7 +71,7 @@ export default defineComponent({
     return {
       code: [null, null, null, null] as (number | null)[],
       showResend: false as boolean,
-      countDown: 60 as number,
+      countDown: -1 as number,
       isCodeClicked: false as boolean,
     };
   },
@@ -126,7 +126,7 @@ export default defineComponent({
       if (this.code.every((code: number | null) => code != null && code)) {
         console.log("Verification code is filled:", this.code);
         this.showResend = true;
-        if (this.countDown == 0 || this.countDown == 60) {
+        if (this.countDown == 0 || this.countDown == -1) {
           this.countDown = 60;
           this.startCountDown();
         }
