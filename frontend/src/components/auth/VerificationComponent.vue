@@ -21,7 +21,7 @@
                 dense
                 class="verification-code-input"
                 :ref="`digit${index}`"
-                @input="formatcode()"
+                @input="formatCode()"
                 @keypress="validateInput($event, index)"
               ></v-text-field>
             </div>
@@ -65,10 +65,13 @@ export default defineComponent({
     };
   },
   methods: {
-    formatcode() {
+    formatCode() {
       for (let index = 0; index < 3; index++) {
-        if (this.code[index] != null) {
-          (this.$refs["digit" + (index + 1)] as any)[0].focus();
+        if (this.code[index] !== null) {
+          const digitInputArray = this.$refs[
+            "digit" + (index + 1)
+          ] as HTMLInputElement[];
+          digitInputArray[0].focus();
         }
       }
     },
