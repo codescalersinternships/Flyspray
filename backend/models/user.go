@@ -48,7 +48,7 @@ func (db *DBClient) CreateUser(user User) (User, error) {
 
 // GetUserByID gets a user by id
 func (db *DBClient) GetUserByID(id string) (User, error) {
-	var user User
+	user := User{ID: id}
 
 	result := db.Client.First(&user)
 
