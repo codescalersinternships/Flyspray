@@ -22,6 +22,19 @@ type updateCommentInput struct {
 	Summary string `json:"summary" validate:"required"`
 }
 
+// createComment creates a new comment for a bug
+// @Summary Creates a comment
+// @Description Creates a new comment for a bug in the database
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param commentInput body createCommentInput true "Comment input object"
+// @Security ApiKeyAuth
+// @Success 201 {object} ResponseMsg "Comment is created successfully (Comment details in the 'Data' field)"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /comment [post]
 func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 
 	var commentInput createCommentInput
@@ -56,6 +69,19 @@ func (app *App) createComment(c *gin.Context) (interface{}, Response) {
 
 }
 
+// getComment retrieves a comment by ID
+// @Summary Retrieves a comment
+// @Description Retrieves a comment by its ID from the database
+// @Tags comments
+// @Produce json
+// @Param id path int true "Comment ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "comment is found successfully (Comment details in the 'Data' field)"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /comment/{id} [get]
 func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 
 	idStr := c.Param("id")
@@ -90,6 +116,20 @@ func (app *App) getComment(c *gin.Context) (interface{}, Response) {
 
 }
 
+// deleteComment deletes a comment by ID
+// @Summary Deletes a comment
+// @Description Deletes a comment by its ID from the database
+// @Tags comments
+// @Produce json
+// @Param id path int true "Comment ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "comment is deleted successfully"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 403 {object} Response "Forbidden"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /comment/{id} [delete]
 func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 
 	idStr := c.Param("id")
@@ -144,6 +184,17 @@ func (app *App) deleteComment(c *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// listComments retrieves a list of comments
+// @Summary Retrieves comments
+// @Description Retrieves a list of comments from the database
+// @Tags comments
+// @Produce json
+// @Param bug_id query int false "Bug ID"
+// @Param user_id query string false "User ID"
+// @Success 200 {object} ResponseMsg "comments are retrieved successfully (Comments details in the 'Data' field)"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /comment/filters [get]
 func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 
 	bugIDStr := c.Query("bug_id")
@@ -172,6 +223,22 @@ func (app *App) listComments(c *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// updateComment updates a comment by ID
+// @Summary Updates a comment
+// @Description Updates a comment by its ID in the database
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param id path int true "Comment ID"
+// @Param input body updateCommentInput true "Updated comment data"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "comment is updated successfully"
+// @Failure 400 {object} Response "Bad Request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 403 {object} Response "Forbidden"
+// @Failure 404 {object} Response "Not Found"
+// @Failure 500 {object} Response "Internal Server Error"
+// @Router /comment/{id} [put]
 func (app *App) updateComment(c *gin.Context) (interface{}, Response) {
 
 	var updatedComment updateCommentInput

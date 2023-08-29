@@ -21,6 +21,20 @@ type updateComponentInput struct {
 	Name string `json:"name" binding:"required"`
 }
 
+// createComponent creates a new component
+// @Summary Create a component
+// @Description Create a new component for a project
+// @Tags Components
+// @Accept json
+// @Produce json
+// @Param input body createComponentInput true "Component data"
+// @Security ApiKeyAuth
+// @Success 201 {object} ResponseMsg "component is created successfully (Component details in the 'Data' field)"
+// @Failure 400 {object} Response "Failed to read component data"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Do not have access to create component"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /component [post]
 func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 	var input createComponentInput
 
@@ -65,6 +79,22 @@ func (a *App) createComponent(ctx *gin.Context) (interface{}, Response) {
 	}, Created()
 }
 
+// updateComponent updates an existing component
+// @Summary Update a component
+// @Description Update an existing component
+// @Tags Components
+// @Accept json
+// @Produce json
+// @Param id path string true "Component ID"
+// @Param input body updateComponentInput true "Component data"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "component is updated successfully"
+// @Failure 400 {object} Response "Failed to read component data"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Do not have access to update component"
+// @Failure 404 {object} Response "Component is not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /component/{id} [put]
 func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 	var input updateComponentInput
@@ -123,6 +153,15 @@ func (a *App) updateComponent(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// @Summary Get a component
+// @Description Get a component by ID
+// @Tags Components
+// @Produce json
+// @Param id path string true "Component ID"
+// @Success 200 {object} ResponseMsg "component is retrieved successfully (Component details in the 'Data' field)"
+// @Failure 404 {object} Response "Component is not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /component/{id} [get]
 func (a *App) getComponent(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 
@@ -143,6 +182,19 @@ func (a *App) getComponent(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// deleteComponent deletes a component by ID
+// @Summary Delete a component
+// @Description Delete a component by ID
+// @Tags Components
+// @Produce json
+// @Param id path string true "Component ID"
+// @Security ApiKeyAuth
+// @Success 200 {object} ResponseMsg "Component is deleted successfully"
+// @Failure 401 {object} Response "Authentication is required"
+// @Failure 403 {object} Response "Do not have access to delete component"
+// @Failure 404 {object} Response "Component is not found"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /component/{id} [delete]
 func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
 	id := ctx.Param("id")
 
@@ -188,6 +240,17 @@ func (a *App) deleteComponent(ctx *gin.Context) (interface{}, Response) {
 	}, Ok()
 }
 
+// getComponents retrieves a list of components based on filters
+// @Summary Get components
+// @Description Get a list of components based on filters
+// @Tags Components
+// @Produce json
+// @Param project_id query string false "Project ID"
+// @Param name query string false "Component name"
+// @Param after query string false "Creation date (after)"
+// @Success 200 {object} ResponseMsg "Components are retrieved successfully (Components details in the 'Data' field)"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /component/filters [get]
 func (a *App) getComponents(ctx *gin.Context) (interface{}, Response) {
 	projectId := ctx.Query("project_id")
 	componentName := ctx.Query("name")

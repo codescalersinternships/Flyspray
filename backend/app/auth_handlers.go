@@ -44,6 +44,22 @@ type verifyForgetPasswordBody struct {
 	ConfirmPassword  string `json:"confirm_password" binding:"required"`
 }
 
+type updateUserBody struct {
+	Name string `json:"name"`
+}
+
+// signup creates a new user account and sends a verification code to the user's email
+// @Summary Create a new user account
+// @Description Creates a new user account and sends a verification code to the user's email
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body signupBody true "Signup request body"
+// @Success 201 {object} ResponseMsg ""A verification code has been sent to your email"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 409 {object} Response "Email already exists and verified"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/signup [post]
 func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody signupBody
@@ -131,6 +147,18 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 	return ResponseMsg{Message: message}, Created()
 }
 
+// verify verifies a user's account using the provided verification code and email
+// @Summary Verify a user's account
+// @Description Verifies a user's account using the provided verification code and email
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body verifyBody true "Verification request body"
+// @Success 200 {object} ResponseMsg "verified"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 404 {object} Response "Email does not exist"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/signup/verify [post]
 func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody verifyBody
@@ -175,6 +203,20 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 
 }
 
+// signIn authenticates a user's credentials and generates access tokens for the user
+// @Summary Authenticate a user and generate access tokens
+// @Description Authenticates a user's credentials and generates access tokens
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body signinBody true "Signin request body"
+// @Success 200 {object} ResponseMsg "logged in successfully (AccessToken details is given in a struct in the 'Data' field)"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 403 {object} Response "Forbidden"
+// @Failure 404 {object} Response "Wrong email or password"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/signin [post]
 func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 
 	var requestBody signinBody
@@ -227,16 +269,30 @@ func (a *App) signIn(ctx *gin.Context) (interface{}, Response) {
 	}}, Ok()
 }
 
+// updateUser updates the user's information
+// @Summary Update user information
+// @Description Updates the user's information
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param request body updateUserBody true "Update user request body"
+// @Success 200 {object} ResponseMsg "user has been updated successfully"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "User does not exist"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user [put]
 func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
+
+	var requestBody updateUserBody
+
 	userID, exists := ctx.Get("user_id")
 
 	if !exists {
 		return nil, UnAuthorized(errors.New("user is not found"))
 	}
 
-	var requestBody struct {
-		Name string `json:"name"`
-	}
 	err := json.NewDecoder(ctx.Request.Body).Decode(&requestBody)
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -263,6 +319,17 @@ func (a *App) updateUser(ctx *gin.Context) (interface{}, Response) {
 	return ResponseMsg{Message: "user has been updated successfully"}, Ok()
 }
 
+// getUser retrieves the user's information
+// @Summary Get user information
+// @Description Retrieves the user's information
+// @Tags Users
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} ResponseMsg "user is found (User details in the 'Data' field)"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 404 {object} Response "User does not exist"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user [get]
 func (a *App) getUser(ctx *gin.Context) (interface{}, Response) {
 
 	userID, exists := ctx.Get("user_id")
@@ -284,6 +351,19 @@ func (a *App) getUser(ctx *gin.Context) (interface{}, Response) {
 	return ResponseMsg{Message: "user is found", Data: user}, Ok()
 }
 
+// refreshToken generates a new access token using the provided refresh token
+// @Summary Generate new access token
+// @Description Generates a new access token using the provided refresh token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Security Bearer
+// @Success 201 {object} ResponseMsg  "token has been refreshed successfully (AccessToken & RefreshToken details are given in a struct in the 'Data' field)"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 401 {object} Response "Unauthorized"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/refresh-token [post]
 func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 
 	token := ctx.GetHeader("Authorization")
