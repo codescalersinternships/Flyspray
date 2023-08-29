@@ -23,19 +23,28 @@
                 :ref="`digit${index}`"
                 @input="formatCode()"
                 @keypress="validateInput($event, index)"
+                @click="isCodeClicked = true"
               ></v-text-field>
             </div>
             <div class="center">
-              <p class="error" v-if="error">Invalid code format</p>
+              <p class="error" v-if="error && isCodeClicked">
+                Invalid code format
+              </p>
             </div>
-            <v-btn type="submit" block class="mt-2 btn">Submit</v-btn>
+            <v-btn
+              type="submit"
+              block
+              class="mt-2 btn"
+              :disabled="error && isCodeClicked"
+              >Submit</v-btn
+            >
           </v-form>
           <div v-if="showResend">
             <hr class="form-separator" />
 
             <button
               class="link"
-              :class="countDown != 0 ? 'disable' : ''"
+              :class="countDown != 0 || error ? 'disable' : ''"
               @click="resendCode()"
             >
               Resend Code
@@ -59,10 +68,19 @@ export default defineComponent({
   data() {
     return {
       code: [null, null, null, null] as (number | null)[],
-      error: false as boolean,
       showResend: false as boolean,
-      countDown: 90 as number,
+      countDown: 60 as number,
+      isCodeClicked: false as boolean,
     };
+  },
+  computed: {
+    error(): boolean {
+      if (this.code.every((code: number | null) => code != null && code)) {
+        return false;
+      } else {
+        return true;
+      }
+    },
   },
   methods: {
     formatCode() {
@@ -86,7 +104,7 @@ export default defineComponent({
     resendCode() {
       if (this.countDown === 0) {
         console.log("resend code");
-        this.countDown = 90;
+        this.countDown = 60;
 
         this.startCountDown();
       } else {
@@ -103,16 +121,14 @@ export default defineComponent({
       }, 1000);
     },
     submitForm() {
-      this.error = false;
-      if (this.code.every((code: number | null) => code != null)) {
+      if (this.code.every((code: number | null) => code != null && code)) {
         console.log("Verification code is filled:", this.code);
         this.showResend = true;
-        if (this.countDown == 0 || this.countDown == 90) {
-          this.countDown = 90;
+        if (this.countDown == 0 || this.countDown == 60) {
+          this.countDown = 60;
           this.startCountDown();
         }
       } else {
-        this.error = true;
         console.log("Verification code is not filled:", this.code);
       }
     },
