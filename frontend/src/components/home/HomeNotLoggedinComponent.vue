@@ -2,18 +2,16 @@
   <div>
     <v-sheet width="400" class="mx-auto">
       <p class="header-text">Welcome to FlySpray</p>
-      <div class="container">
-        <p class="sub-header-text">
-          Flyspray is an open-source web-based project management and bug
-          tracking system. It provides a platform for teams to collaborate,
-          track tasks, and manage software development projects. With features
-          such as task assignment, progress tracking, user permissions, Flyspray
-          streamlines project communication and helps teams identify and resolve
-          software issues efficiently. It is a tool commonly used in software
-          development and other project-based industries to enhance teamwork and
-          project organization.
-        </p>
-      </div>
+      <p class="sub-header-text">
+        Flyspray is an open-source web-based project management and bug tracking
+        system. It provides a platform for teams to collaborate, track tasks,
+        and manage software development projects. With features such as task
+        assignment, progress tracking, user permissions, Flyspray streamlines
+        project communication and helps teams identify and resolve software
+        issues efficiently. It is a tool commonly used in software development
+        and other project-based industries to enhance teamwork and project
+        organization.
+      </p>
       <div class="buttons">
         <v-btn type="submit" block class="mt-2 btn" @click="goToRegisterPage()"
           >Register</v-btn
@@ -59,23 +57,20 @@ export default defineComponent({
   font-weight: 400;
   color: #525252;
   font-family: "Poppins", sans-serif;
-}
-.container {
-  text-align: left;
-  margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 .buttons {
   width: 70%;
   text-align: center;
   align-items: center;
   margin: auto;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 }
 .btn {
   border-radius: 8px;
   background: linear-gradient(134deg, #9181f4 0%, #5038ed 100%);
   box-shadow: 0px 8px 21px 0px rgba(0, 0, 0, 0.16);
   color: #ffff;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.8rem;
 }
 </style>
