@@ -12,13 +12,13 @@ import (
 
 // User is the model for the user table
 type User struct {
-	ID                      string `gorm:"primaryKey"`
-	Name                    string `json:"name"`
-	Email                   string `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
-	Password                string `json:"password" gorm:"not null"`
-	VerificationCode        int    `gorm:"unique"`
-	Verified                bool   `gorm:"default:false"`
-	VerificationCodeTimeout time.Time
+	ID                      string    `json:"id" gorm:"primaryKey"`
+	Name                    string    `json:"name"`
+	Email                   string    `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
+	Password                string    `json:"password" gorm:"not null"`
+	VerificationCode        int       `json:"verification_code" gorm:"unique"`
+	Verified                bool      `json:"verified" gorm:"default:false"`
+	VerificationCodeTimeout time.Time `json:"verification_code_timeout"`
 }
 
 // Validate validates the user struct
