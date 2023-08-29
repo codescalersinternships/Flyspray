@@ -35,7 +35,9 @@
               type="submit"
               block
               class="mt-2 btn"
-              :disabled="error && isCodeClicked"
+              :disabled="
+                (error && isCodeClicked) || (countDown != 0 && countDown != 60)
+              "
               >Submit</v-btn
             >
           </v-form>
