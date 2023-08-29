@@ -11,7 +11,11 @@
     <div class="form-box">
       <input-form>
         <v-sheet width="300" class="mx-auto">
-          <v-form ref="form" @submit.prevent="submitForm">
+          <v-form
+            ref="form"
+            @submit.prevent="submitForm"
+            @keydown.enter.prevent="submitForm"
+          >
             <div class="verification-code-container">
               <v-text-field
                 v-for="(digit, index) in code"
