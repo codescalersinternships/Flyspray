@@ -12,13 +12,13 @@ import (
 
 // User is the model for the user table
 type User struct {
-	ID                      string    `json:"id" gorm:"primaryKey"`
-	Name                    string    `json:"name"`
-	Email                   string    `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
-	Password                string    `json:"password" gorm:"not null"`
-	VerificationCode        int       `json:"verification_code" gorm:"unique"`
-	Verified                bool      `json:"verified" gorm:"default:false"`
-	VerificationCodeTimeout time.Time `json:"verification_code_timeout"`
+	ID                             string    `json:"id" gorm:"primaryKey"`
+	Name                           string    `json:"name"`
+	Email                          string    `json:"email" gorm:"unique;not null" validate:"regexp=^[0-9a-z]+@[0-9a-z]+(\\.[0-9a-z]+)+$"`
+	Password                       string    `json:"password" gorm:"not null"`
+	VerificationCode               int       `json:"verification_code" gorm:"unique"`
+	Verified                       bool      `json:"verified" gorm:"default:false"`
+	VerificationCodeExpirationTime time.Time `json:"verification_code_expiration_time"`
 }
 
 // Validate validates the user struct
@@ -87,8 +87,8 @@ func (db *DBClient) GenerateVerificationCode() int {
 
 func (db *DBClient) UpdateVerificationCode(userID string, newVerificationCode int, timeout int) error {
 	return db.Client.Model(&User{}).Where("id = ?", userID).Updates(User{
-		VerificationCode:        newVerificationCode,
-		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+		VerificationCode:               newVerificationCode,
+		VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 	}).Error
 }
 
