@@ -49,7 +49,7 @@ func (app *App) registerRoutes() {
 	app.router.Use(cors.Default())
 
 	authGroup := app.router.Group("")
-	authGroup.Use(middleware.RequireAuth(""))
+	authGroup.Use(middleware.RequireAuth(app.config.JWT.Secret))
 
 	project := authGroup.Group("/project")
 	{
