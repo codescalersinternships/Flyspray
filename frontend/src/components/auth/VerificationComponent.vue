@@ -40,7 +40,7 @@
             >
               Resend Code
             </button>
-            <p class="count-down">{{ countDown }}</p>
+            <p class="count-down" v-if="countDown != 0">{{ countDown }}</p>
           </div>
         </v-sheet></input-form
       >
@@ -167,9 +167,9 @@ export default defineComponent({
 }
 .count-down {
   display: inline;
-  margin-left: 2rem;
+  margin-left: 1rem;
   font-family: Poppins;
-  color: #c31031;
+  color: #8457f7;
 }
 .disable {
   color: gray;
