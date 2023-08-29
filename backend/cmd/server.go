@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/codescalersinternships/Flyspray/app"
 	_ "github.com/codescalersinternships/Flyspray/docs"
@@ -16,7 +17,7 @@ var (
 
 func main() {
 
-// if the user enters version in the run command then the latest version & commit of the app will be printed
+	// if the user enters version in the run command then the latest version & commit of the app will be printed
 	if len(os.Args) > 1 && os.Args[1] == "version" {
 		// Print the version and commit information
 		fmt.Println("Version:", version)
@@ -37,3 +38,4 @@ func main() {
 		log.Fatal(err)
 	}
 }
+
