@@ -1,15 +1,15 @@
 <template>
   <div ud="navbar">
-    <navbar-component></navbar-component>
+    <navbar-sidebar-component></navbar-sidebar-component>
   </div>
 </template>
 <script lang="ts">
-import NavbarComponent from "@/components/NavbarComponent.vue";
+import NavbarSidebarComponent from "@/components/NavbarSidebarComponent.vue";
 import { defineComponent } from "vue";
 export default defineComponent({
   name: "HomeLoggedInPage",
   components: {
-    NavbarComponent,
+    NavbarSidebarComponent,
   },
 });
 </script>
