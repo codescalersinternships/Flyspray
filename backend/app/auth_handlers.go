@@ -33,7 +33,7 @@ type verifyBody struct {
 	Email            string `json:"email" binding:"required"`
 }
 
-type emailInput struct {
+type forgetPasswordBody struct {
 	Email string `json:"email" binding:"required"`
 }
 
@@ -427,7 +427,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 // @Failure 500 {object} Response "Internal server error"
 // @Router /user/forget_password [post]
 func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
-	var input emailInput
+	var input forgetPasswordBody
 
 	if err := ctx.BindJSON(&input); err != nil {
 		log.Error().Err(err).Send()

@@ -549,7 +549,7 @@ func TestForgetPassword(t *testing.T) {
 	testCases := []struct {
 		name               string
 		preCreatedUser     models.User
-		input              emailInput
+		input              forgetPasswordBody
 		expectedStatusCode int
 	}{
 		{
@@ -559,7 +559,7 @@ func TestForgetPassword(t *testing.T) {
 				Email:    "omar@gmail.com",
 				Password: "123456!Abc",
 			},
-			input:              emailInput{},
+			input:              forgetPasswordBody{},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name: "not exist",
@@ -568,7 +568,7 @@ func TestForgetPassword(t *testing.T) {
 				Email:    "omar@gmail.com",
 				Password: "123456!Abc",
 			},
-			input:              emailInput{Email: "another@gmail.com"},
+			input:              forgetPasswordBody{Email: "another@gmail.com"},
 			expectedStatusCode: http.StatusNotFound,
 		}, {
 			name: "not verified",
@@ -577,7 +577,7 @@ func TestForgetPassword(t *testing.T) {
 				Email:    "omar@gmail.com",
 				Password: "123456!Abc",
 			},
-			input:              emailInput{Email: "omar@gmail.com"},
+			input:              forgetPasswordBody{Email: "omar@gmail.com"},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name: "valid",
@@ -587,7 +587,7 @@ func TestForgetPassword(t *testing.T) {
 				Password: "123456!Abc",
 				Verified: true,
 			},
-			input:              emailInput{Email: "omar@gmail.com"},
+			input:              forgetPasswordBody{Email: "omar@gmail.com"},
 			expectedStatusCode: http.StatusOK,
 		},
 	}
