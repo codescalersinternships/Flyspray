@@ -4,6 +4,7 @@ import ForgetPasswordView from "../views/auth/ForgetPasswordView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 import RegisterVerificationView from "../views/auth/RegisterVerificationView.vue";
 import HomeNotLoggedinView from "../views/home/HomeNotLoggedinView.vue";
+import PageNotFound from "../views/PageNotFoundView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -30,6 +31,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/",
     name: "home",
     component: HomeNotLoggedinView,
+  },
+  {
+    path: "/404",
+    name: "notfound",
+    component: PageNotFound,
   },
 ];
 
