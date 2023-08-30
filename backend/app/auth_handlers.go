@@ -421,6 +421,7 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 // @Tags Users
 // @Accept json
 // @Produce json
+// @Param request body forgetPasswordBody true "request forget password code request body"
 // @Success 200 {object} ResponseMsg  "forget password code has been sent to your email"
 // @Failure 400 {object} Response "Bad request"
 // @Failure 404 {object} Response "NotFound"
@@ -472,6 +473,7 @@ func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
 // @Tags Users
 // @Accept json
 // @Produce json
+// @Param request body verifyBody true "verify forget password code request body"
 // @Success 200 {object} ResponseMsg "verified (AccessToken details is given in a struct in the 'Data' field)"
 // @Failure 400 {object} Response "Bad request"
 // @Failure 404 {object} Response "NotFound"
@@ -530,6 +532,7 @@ func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
 // @Tags Users
 // @Accept json
 // @Produce json
+// @Param request body changePasswordBody true "change password request body"
 // @Param Authorization header string true "Bearer token"
 // @Security Bearer
 // @Success 200 {object} ResponseMsg "password has been updated successfully"

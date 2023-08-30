@@ -1298,6 +1298,17 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "Request forget password code",
+                "parameters": [
+                    {
+                        "description": "request forget password code request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.forgetPasswordBody"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "forget password code has been sent to your email",
@@ -1333,6 +1344,17 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "verify forget password code",
+                "parameters": [
+                    {
+                        "description": "verify forget password code request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.verifyBody"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "verified (AccessToken details is given in a struct in the 'Data' field)",
@@ -1374,6 +1396,15 @@ const docTemplate = `{
                 ],
                 "summary": "changes password",
                 "parameters": [
+                    {
+                        "description": "change password request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.changePasswordBody"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "Bearer token",
@@ -1610,6 +1641,21 @@ const docTemplate = `{
                 }
             }
         },
+        "app.changePasswordBody": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "app.createBugInput": {
             "type": "object",
             "required": [
@@ -1688,6 +1734,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "app.forgetPasswordBody": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }

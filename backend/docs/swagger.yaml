@@ -5,6 +5,16 @@ definitions:
       msg:
         type: string
     type: object
+  app.changePasswordBody:
+    properties:
+      confirm_password:
+        type: string
+      password:
+        type: string
+    required:
+    - confirm_password
+    - password
+    type: object
   app.createBugInput:
     properties:
       category:
@@ -58,6 +68,13 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  app.forgetPasswordBody:
+    properties:
+      email:
+        type: string
+    required:
+    - email
     type: object
   app.signinBody:
     properties:
@@ -997,6 +1014,13 @@ paths:
       consumes:
       - application/json
       description: requests forget password code to be sent to user's email
+      parameters:
+      - description: request forget password code request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.forgetPasswordBody'
       produces:
       - application/json
       responses:
@@ -1021,6 +1045,13 @@ paths:
       consumes:
       - application/json
       description: verify forget password code then send token
+      parameters:
+      - description: verify forget password code request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.verifyBody'
       produces:
       - application/json
       responses:
@@ -1047,6 +1078,12 @@ paths:
       - application/json
       description: changes password
       parameters:
+      - description: change password request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.changePasswordBody'
       - description: Bearer token
         in: header
         name: Authorization
