@@ -18,7 +18,7 @@ definitions:
       summary:
         type: string
     required:
-      - component_id
+    - component_id
     type: object
   app.createCommentInput:
     properties:
@@ -27,8 +27,8 @@ definitions:
       summary:
         type: string
     required:
-      - bug_id
-      - summary
+    - bug_id
+    - summary
     type: object
   app.createComponentInput:
     properties:
@@ -37,8 +37,8 @@ definitions:
       project_id:
         type: string
     required:
-      - name
-      - project_id
+    - name
+    - project_id
     type: object
   app.createMemberInput:
     properties:
@@ -49,15 +49,15 @@ definitions:
       user_id:
         type: string
     required:
-      - project_id
-      - user_id
+    - project_id
+    - user_id
     type: object
   app.createProjectInput:
     properties:
       name:
         type: string
     required:
-      - name
+    - name
     type: object
   app.signinBody:
     properties:
@@ -93,14 +93,14 @@ definitions:
       summary:
         type: string
     required:
-      - summary
+    - summary
     type: object
   app.updateComponentInput:
     properties:
       name:
         type: string
     required:
-      - name
+    - name
     type: object
   app.updateMemberInput:
     properties:
@@ -116,8 +116,8 @@ definitions:
       owner_id:
         type: string
     required:
-      - name
-      - owner_id
+    - name
+    - owner_id
     type: object
   app.updateUserBody:
     properties:
@@ -130,6 +130,9 @@ definitions:
         type: string
       verification_code:
         type: integer
+    required:
+    - email
+    - verification_code
     type: object
 swagger: "2.0"
 info:
@@ -140,22 +143,22 @@ paths:
   /bug:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Creates a new bug with the provided input
       parameters:
-        - description: Bug data
-          in: body
-          name: bug
-          required: true
-          schema:
-            $ref: "#/definitions/app.createBugInput"
+      - description: Bug data
+        in: body
+        name: bug
+        required: true
+        schema:
+          $ref: '#/definitions/app.createBugInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: bug is created successfully (Bug details in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -166,26 +169,26 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Create a bug
       tags:
-        - bugs
+      - bugs
   /bug/{id}:
     delete:
       description: Deletes a bug by its ID
       parameters:
-        - description: Bug ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Bug ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: bug is deleted successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -199,25 +202,25 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Delete a bug
       tags:
-        - bugs
+      - bugs
     get:
       description: Retrieves a bug by its ID
       parameters:
-        - description: Bug ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Bug ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: bug is retrieved successfully (Bug details in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -231,33 +234,33 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Get a bug
       tags:
-        - bugs
+      - bugs
     put:
       consumes:
-        - application/json
+      - application/json
       description: Updates a bug with the provided data
       parameters:
-        - description: Bug ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Bug data
-          in: body
-          name: bug
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateBugInput"
+      - description: Bug ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Bug data
+        in: body
+        name: bug
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateBugInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: bug is updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -271,35 +274,34 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Update a bug
       tags:
-        - bugs
+      - bugs
   /bug/filters:
     get:
       description: Retrieves bugs based on the provided filters
       parameters:
-        - description: Bug category
-          in: query
-          name: category
-          type: string
-        - description: Bug status
-          in: query
-          name: status
-          type: string
-        - description: Component ID
-          in: query
-          name: component_id
-          type: string
+      - description: Bug category
+        in: query
+        name: category
+        type: string
+      - description: Bug status
+        in: query
+        name: status
+        type: string
+      - description: Component ID
+        in: query
+        name: component_id
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            bugs are retrieved successfully (Bugs details in the 'Data'
+          description: bugs are retrieved successfully (Bugs details in the 'Data'
             field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "401":
           description: Unauthorized
           schema: {}
@@ -307,31 +309,30 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Get bugs
       tags:
-        - bugs
+      - bugs
   /comment:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Creates a new comment for a bug in the database
       parameters:
-        - description: Comment input object
-          in: body
-          name: commentInput
-          required: true
-          schema:
-            $ref: "#/definitions/app.createCommentInput"
+      - description: Comment input object
+        in: body
+        name: commentInput
+        required: true
+        schema:
+          $ref: '#/definitions/app.createCommentInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
-          description:
-            Comment is created successfully (Comment details in the 'Data'
+          description: Comment is created successfully (Comment details in the 'Data'
             field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -342,26 +343,26 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Creates a comment
       tags:
-        - comments
+      - comments
   /comment/{id}:
     delete:
       description: Deletes a comment by its ID from the database
       parameters:
-        - description: Comment ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: comment is deleted successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -378,27 +379,26 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Deletes a comment
       tags:
-        - comments
+      - comments
     get:
       description: Retrieves a comment by its ID from the database
       parameters:
-        - description: Comment ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            comment is found successfully (Comment details in the 'Data'
+          description: comment is found successfully (Comment details in the 'Data'
             field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -412,33 +412,33 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Retrieves a comment
       tags:
-        - comments
+      - comments
     put:
       consumes:
-        - application/json
+      - application/json
       description: Updates a comment by its ID in the database
       parameters:
-        - description: Comment ID
-          in: path
-          name: id
-          required: true
-          type: integer
-        - description: Updated comment data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateCommentInput"
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated comment data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateCommentInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: comment is updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -455,31 +455,30 @@ paths:
           description: Internal Server Error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Updates a comment
       tags:
-        - comments
+      - comments
   /comment/filters:
     get:
       description: Retrieves a list of comments from the database
       parameters:
-        - description: Bug ID
-          in: query
-          name: bug_id
-          type: integer
-        - description: User ID
-          in: query
-          name: user_id
-          type: string
+      - description: Bug ID
+        in: query
+        name: bug_id
+        type: integer
+      - description: User ID
+        in: query
+        name: user_id
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            comments are retrieved successfully (Comments details in the
+          description: comments are retrieved successfully (Comments details in the
             'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad Request
           schema: {}
@@ -488,28 +487,27 @@ paths:
           schema: {}
       summary: Retrieves comments
       tags:
-        - comments
+      - comments
   /component:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a new component for a project
       parameters:
-        - description: Component data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.createComponentInput"
+      - description: Component data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.createComponentInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
-          description:
-            component is created successfully (Component details in the
+          description: component is created successfully (Component details in the
             'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read component data
           schema: {}
@@ -523,26 +521,26 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Create a component
       tags:
-        - Components
+      - Components
   /component/{id}:
     delete:
       description: Delete a component by ID
       parameters:
-        - description: Component ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Component ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Component is deleted successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "401":
           description: Authentication is required
           schema: {}
@@ -556,27 +554,26 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Delete a component
       tags:
-        - Components
+      - Components
     get:
       description: Get a component by ID
       parameters:
-        - description: Component ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Component ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            component is retrieved successfully (Component details in the
+          description: component is retrieved successfully (Component details in the
             'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "404":
           description: Component is not found
           schema: {}
@@ -585,30 +582,30 @@ paths:
           schema: {}
       summary: Get a component
       tags:
-        - Components
+      - Components
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update an existing component
       parameters:
-        - description: Component ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Component data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateComponentInput"
+      - description: Component ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Component data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateComponentInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: component is updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read component data
           schema: {}
@@ -625,60 +622,59 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Update a component
       tags:
-        - Components
+      - Components
   /component/filters:
     get:
       description: Get a list of components based on filters
       parameters:
-        - description: Project ID
-          in: query
-          name: project_id
-          type: string
-        - description: Component name
-          in: query
-          name: name
-          type: string
-        - description: Creation date (after)
-          in: query
-          name: after
-          type: string
+      - description: Project ID
+        in: query
+        name: project_id
+        type: string
+      - description: Component name
+        in: query
+        name: name
+        type: string
+      - description: Creation date (after)
+        in: query
+        name: after
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            Components are retrieved successfully (Components details in
+          description: Components are retrieved successfully (Components details in
             the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "500":
           description: Internal server error
           schema: {}
       summary: Get components
       tags:
-        - Components
+      - Components
   /member:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a new member for a project
       parameters:
-        - description: Member data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.createMemberInput"
+      - description: Member data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.createMemberInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: member created successfully (Member details in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read member data
           schema: {}
@@ -692,34 +688,34 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Create a new member
       tags:
-        - Members
+      - Members
   /member/{id}:
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update the ownership of a member
       parameters:
-        - description: Member ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Member data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateMemberInput"
+      - description: Member ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Member data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateMemberInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Member ownership updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read member data
           schema: {}
@@ -736,55 +732,53 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Update member ownership
       tags:
-        - Members
+      - Members
   /member/{project_id}:
     get:
       description: Get a list of members in a project
       parameters:
-        - description: Project ID
-          in: path
-          name: project_id
-          required: true
-          type: string
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            members in project retrieved successfully (Members details
+          description: members in project retrieved successfully (Members details
             in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "500":
           description: Internal server error
           schema: {}
       summary: Get members in a project
       tags:
-        - Members
+      - Members
   /project:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Create a new project
       parameters:
-        - description: Project data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.createProjectInput"
+      - description: Project data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.createProjectInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
-          description:
-            Project is created successfully (Project details in the 'Data'
+          description: Project is created successfully (Project details in the 'Data'
             field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read project data
           schema: {}
@@ -801,26 +795,26 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Create a new project
       tags:
-        - Projects
+      - Projects
   /project/{id}:
     delete:
       description: Delete an existing project
       parameters:
-        - description: Project ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Project is deleted successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "401":
           description: Authentication is required
           schema: {}
@@ -834,27 +828,26 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Delete a project
       tags:
-        - Projects
+      - Projects
     get:
       description: Get details of a project
       parameters:
-        - description: Project ID
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            project is retrieved successfully (Project details in the 'Data'
+          description: project is retrieved successfully (Project details in the 'Data'
             field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "404":
           description: Project is not found
           schema: {}
@@ -863,30 +856,30 @@ paths:
           schema: {}
       summary: Get a project
       tags:
-        - Projects
+      - Projects
     put:
       consumes:
-        - application/json
+      - application/json
       description: Update an existing project
       parameters:
-        - description: Project ID
-          in: path
-          name: id
-          required: true
-          type: string
-        - description: Project data
-          in: body
-          name: input
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateProjectInput"
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Project data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateProjectInput'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Project is updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Failed to read project data
           schema: {}
@@ -906,51 +899,50 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - ApiKeyAuth: []
+      - ApiKeyAuth: []
       summary: Update a project
       tags:
-        - Projects
+      - Projects
   /project/filters:
     get:
       description: Get a list of projects based on filters
       parameters:
-        - description: User ID
-          in: query
-          name: userid
-          type: string
-        - description: Project name
-          in: query
-          name: name
-          type: string
-        - description: Creation date (after)
-          in: query
-          name: after
-          type: string
+      - description: User ID
+        in: query
+        name: userid
+        type: string
+      - description: Project name
+        in: query
+        name: name
+        type: string
+      - description: Creation date (after)
+        in: query
+        name: after
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            Projects are retrieved successfully (Projects details in the
+          description: Projects are retrieved successfully (Projects details in the
             'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "500":
           description: Internal server error
           schema: {}
       summary: Get projects
       tags:
-        - Projects
+      - Projects
   /user:
     get:
       description: Retrieves the user's information
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: user is found (User details in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "401":
           description: Unauthorized
           schema: {}
@@ -961,28 +953,28 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - Bearer: []
+      - Bearer: []
       summary: Get user information
       tags:
-        - Users
+      - Users
     put:
       consumes:
-        - application/json
+      - application/json
       description: Updates the user's information
       parameters:
-        - description: Update user request body
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: "#/definitions/app.updateUserBody"
+      - description: Update user request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.updateUserBody'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: user has been updated successfully
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad request
           schema: {}
@@ -996,30 +988,110 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - Bearer: []
+      - Bearer: []
       summary: Update user information
       tags:
-        - Users
+      - Users
+  /user/forget_password:
+    post:
+      consumes:
+      - application/json
+      description: requests forget password code to be sent to user's email
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: forget password code has been sent to your email
+          schema:
+            $ref: '#/definitions/app.ResponseMsg'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: NotFound
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Request forget password code
+      tags:
+      - Users
+  /user/forget_password/verify:
+    post:
+      consumes:
+      - application/json
+      description: verify forget password code then send token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: verified (AccessToken details is given in a struct in the 'Data'
+            field)
+          schema:
+            $ref: '#/definitions/app.ResponseMsg'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: NotFound
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: verify forget password code
+      tags:
+      - Users
+  /user/password:
+    put:
+      consumes:
+      - application/json
+      description: changes password
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: password has been updated successfully
+          schema:
+            $ref: '#/definitions/app.ResponseMsg'
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: UnAuthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - Bearer: []
+      summary: changes password
+      tags:
+      - Users
   /user/refresh-token:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Generates a new access token using the provided refresh token
       parameters:
-        - description: Bearer token
-          in: header
-          name: Authorization
-          required: true
-          type: string
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
-          description:
-            token has been refreshed successfully (AccessToken & RefreshToken
+          description: token has been refreshed successfully (AccessToken & RefreshToken
             details are given in a struct in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad request
           schema: {}
@@ -1030,31 +1102,30 @@ paths:
           description: Internal server error
           schema: {}
       security:
-        - Bearer: []
+      - Bearer: []
       summary: Generate new access token
       tags:
-        - Users
+      - Users
   /user/signin:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Authenticates a user's credentials and generates access tokens
       parameters:
-        - description: Signin request body
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: "#/definitions/app.signinBody"
+      - description: Signin request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.signinBody'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
-          description:
-            logged in successfully (AccessToken details is given in a struct
+          description: logged in successfully (AccessToken details is given in a struct
             in the 'Data' field)
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad request
           schema: {}
@@ -1072,28 +1143,27 @@ paths:
           schema: {}
       summary: Authenticate a user and generate access tokens
       tags:
-        - Users
+      - Users
   /user/signup:
     post:
       consumes:
-        - application/json
-      description:
-        Creates a new user account and sends a verification code to the
+      - application/json
+      description: Creates a new user account and sends a verification code to the
         user's email
       parameters:
-        - description: Signup request body
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: "#/definitions/app.signupBody"
+      - description: Signup request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.signupBody'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: A verification code has been sent to your email
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad request
           schema: {}
@@ -1105,28 +1175,27 @@ paths:
           schema: {}
       summary: Create a new user account
       tags:
-        - Users
+      - Users
   /user/signup/verify:
     post:
       consumes:
-        - application/json
-      description:
-        Verifies a user's account using the provided verification code
+      - application/json
+      description: Verifies a user's account using the provided verification code
         and email
       parameters:
-        - description: Verification request body
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: "#/definitions/app.verifyBody"
+      - description: Verification request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app.verifyBody'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: verified
           schema:
-            $ref: "#/definitions/app.ResponseMsg"
+            $ref: '#/definitions/app.ResponseMsg'
         "400":
           description: Bad request
           schema: {}
@@ -1138,4 +1207,5 @@ paths:
           schema: {}
       summary: Verify a user's account
       tags:
-        - Users
+      - Users
+swagger: "2.0"

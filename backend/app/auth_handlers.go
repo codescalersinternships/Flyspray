@@ -415,6 +415,17 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 
 }
 
+// forgetPassword requests forget password code to be sent to user's email
+// @Summary Request forget password code
+// @Description requests forget password code to be sent to user's email
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseMsg  "forget password code has been sent to your email"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 404 {object} Response "NotFound"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/forget_password [post]
 func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
 	var input emailInput
 
@@ -455,6 +466,17 @@ func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
 	return ResponseMsg{Message: "forget password code has been sent to your email"}, Ok()
 }
 
+// verifyForgetPassword verify forget password code then send token
+// @Summary verify forget password code
+// @Description verify forget password code then send token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseMsg "verified (AccessToken details is given in a struct in the 'Data' field)"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 404 {object} Response "NotFound"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/forget_password/verify [post]
 func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
 	var input verifyBody
 
@@ -502,6 +524,19 @@ func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
 	}}, Ok()
 }
 
+// changePassword changes password
+// @Summary changes password
+// @Description changes password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Security Bearer
+// @Success 200 {object} ResponseMsg "password has been updated successfully"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 401 {object} Response "UnAuthorized"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/password [put]
 func (a *App) changePassword(ctx *gin.Context) (interface{}, Response) {
 	var input changePasswordBody
 
