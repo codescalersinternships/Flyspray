@@ -1285,6 +1285,156 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/forget_password": {
+            "post": {
+                "description": "requests forget password code to be sent to user's email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Request forget password code",
+                "parameters": [
+                    {
+                        "description": "request forget password code request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.forgetPasswordBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "forget password code has been sent to your email",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseMsg"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "NotFound",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/user/forget_password/verify": {
+            "post": {
+                "description": "verify forget password code then send token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "verify forget password code",
+                "parameters": [
+                    {
+                        "description": "verify forget password code request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.verifyBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "verified (AccessToken details is given in a struct in the 'Data' field)",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseMsg"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "NotFound",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/user/password": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "changes password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "changes password",
+                "parameters": [
+                    {
+                        "description": "change password request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/app.changePasswordBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "password has been updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/app.ResponseMsg"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "UnAuthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/user/refresh-token": {
             "post": {
                 "security": [
@@ -1491,6 +1641,21 @@ const docTemplate = `{
                 }
             }
         },
+        "app.changePasswordBody": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "app.createBugInput": {
             "type": "object",
             "required": [
@@ -1569,6 +1734,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "app.forgetPasswordBody": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }
@@ -1676,6 +1852,10 @@ const docTemplate = `{
         },
         "app.verifyBody": {
             "type": "object",
+            "required": [
+                "email",
+                "verification_code"
+            ],
             "properties": {
                 "email": {
                     "type": "string"

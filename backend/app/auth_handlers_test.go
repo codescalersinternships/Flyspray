@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/codescalersinternships/Flyspray/internal"
 	"github.com/codescalersinternships/Flyspray/models"
@@ -538,6 +539,297 @@ func TestRefreshToken(t *testing.T) {
 		})
 	}
 
+}
+
+func TestForgetPassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	app.config = internal.Configuration{}
+	app.config.Version = "v1"
+
+	app.router = gin.Default()
+	app.registerRoutes()
+
+	testCases := []struct {
+		name               string
+		preCreatedUser     models.User
+		input              forgetPasswordBody
+		expectedStatusCode int
+	}{
+		{
+			name: "invalid input",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              forgetPasswordBody{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "not exist",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              forgetPasswordBody{Email: "another@gmail.com"},
+			expectedStatusCode: http.StatusNotFound,
+		}, {
+			name: "not verified",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+			},
+			input:              forgetPasswordBody{Email: "omar@gmail.com"},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			preCreatedUser: models.User{
+				Name:     "omar",
+				Email:    "omar@gmail.com",
+				Password: "123456!Abc",
+				Verified: true,
+			},
+			input:              forgetPasswordBody{Email: "omar@gmail.com"},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer app.DB.Client.Exec("DELETE FROM users")
+
+			_, err := app.DB.CreateUser(tc.preCreatedUser)
+			assert.Nil(t, err)
+
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/forget_password", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
+}
+
+func TestVerifyForgetPassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	app.config = internal.Configuration{}
+	app.config.Version = "v1"
+
+	app.router = gin.Default()
+	app.registerRoutes()
+
+	timeout := 15
+
+	testCases := []struct {
+		name               string
+		preCreatedUser     models.User
+		input              verifyBody
+		expectedStatusCode int
+	}{
+		{
+			name: "invalid input",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input:              verifyBody{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "not exist",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyBody{
+				Email:            "another@gmail.com",
+				VerificationCode: 100001,
+			},
+			expectedStatusCode: http.StatusNotFound,
+		}, {
+			name: "not verified",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       false,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "wrong verification code",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100003,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "verification code expired",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now(),
+			},
+			input: verifyBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			preCreatedUser: models.User{
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
+			},
+			input: verifyBody{
+				Email:            "omar@gmail.com",
+				VerificationCode: 100001,
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer app.DB.Client.Exec("DELETE FROM users")
+
+			_, err := app.DB.CreateUser(tc.preCreatedUser)
+			assert.Nil(t, err)
+
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/forget_password/verify", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	preCreatedUser := models.User{
+		Name:     "omar",
+		Email:    "omar@gmail.com",
+		Password: "123456!Abc",
+	}
+	preCreatedUser, err = app.DB.CreateUser(preCreatedUser)
+	assert.Nil(t, err)
+
+	app.router = gin.Default()
+	app.router.Use(func(ctx *gin.Context) {
+		ctx.Set("user_id", preCreatedUser.ID)
+		ctx.Next()
+	})
+	app.router.PUT("/user/password", WrapFunc(app.changePassword))
+
+	testCases := []struct {
+		name               string
+		input              changePasswordBody
+		expectedStatusCode int
+	}{
+		{
+			name:               "invalid input",
+			input:              changePasswordBody{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "passwords do not match",
+			input: changePasswordBody{
+				Password:        "changed-a-123456!Abc",
+				ConfirmPassword: "changed-b-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			input: changePasswordBody{
+				Password:        "changed-123456!Abc",
+				ConfirmPassword: "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPut, "/user/password", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
 }
 
 func AddUserToDB(t testing.TB, user signupBody, app *App) {
