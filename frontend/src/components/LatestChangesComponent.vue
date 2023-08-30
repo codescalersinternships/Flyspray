@@ -1,5 +1,5 @@
 <template>
-  <v-col id="latest-changes-container" class="h-100" cols="4">
+  <v-col id="latest-changes-container" class="h-100" cols="3">
     <div id="latest-changes-innerdiv">
       <div id="latest-changes-title">Latest Changes</div>
       <div id="vertical-line">
@@ -29,6 +29,14 @@
     </div>
   </v-col>
 </template>
+
+<script lang="ts">
+export default {
+  data() {
+    return {};
+  },
+};
+</script>
 
 <style scoped>
 #latest-changes-container {
@@ -62,11 +70,10 @@
   left: -5px;
   height: calc(100% - 30px);
 }
+
+@media (max-width: 900px) {
+  #latest-changes-container {
+    display: none;
+  }
+}
 </style>
-<script lang="ts">
-export default {
-  data() {
-    return {};
-  },
-};
-</script>

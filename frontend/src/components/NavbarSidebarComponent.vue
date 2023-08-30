@@ -22,7 +22,7 @@
       class="sidebar-container sidebar-menu"
     >
       <!-- Sidebar content here -->
-      <v-sheet class="mx-auto">
+      <v-sheet class="mx-auto navbar-width">
         <div class="sidebar-menu">
           <div id="sidebar-menu-container">
             <div class="sidebar-menu-elements">
