@@ -16,7 +16,9 @@ func RequireAuth(secret string) func(*gin.Context) {
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		if token == "" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"err": "token not found"})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"err": "token is not found"})
+			ctx.Abort()
+			return
 		}
 		claims, err := internal.ValidateToken(secret, token)
 
