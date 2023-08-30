@@ -19,8 +19,6 @@ func NewApp(configFilePath string) (App, error) {
 		return App{}, err
 	}
 
-	fmt.Println(config)
-
 	database, err := models.NewDBClient(config.DB.File)
 	if err != nil {
 		return App{}, err
