@@ -1,5 +1,5 @@
 <template>
-  <v-col id="main-section-container" class="h-100" cols="9" lg="9">
+  <v-col v-col id="main-section-container" class="h-100" cols="9" lg="9">
     <div id="main-section-innerdiv">
       <div class="header">
         <div class="sub-header">
@@ -37,9 +37,27 @@
           </div>
         </div>
       </div>
+      <div>
+        <project-item></project-item>
+        <project-item></project-item>
+        <project-item></project-item>
+        <project-item></project-item>
+      </div>
     </div>
   </v-col>
 </template>
+
+<script lang="ts">
+import { defineComponent } from "vue";
+import ProjectItem from "./ProjectItem.vue";
+
+export default defineComponent({
+  components: { ProjectItem },
+  data() {
+    return {};
+  },
+});
+</script>
 <style scoped>
 .header {
   font-weight: 400;
@@ -124,10 +142,3 @@
   }
 }
 </style>
-<script lang="ts">
-export default {
-  data() {
-    return {};
-  },
-};
-</script>
