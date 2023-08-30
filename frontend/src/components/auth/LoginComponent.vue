@@ -9,7 +9,7 @@
     <div class="form-box">
       <p class="signin-text">Sign in to start managing your projects</p>
       <input-form>
-        <v-sheet width="300" class="mx-auto">
+        <v-sheet width="320" class="mx-auto">
           <v-form ref="form" @submit.prevent="submitForm">
             <v-text-field
               :class="{ 'error-field': errorEmail && isEmailClicked }"
@@ -164,6 +164,8 @@ export default defineComponent({
   background: rgba(240, 237, 255, 0.2);
   width: 100%;
   flex-shrink: 0;
+  text-align: start;
+  align-items: start;
 }
 .btn {
   border-radius: 8px;
@@ -196,8 +198,6 @@ export default defineComponent({
 }
 .error-field {
   margin-bottom: 2rem;
-  text-align: start;
-  align-items: start;
 }
 .v-input__details {
   display: none !important;
