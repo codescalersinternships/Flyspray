@@ -14,6 +14,7 @@ type Configuration struct {
 	MailSender MailSender `json:"mail_sender"`
 	DB         DB         `json:"db"`
 	JWT        JWT        `json:"jwt"`
+	Version    Version    `json:"version"`
 }
 
 // Server is server configuration data
@@ -38,6 +39,11 @@ type DB struct {
 type JWT struct {
 	Secret  string `json:"secret" validate:"nonzero"`
 	Timeout int    `json:"timeout" validate:"min=5"`
+}
+
+// Version represents the version of the app
+type Version struct {
+	AppVersion string `json:"app_version"`
 }
 
 // ReadConfigFile read configuration from json file

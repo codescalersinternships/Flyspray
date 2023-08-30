@@ -19,6 +19,8 @@ func NewApp(configFilePath string) (App, error) {
 		return App{}, err
 	}
 
+	fmt.Println(config)
+
 	database, err := models.NewDBClient(config.DB.File)
 	if err != nil {
 		return App{}, err
@@ -46,9 +48,12 @@ func (app *App) Run() error {
 }
 
 func (app *App) registerRoutes() {
-	app.router.Use(cors.Default())
 
-	authGroup := app.router.Group("")
+	apiGroup := app.router.Group("/api/" + app.config.Version.AppVersion)
+
+	apiGroup.Use(cors.Default())
+
+	authGroup := apiGroup.Group("")
 	authGroup.Use(middleware.RequireAuth(""))
 
 	project := authGroup.Group("/project")

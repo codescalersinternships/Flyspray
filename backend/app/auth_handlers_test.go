@@ -347,7 +347,7 @@ func TestUpdateUser(t *testing.T) {
 			Name: "omar",
 		})
 		assert.Nil(t, err)
-		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodPut, "/api/user", bytes.NewReader(body))
 
 		assert.Nil(t, err)
 
@@ -373,7 +373,7 @@ func TestUpdateUser(t *testing.T) {
 
 		body, err := json.Marshal(requestBody)
 		assert.Nil(t, err)
-		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodPut, "/api/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -422,7 +422,7 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	t.Run("unauthorized user", func(t *testing.T) {
 
-		request, err := http.NewRequest(http.MethodGet, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodGet, "/api/user", bytes.NewReader(body))
 
 		assert.Nil(t, err)
 
@@ -442,7 +442,7 @@ func TestGetUser(t *testing.T) {
 	token := SigninUser(t, reqBody, &app)
 
 	t.Run("authorized user", func(t *testing.T) {
-		request, err := http.NewRequest(http.MethodGet, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodGet, "/api/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
