@@ -29,19 +29,17 @@ type signinBody struct {
 }
 
 type verifyBody struct {
-	VerificationCode int    `json:"verification_code"`
-	Email            string `json:"email"`
+	VerificationCode int    `json:"verification_code" binding:"required"`
+	Email            string `json:"email" binding:"required"`
 }
 
 type emailInput struct {
 	Email string `json:"email" binding:"required"`
 }
 
-type verifyForgetPasswordBody struct {
-	Email            string `json:"email" binding:"required"`
-	VerificationCode int    `json:"verification_code" binding:"required"`
-	Password         string `json:"password" binding:"required"`
-	ConfirmPassword  string `json:"confirm_password" binding:"required"`
+type changePasswordBody struct {
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
 
 type updateUserBody struct {
@@ -458,15 +456,11 @@ func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
 }
 
 func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
-	var input verifyForgetPasswordBody
+	var input verifyBody
 
 	if err := ctx.BindJSON(&input); err != nil {
 		log.Error().Err(err).Send()
 		return nil, BadRequest(errors.New("input data is invalid"))
-	}
-
-	if input.Password != input.ConfirmPassword {
-		return nil, BadRequest(errors.New("passwords do not match"))
 	}
 
 	user, err := a.DB.GetUserByEmail(input.Email)
@@ -493,12 +487,45 @@ func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("verification code has expired"))
 	}
 
+	// generate tokens
+	accessToken, err := internal.GenerateToken(a.config.JWT.Secret, user.ID, time.Now().Add(time.Minute*time.Duration(a.config.JWT.Timeout)))
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "verified", Data: struct {
+		AccessToken string `json:"access_token"`
+	}{
+		AccessToken: accessToken,
+	}}, Ok()
+}
+
+func (a *App) changePassword(ctx *gin.Context) (interface{}, Response) {
+	var input changePasswordBody
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	if input.Password != input.ConfirmPassword {
+		return nil, BadRequest(errors.New("passwords do not match"))
+	}
+
 	hashedPassword, err := internal.HashPassword([]byte(input.Password))
 	if err != nil {
 		log.Error().Err(err).Send()
 		return nil, InternalServerError(errInternalServerError)
 	}
-	user.Password = string(hashedPassword)
+
+	user := models.User{ID: userID.(string), Password: string(hashedPassword)}
 
 	if err := a.DB.UpdateUser(user); err != nil {
 		log.Error().Err(err).Send()

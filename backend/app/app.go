@@ -84,13 +84,14 @@ func (app *App) registerRoutes() {
 		userGroup.POST("/signup/verify", WrapFunc(app.verify))
 		userGroup.POST("/refresh_token", WrapFunc(app.refreshToken))
 		userGroup.POST("/forget_password", WrapFunc(app.forgetPassword))
-		userGroup.PUT("/forget_password/verify", WrapFunc(app.verifyForgetPassword))
+		userGroup.POST("/forget_password/verify", WrapFunc(app.verifyForgetPassword))
 	}
 
 	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	authUserGroup := authGroup.Group("/user")
 	{
+		authUserGroup.PUT("/password", WrapFunc(app.changePassword))
 		authUserGroup.PUT("", WrapFunc(app.updateUser))
 		authUserGroup.GET("", WrapFunc(app.getUser))
 	}

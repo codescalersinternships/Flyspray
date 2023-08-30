@@ -633,7 +633,7 @@ func TestVerifyForgetPassword(t *testing.T) {
 	testCases := []struct {
 		name               string
 		preCreatedUser     models.User
-		input              verifyForgetPasswordBody
+		input              verifyBody
 		expectedStatusCode int
 	}{
 		{
@@ -646,7 +646,7 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
-			input:              verifyForgetPasswordBody{},
+			input:              verifyBody{},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name: "not exist",
@@ -658,11 +658,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
-			input: verifyForgetPasswordBody{
+			input: verifyBody{
 				Email:            "another@gmail.com",
 				VerificationCode: 100001,
-				Password:         "changed-123456!Abc",
-				ConfirmPassword:  "changed-123456!Abc",
 			},
 			expectedStatusCode: http.StatusNotFound,
 		}, {
@@ -675,28 +673,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
-			input: verifyForgetPasswordBody{
+			input: verifyBody{
 				Email:            "omar@gmail.com",
 				VerificationCode: 100001,
-				Password:         "changed-123456!Abc",
-				ConfirmPassword:  "changed-123456!Abc",
-			},
-			expectedStatusCode: http.StatusBadRequest,
-		}, {
-			name: "passwords do not match",
-			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
-			},
-			input: verifyForgetPasswordBody{
-				Email:            "omar@gmail.com",
-				VerificationCode: 100001,
-				Password:         "changed-a-123456!Abc",
-				ConfirmPassword:  "changed-b-123456!Abc",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
@@ -709,11 +688,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
-			input: verifyForgetPasswordBody{
+			input: verifyBody{
 				Email:            "omar@gmail.com",
 				VerificationCode: 100003,
-				Password:         "changed-123456!Abc",
-				ConfirmPassword:  "changed-123456!Abc",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
@@ -726,11 +703,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now(),
 			},
-			input: verifyForgetPasswordBody{
+			input: verifyBody{
 				Email:            "omar@gmail.com",
 				VerificationCode: 100001,
-				Password:         "changed-123456!Abc",
-				ConfirmPassword:  "changed-123456!Abc",
 			},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
@@ -743,11 +718,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 				VerificationCode:        100001,
 				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
-			input: verifyForgetPasswordBody{
+			input: verifyBody{
 				Email:            "omar@gmail.com",
 				VerificationCode: 100001,
-				Password:         "changed-123456!Abc",
-				ConfirmPassword:  "changed-123456!Abc",
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -763,7 +736,76 @@ func TestVerifyForgetPassword(t *testing.T) {
 			body, err := json.Marshal(tc.input)
 			assert.Nil(t, err)
 
-			req, err := http.NewRequest(http.MethodPut, "/user/forget_password/verify", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/user/forget_password/verify", bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			res := httptest.NewRecorder()
+			app.router.ServeHTTP(res, req)
+
+			assert.Equal(t, tc.expectedStatusCode, res.Code)
+		})
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	app := App{}
+	var err error
+	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
+	assert.Nil(t, err)
+
+	err = app.DB.Migrate()
+	assert.Nil(t, err)
+
+	preCreatedUser := models.User{
+		Name:     "omar",
+		Email:    "omar@gmail.com",
+		Password: "123456!Abc",
+	}
+	preCreatedUser, err = app.DB.CreateUser(preCreatedUser)
+	assert.Nil(t, err)
+
+	app.router = gin.Default()
+	app.router.Use(func(ctx *gin.Context) {
+		ctx.Set("user_id", preCreatedUser.ID)
+		ctx.Next()
+	})
+	app.router.PUT("/user/password", WrapFunc(app.changePassword))
+
+	testCases := []struct {
+		name               string
+		input              changePasswordBody
+		expectedStatusCode int
+	}{
+		{
+			name:               "invalid input",
+			input:              changePasswordBody{},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "passwords do not match",
+			input: changePasswordBody{
+				Password:        "changed-a-123456!Abc",
+				ConfirmPassword: "changed-b-123456!Abc",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		}, {
+			name: "valid",
+			input: changePasswordBody{
+				Password:        "changed-123456!Abc",
+				ConfirmPassword: "changed-123456!Abc",
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := json.Marshal(tc.input)
+			assert.Nil(t, err)
+
+			req, err := http.NewRequest(http.MethodPut, "/user/password", bytes.NewReader(body))
 			assert.Nil(t, err)
 
 			res := httptest.NewRecorder()
