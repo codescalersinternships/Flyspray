@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import NavbarSidebarComponent from "../../components/NavbarSidebarComponent.vue";
-import MainPageComponent from "../../components/MainPageComponent.vue";
+import MainPageComponent from "../../components/home/MainPageComponent.vue";
 import FooterComponent from "../../components/FooterComponent.vue";
 import LatestChangesComponent from "../../components/LatestChangesComponent.vue";
 
