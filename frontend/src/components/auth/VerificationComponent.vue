@@ -28,6 +28,7 @@
                 @input="formatCode()"
                 @keypress="validateInput($event, index)"
                 @click="isCodeClicked = true"
+                @paste="handlePaste($event, index)"
               ></v-text-field>
             </div>
             <div class="center">
@@ -103,6 +104,24 @@ export default defineComponent({
       }
       if (!/^\d$/.test(event.key)) {
         event.preventDefault();
+      }
+    },
+    handlePaste(event: ClipboardEvent, index: number) {
+      // Prevent the default paste behavior
+      event.preventDefault();
+
+      // Get the pasted text from the clipboard
+      let pastedText = "";
+      if (event.clipboardData) {
+        pastedText = event.clipboardData.getData("text/plain");
+      }
+
+      // Remove non-digit characters and limit the length to 4 characters
+      const cleanedText = pastedText.replace(/[^\d]/g, "").substring(0, 4);
+
+      // Update the code array with the cleaned text
+      for (let i = 0; i < cleanedText.length; i++) {
+        this.code[index + i] = parseInt(cleanedText.charAt(i), 10);
       }
     },
     resendCode() {
