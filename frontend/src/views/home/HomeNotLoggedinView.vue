@@ -2,7 +2,9 @@
   <div class="row">
     <logo-image class="child1"></logo-image>
     <div class="child2">
-      <home-not-loggedin-component></home-not-loggedin-component>
+      <home-not-loggedin-component
+        v-if="loggedIn"
+      ></home-not-loggedin-component>
     </div>
   </div>
 </template>
@@ -17,6 +19,16 @@ export default defineComponent({
   components: {
     HomeNotLoggedinComponent,
     LogoImage,
+  },
+  beforeMount() {
+    const loggedIn = true;
+    localStorage.setItem("loggedIn", JSON.stringify(loggedIn));
+    console.log(localStorage.getItem("loggedIn"));
+  },
+  data() {
+    return {
+      loggedIn: localStorage.getItem("loggedIn"),
+    };
   },
 });
 </script>

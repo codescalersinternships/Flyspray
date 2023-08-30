@@ -27,7 +27,7 @@ const routes: Array<RouteRecordRaw> = [
     component: RegisterVerificationView,
   },
   {
-    path: "/home",
+    path: "/",
     name: "home",
     component: HomeNotLoggedinView,
   },
