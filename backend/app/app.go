@@ -47,7 +47,7 @@ func (app *App) Run() error {
 
 func (app *App) registerRoutes() {
 
-	apiGroup := app.router.Group("/api/" + app.config.Version.AppVersion)
+	apiGroup := app.router.Group("/api/" + app.config.Version)
 
 	apiGroup.Use(cors.Default())
 
