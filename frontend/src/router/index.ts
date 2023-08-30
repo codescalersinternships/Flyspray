@@ -3,6 +3,7 @@ import LoginView from "../views/auth/LoginView.vue";
 import ForgetPasswordView from "../views/auth/ForgetPasswordView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 import RegisterVerificationView from "../views/auth/RegisterVerificationView.vue";
+import HomeNotLoggedinView from "../views/home/HomeNotLoggedinView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -24,6 +25,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/register-verification",
     name: "register-verification",
     component: RegisterVerificationView,
+  },
+  {
+    path: "/",
+    name: "home",
+    component: HomeNotLoggedinView,
   },
 ];
 

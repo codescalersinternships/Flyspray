@@ -74,10 +74,10 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 	}
 
 	user := models.User{
-		Name:                    requestBody.Name,
-		Email:                   requestBody.Email,
-		Password:                requestBody.Password,
-		VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(a.config.MailSender.Timeout)),
+		Name:                           requestBody.Name,
+		Email:                          requestBody.Email,
+		Password:                       requestBody.Password,
+		VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(a.config.MailSender.Timeout)),
 	}
 
 	err = user.Validate()
@@ -186,7 +186,7 @@ func (a *App) verify(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("wrong verification code"))
 	}
 
-	if user.VerificationCodeTimeout.Before(time.Now()) {
+	if user.VerificationCodeExpirationTime.Before(time.Now()) {
 		return nil, BadRequest(errors.New("verification code has expired"))
 	}
 
@@ -507,7 +507,7 @@ func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
 		return nil, BadRequest(errors.New("wrong verification code"))
 	}
 
-	if user.VerificationCodeTimeout.Before(time.Now()) {
+	if user.VerificationCodeExpirationTime.Before(time.Now()) {
 		return nil, BadRequest(errors.New("verification code has expired"))
 	}
 

@@ -21,9 +21,12 @@ func TestSignup(t *testing.T) {
 	dir := t.TempDir()
 
 	app := App{}
+
 	var err error
 	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
+
+	app.config.Version = "v1"
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
@@ -114,7 +117,7 @@ func TestSignup(t *testing.T) {
 			body, err := json.Marshal(tc.requestBody)
 
 			assert.Nil(t, err)
-			req, err := http.NewRequest(http.MethodPost, "/user/signup", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/signup", bytes.NewReader(body))
 
 			assert.Nil(t, err)
 			res := httptest.NewRecorder()
@@ -134,6 +137,8 @@ func TestVerify(t *testing.T) {
 	var err error
 	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
+
+	app.config.Version = "v1"
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
@@ -201,7 +206,7 @@ func TestVerify(t *testing.T) {
 			body, err := json.Marshal(tc.requestBody)
 
 			assert.Nil(t, err)
-			req, err := http.NewRequest(http.MethodPost, "/user/signup/verify", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/signup/verify", bytes.NewReader(body))
 
 			assert.Nil(t, err)
 			res := httptest.NewRecorder()
@@ -221,6 +226,8 @@ func TestSignin(t *testing.T) {
 	var err error
 	app.DB, err = models.NewDBClient(filepath.Join(dir, "flyspray.db"))
 	assert.Nil(t, err)
+
+	app.config.Version = "v1"
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
@@ -296,7 +303,7 @@ func TestSignin(t *testing.T) {
 			body, err := json.Marshal(tc.requestBody)
 
 			assert.Nil(t, err)
-			req, err := http.NewRequest(http.MethodPost, "/user/signin", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/signin", bytes.NewReader(body))
 
 			assert.Nil(t, err)
 			res := httptest.NewRecorder()
@@ -320,11 +327,12 @@ func TestUpdateUser(t *testing.T) {
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
-	app.router = gin.Default()
-	app.registerRoutes()
-
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15
+	app.config.Version = "v1"
+
+	app.router = gin.Default()
+	app.registerRoutes()
 
 	newUser := signupBody{
 		Name:            "diaa",
@@ -348,7 +356,7 @@ func TestUpdateUser(t *testing.T) {
 			Name: "omar",
 		})
 		assert.Nil(t, err)
-		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodPut, "/api/"+app.config.Version+"/user", bytes.NewReader(body))
 
 		assert.Nil(t, err)
 
@@ -374,7 +382,7 @@ func TestUpdateUser(t *testing.T) {
 
 		body, err := json.Marshal(requestBody)
 		assert.Nil(t, err)
-		request, err := http.NewRequest(http.MethodPut, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodPut, "/api/"+app.config.Version+"/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -398,11 +406,12 @@ func TestGetUser(t *testing.T) {
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
-	app.router = gin.Default()
-	app.registerRoutes()
-
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15
+	app.config.Version = "v1"
+
+	app.router = gin.Default()
+	app.registerRoutes()
 
 	newUser := signupBody{
 		Name:            "diaa",
@@ -423,7 +432,7 @@ func TestGetUser(t *testing.T) {
 	assert.Nil(t, err)
 	t.Run("unauthorized user", func(t *testing.T) {
 
-		request, err := http.NewRequest(http.MethodGet, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodGet, "/api/"+app.config.Version+"/user", bytes.NewReader(body))
 
 		assert.Nil(t, err)
 
@@ -443,7 +452,7 @@ func TestGetUser(t *testing.T) {
 	token := SigninUser(t, reqBody, &app)
 
 	t.Run("authorized user", func(t *testing.T) {
-		request, err := http.NewRequest(http.MethodGet, "/user", bytes.NewReader(body))
+		request, err := http.NewRequest(http.MethodGet, "/api/"+app.config.Version+"/user", bytes.NewReader(body))
 		assert.Nil(t, err)
 
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -468,11 +477,12 @@ func TestRefreshToken(t *testing.T) {
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
-	app.router = gin.Default()
-	app.registerRoutes()
-
 	app.config = internal.Configuration{}
 	app.config.JWT.Timeout = 15
+	app.config.Version = "v1"
+
+	app.router = gin.Default()
+	app.registerRoutes()
 
 	newUser := signupBody{
 		Name:            "diaa",
@@ -516,7 +526,7 @@ func TestRefreshToken(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			request, err := http.NewRequest(http.MethodPost, "/user/refresh_token", nil)
+			request, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/refresh_token", nil)
 
 			assert.Nil(t, err)
 
@@ -542,6 +552,9 @@ func TestForgetPassword(t *testing.T) {
 
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
+
+	app.config = internal.Configuration{}
+	app.config.Version = "v1"
 
 	app.router = gin.Default()
 	app.registerRoutes()
@@ -602,7 +615,7 @@ func TestForgetPassword(t *testing.T) {
 			body, err := json.Marshal(tc.input)
 			assert.Nil(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/user/forget_password", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/forget_password", bytes.NewReader(body))
 			assert.Nil(t, err)
 
 			res := httptest.NewRecorder()
@@ -625,6 +638,9 @@ func TestVerifyForgetPassword(t *testing.T) {
 	err = app.DB.Migrate()
 	assert.Nil(t, err)
 
+	app.config = internal.Configuration{}
+	app.config.Version = "v1"
+
 	app.router = gin.Default()
 	app.registerRoutes()
 
@@ -639,24 +655,24 @@ func TestVerifyForgetPassword(t *testing.T) {
 		{
 			name: "invalid input",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
 			input:              verifyBody{},
 			expectedStatusCode: http.StatusBadRequest,
 		}, {
 			name: "not exist",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
 			input: verifyBody{
 				Email:            "another@gmail.com",
@@ -666,12 +682,12 @@ func TestVerifyForgetPassword(t *testing.T) {
 		}, {
 			name: "not verified",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                false,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       false,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
 			input: verifyBody{
 				Email:            "omar@gmail.com",
@@ -681,12 +697,12 @@ func TestVerifyForgetPassword(t *testing.T) {
 		}, {
 			name: "wrong verification code",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
 			input: verifyBody{
 				Email:            "omar@gmail.com",
@@ -696,12 +712,12 @@ func TestVerifyForgetPassword(t *testing.T) {
 		}, {
 			name: "verification code expired",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now(),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now(),
 			},
 			input: verifyBody{
 				Email:            "omar@gmail.com",
@@ -711,12 +727,12 @@ func TestVerifyForgetPassword(t *testing.T) {
 		}, {
 			name: "valid",
 			preCreatedUser: models.User{
-				Name:                    "omar",
-				Email:                   "omar@gmail.com",
-				Password:                "123456!Abc",
-				Verified:                true,
-				VerificationCode:        100001,
-				VerificationCodeTimeout: time.Now().Add(time.Second * time.Duration(timeout)),
+				Name:                           "omar",
+				Email:                          "omar@gmail.com",
+				Password:                       "123456!Abc",
+				Verified:                       true,
+				VerificationCode:               100001,
+				VerificationCodeExpirationTime: time.Now().Add(time.Second * time.Duration(timeout)),
 			},
 			input: verifyBody{
 				Email:            "omar@gmail.com",
@@ -736,7 +752,7 @@ func TestVerifyForgetPassword(t *testing.T) {
 			body, err := json.Marshal(tc.input)
 			assert.Nil(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/user/forget_password/verify", bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/forget_password/verify", bytes.NewReader(body))
 			assert.Nil(t, err)
 
 			res := httptest.NewRecorder()
@@ -822,7 +838,7 @@ func AddUserToDB(t testing.TB, user signupBody, app *App) {
 	body, err := json.Marshal(user)
 
 	assert.Nil(t, err)
-	req, err := http.NewRequest(http.MethodPost, "/user/signup", bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/signup", bytes.NewReader(body))
 
 	assert.Nil(t, err)
 	res := httptest.NewRecorder()
@@ -837,7 +853,7 @@ func SigninUser(t testing.TB, user signinBody, app *App) string {
 
 	body, err := json.Marshal(user)
 	assert.Nil(t, err)
-	request, err := http.NewRequest(http.MethodPost, "/user/signin", bytes.NewReader(body))
+	request, err := http.NewRequest(http.MethodPost, "/api/"+app.config.Version+"/user/signin", bytes.NewReader(body))
 	assert.Nil(t, err)
 	res := httptest.NewRecorder()
 

@@ -14,6 +14,7 @@ type Configuration struct {
 	MailSender MailSender `json:"mail_sender"`
 	DB         DB         `json:"db"`
 	JWT        JWT        `json:"jwt"`
+	Version    string     `json:"version"`
 }
 
 // Server is server configuration data

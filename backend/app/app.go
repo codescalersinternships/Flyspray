@@ -46,10 +46,15 @@ func (app *App) Run() error {
 }
 
 func (app *App) registerRoutes() {
-	app.router.Use(cors.Default())
 
-	authGroup := app.router.Group("")
-	authGroup.Use(middleware.RequireAuth(""))
+	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
+
+	apiGroup := app.router.Group("/api/" + app.config.Version)
+
+	apiGroup.Use(cors.Default())
+
+	authGroup := apiGroup.Group("")
+	authGroup.Use(middleware.RequireAuth(app.config.JWT.Secret))
 
 	project := authGroup.Group("/project")
 	{
@@ -77,7 +82,7 @@ func (app *App) registerRoutes() {
 		memberRoutes.GET("/:project_id", WrapFunc(app.getMembersInProject))
 	}
 
-	userGroup := app.router.Group("/user")
+	userGroup := apiGroup.Group("/user")
 	{
 		userGroup.POST("/signup", WrapFunc(app.signup))
 		userGroup.POST("/signin", WrapFunc(app.signIn))
@@ -86,8 +91,6 @@ func (app *App) registerRoutes() {
 		userGroup.POST("/forget_password", WrapFunc(app.forgetPassword))
 		userGroup.POST("/forget_password/verify", WrapFunc(app.verifyForgetPassword))
 	}
-
-	app.router.GET("/docs/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	authUserGroup := authGroup.Group("/user")
 	{
