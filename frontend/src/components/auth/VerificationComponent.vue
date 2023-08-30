@@ -18,7 +18,7 @@
           >
             <div class="verification-code-container">
               <v-text-field
-                v-for="(digit, index) in code"
+                v-for="(_, index) in code"
                 :key="index"
                 v-model="code[index]"
                 outlined
@@ -39,9 +39,7 @@
               type="submit"
               block
               class="mt-2 btn"
-              :disabled="
-                (error && isCodeClicked) || (countDown != 0 && countDown != -1)
-              "
+              :disabled="error || (countDown != 0 && countDown != -1)"
               >Submit</v-btn
             >
           </v-form>
