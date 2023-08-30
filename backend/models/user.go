@@ -48,11 +48,8 @@ func (db *DBClient) CreateUser(user User) (User, error) {
 
 // GetUserByID gets a user by id
 func (db *DBClient) GetUserByID(id string) (User, error) {
-	user := User{ID: id}
-
-	result := db.Client.First(&user)
-
-	return user, result.Error
+	user := User{}
+	return user, db.Client.First(&user, "id = ?", id).Error
 }
 
 // UpdateUser updates a user
