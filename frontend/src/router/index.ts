@@ -37,6 +37,10 @@ const routes: Array<RouteRecordRaw> = [
     name: "notfound",
     component: PageNotFound,
   },
+  {
+    path: "/:catchAll(.*)",
+    redirect: "/404",
+  },
 ];
 
 const router = createRouter({
