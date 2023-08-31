@@ -32,14 +32,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "home",
     component: HomeNotLoggedinView,
   },
-  {
-    path: "/404",
-    name: "notfound",
-    component: PageNotFound,
-  },
+
   {
     path: "/:catchAll(.*)",
-    redirect: "/404",
+    name: "notfound",
+    component: PageNotFound,
   },
 ];
 
