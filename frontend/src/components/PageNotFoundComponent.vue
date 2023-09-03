@@ -1,20 +1,16 @@
 <template>
   <div class="container">
-    <v-img src="../assets/404logo.png" id="err-logo"></v-img>
-    <v-img src="../assets/404img.png" alt="logo" id="err-img"></v-img>
+    <div id="err-logo">
+      <v-img src="../assets/404logo.png"></v-img>
+    </div>
+    <div id="err-img">
+      <v-img src="../assets/404img.png" alt="logo"></v-img>
+    </div>
     <div class="row">
-      <v-btn
-        type="ReturnToHome"
-        block
-        class="mt-2 btn"
-        @click="$router.push('/')"
-        >Return To Home</v-btn
+      <v-btn type="text" block class="mt-4 btn" @click="$router.push('/')"
+        >Go Home</v-btn
       >
-      <v-btn
-        type="ReturnToPrevious"
-        block
-        class="mt-2 btn"
-        @click="$router.go(-1)"
+      <v-btn type="text" block class="mt-4 btn" @click="$router.go(-1)"
         >Back</v-btn
       >
     </div>
@@ -23,9 +19,10 @@
 
 <style scoped>
 .row {
+  width: 20%;
   display: flex;
-  margin-right: 220px;
-  gap: 20px;
+  justify-content: center;
+  gap: 10%;
 }
 .btn {
   border-radius: 8px;
@@ -36,44 +33,36 @@
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 500;
-  margin-top: -195px !important;
-  width: 70px;
+  width: 100%;
 }
 .container {
-  width: 50%;
+  width: 100%;
   align-items: center;
   display: flex;
   flex-direction: column;
-  margin-top: -166px;
+  justify-content: center;
 }
 
 #err-logo {
   height: auto;
-  width: 20%;
-  margin-bottom: -65%;
+  width: 10%;
 }
 
 #err-img {
   height: auto;
-  width: 80%;
+  width: 50%;
 }
-@media (max-width: 1100px) {
-  .container {
-    width: 100%;
-  }
-  #err-logo {
-    width: 30%;
-  }
-  #err-img {
-    width: 100%;
-    margin-top: -335px;
-  }
+
+@media (max-width: 400px) {
   .row {
-    margin-right: 170px;
+    flex-direction: column;
+    width: 100%;
   }
-  .btn {
-    width: 55px;
-    margin-top: -250px !important;
+}
+@media (max-width: 800px) {
+  .row {
+    flex-direction: column;
+    width: 25%;
   }
 }
 </style>
