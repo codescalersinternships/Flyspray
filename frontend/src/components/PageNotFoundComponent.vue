@@ -7,10 +7,10 @@
       <v-img src="../assets/404img.png" alt="logo"></v-img>
     </div>
     <div class="row">
-      <v-btn type="text" block class="mt-4 btn" @click="$router.push('/')"
+      <v-btn type="submit" block class="mt-4 btn" @click="$router.push('/')"
         >Go Home</v-btn
       >
-      <v-btn type="text" block class="mt-4 btn" @click="$router.go(-1)"
+      <v-btn type="submit" block class="mt-4 btn" @click="$router.go(-1)"
         >Back</v-btn
       >
     </div>
