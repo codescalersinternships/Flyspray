@@ -29,8 +29,17 @@ type signinBody struct {
 }
 
 type verifyBody struct {
-	VerificationCode int    `json:"verification_code"`
-	Email            string `json:"email"`
+	VerificationCode int    `json:"verification_code" binding:"required"`
+	Email            string `json:"email" binding:"required"`
+}
+
+type forgetPasswordBody struct {
+	Email string `json:"email" binding:"required"`
+}
+
+type changePasswordBody struct {
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
 
 type updateUserBody struct {
@@ -107,7 +116,8 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 				return nil, InternalServerError(errInternalServerError)
 			}
 
-			err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, verificationCode)
+			mailSubject, mailBody := internal.VerifyMailContent(verificationCode)
+			err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody)
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, InternalServerError(errInternalServerError)
@@ -122,7 +132,8 @@ func (a *App) signup(ctx *gin.Context) (interface{}, Response) {
 		return nil, InternalServerError(errInternalServerError)
 	}
 
-	err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, user.VerificationCode)
+	mailSubject, mailBody := internal.VerifyMailContent(user.VerificationCode)
+	err = internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody)
 	if err != nil {
 		log.Error().Err(err).Send()
 
@@ -402,4 +413,162 @@ func (a *App) refreshToken(ctx *gin.Context) (interface{}, Response) {
 		},
 	}, Created()
 
+}
+
+// forgetPassword requests forget password code to be sent to user's email
+// @Summary Request forget password code
+// @Description requests forget password code to be sent to user's email
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body forgetPasswordBody true "request forget password code request body"
+// @Success 200 {object} ResponseMsg  "forget password code has been sent to your email"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 404 {object} Response "NotFound"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/forget_password [post]
+func (a *App) forgetPassword(ctx *gin.Context) (interface{}, Response) {
+	var input forgetPasswordBody
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	user, err := a.DB.GetUserByEmail(input.Email)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("email does not exist"))
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if !user.Verified {
+		return nil, BadRequest(errors.New("your account is not verified, please verify your account first"))
+	}
+
+	verificationCode := a.DB.GenerateVerificationCode()
+
+	if err := a.DB.UpdateVerificationCode(user.ID, verificationCode, a.config.MailSender.Timeout); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	mailSubject, mailBody := internal.ForgetPasswordMailContent(verificationCode)
+	if err := internal.SendEmail(a.config.MailSender.SendGridKey, a.config.MailSender.Email, user.Email, mailSubject, mailBody); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "forget password code has been sent to your email"}, Ok()
+}
+
+// verifyForgetPassword verify forget password code then send token
+// @Summary verify forget password code
+// @Description verify forget password code then send token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body verifyBody true "verify forget password code request body"
+// @Success 200 {object} ResponseMsg "verified (AccessToken details is given in a struct in the 'Data' field)"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 404 {object} Response "NotFound"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/forget_password/verify [post]
+func (a *App) verifyForgetPassword(ctx *gin.Context) (interface{}, Response) {
+	var input verifyBody
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	user, err := a.DB.GetUserByEmail(input.Email)
+
+	if err == gorm.ErrRecordNotFound {
+		log.Error().Err(err).Send()
+		return nil, NotFound(errors.New("email does not exist"))
+	}
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	if !user.Verified {
+		return nil, BadRequest(errors.New("your account is not verified, please verify your account first"))
+	}
+
+	if user.VerificationCode != input.VerificationCode {
+		return nil, BadRequest(errors.New("wrong verification code"))
+	}
+
+	if user.VerificationCodeExpirationTime.Before(time.Now()) {
+		return nil, BadRequest(errors.New("verification code has expired"))
+	}
+
+	// generate tokens
+	accessToken, err := internal.GenerateToken(a.config.JWT.Secret, user.ID, time.Now().Add(time.Minute*time.Duration(a.config.JWT.Timeout)))
+
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "verified", Data: struct {
+		AccessToken string `json:"access_token"`
+	}{
+		AccessToken: accessToken,
+	}}, Ok()
+}
+
+// changePassword changes password
+// @Summary changes password
+// @Description changes password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body changePasswordBody true "change password request body"
+// @Param Authorization header string true "Bearer token"
+// @Security Bearer
+// @Success 200 {object} ResponseMsg "password has been updated successfully"
+// @Failure 400 {object} Response "Bad request"
+// @Failure 401 {object} Response "UnAuthorized"
+// @Failure 500 {object} Response "Internal server error"
+// @Router /user/password [put]
+func (a *App) changePassword(ctx *gin.Context) (interface{}, Response) {
+	var input changePasswordBody
+
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Error().Err(err).Send()
+		return nil, BadRequest(errors.New("input data is invalid"))
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		return nil, UnAuthorized(errors.New("authentication is required"))
+	}
+
+	if input.Password != input.ConfirmPassword {
+		return nil, BadRequest(errors.New("passwords do not match"))
+	}
+
+	hashedPassword, err := internal.HashPassword([]byte(input.Password))
+	if err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	user := models.User{ID: userID.(string), Password: string(hashedPassword)}
+
+	if err := a.DB.UpdateUser(user); err != nil {
+		log.Error().Err(err).Send()
+		return nil, InternalServerError(errInternalServerError)
+	}
+
+	return ResponseMsg{Message: "password has been updated successfully"}, Ok()
 }

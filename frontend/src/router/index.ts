@@ -3,9 +3,8 @@ import LoginView from "../views/auth/LoginView.vue";
 import ForgetPasswordView from "../views/auth/ForgetPasswordView.vue";
 import RegisterView from "../views/auth/RegisterView.vue";
 import RegisterVerificationView from "../views/auth/RegisterVerificationView.vue";
-import HomeNotLoggedinView from "../views/home/HomeNotLoggedinView.vue";
+import HomeView from "../views/home/HomeView.vue";
 import PageNotFound from "../views/PageNotFoundView.vue";
-
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/login",
@@ -30,7 +29,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "home",
-    component: HomeNotLoggedinView,
+    component: HomeView,
   },
 
   {
