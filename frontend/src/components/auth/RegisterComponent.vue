@@ -115,7 +115,7 @@
                   :dialog="privacyDialog"
                   @close-dialog="(value) => (privacyDialog = value)"
                 >
-                  <template v-slot:title> Privacy Policy </template>
+                  <template v-slot:title> <h3>Privacy Policy</h3> </template>
                   <p class="bold">Last Updated: 09/03/2023</p>
                   <p class="bold">1. Acceptance of Terms</p>
                   <p>
