@@ -55,10 +55,96 @@
             ></v-text-field>
             <v-checkbox type="checkbox" hide-details v-model="termsCheck">
               <template v-slot:label>
-                <span class="terms-checkbox"
-                  >I agree to all the <a id="terms-link">Terms</a> and
-                  <a id="privacy-policy-link">Privacy policy.</a></span
+                <span class="terms-checkbox">
+                  I agree to all the
+                  <a
+                    id="terms-link"
+                    @click="
+                      termsDialog = true;
+                      $event.preventDefault();
+                    "
+                    >Terms</a
+                  >
+                  and
+                  <a
+                    id="privacy-policy-link"
+                    @click="
+                      privacyDialog = true;
+                      $event.preventDefault();
+                    "
+                    >Privacy policy.</a
+                  >
+                </span>
+                <ModalComponent
+                  :dialog="termsDialog"
+                  @close-dialog="(value) => (termsDialog = value)"
                 >
+                  <template v-slot:title>
+                    <h3>Terms and Conditions</h3></template
+                  >
+                  <p class="bold">Last Updated: 09/03/2023</p>
+                  <p class="bold">1. Acceptance of Terms</p>
+                  <p>
+                    By accessing or using Flyspray, you agree to comply with and
+                    be bound by these terms and conditions. If you do not agree
+                    with any part of these terms, please do not use Flyspray.
+                  </p>
+
+                  <p class="bold">2. License and Access</p>
+
+                  <p class="bold">2.1. License:</p>
+                  <p>
+                    Subject to your compliance with these terms, Codescalers
+                    grants you a limited, non-exclusive, non-transferable, and
+                    revocable license to use Flyspray for your personal or
+                    internal business purposes.
+                  </p>
+
+                  <template v-slot:custom-button>
+                    <v-btn
+                      class="btn"
+                      @click="
+                        termsCheck = true;
+                        termsDialog = false;
+                      "
+                      >Accept Terms & Privacy Policy</v-btn
+                    >
+                  </template>
+                </ModalComponent>
+                <ModalComponent
+                  :dialog="privacyDialog"
+                  @close-dialog="(value) => (privacyDialog = value)"
+                >
+                  <template v-slot:title> Privacy Policy </template>
+                  <p class="bold">Last Updated: 09/03/2023</p>
+                  <p class="bold">1. Acceptance of Terms</p>
+                  <p>
+                    By accessing or using Flyspray, you agree to comply with and
+                    be bound by these terms and conditions. If you do not agree
+                    with any part of these terms, please do not use Flyspray.
+                  </p>
+
+                  <p class="bold">2. License and Access</p>
+
+                  <p class="bold">2.1. License:</p>
+                  <p>
+                    Subject to your compliance with these terms, Codescalers
+                    grants you a limited, non-exclusive, non-transferable, and
+                    revocable license to use Flyspray for your personal or
+                    internal business purposes.
+                  </p>
+
+                  <template v-slot:custom-button>
+                    <v-btn
+                      class="btn"
+                      @click="
+                        termsCheck = true;
+                        privacyDialog = false;
+                      "
+                      >Accept Terms & Privacy Policy</v-btn
+                    >
+                  </template>
+                </ModalComponent>
               </template>
             </v-checkbox>
             <v-btn
@@ -86,6 +172,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import InputForm from "./InputForm.vue";
+import ModalComponent from "../ModalComponent.vue";
 import {
   validateEmail,
   ValidationResult,
@@ -96,7 +183,9 @@ import {
 export default defineComponent({
   components: {
     InputForm,
+    ModalComponent,
   },
+
   data() {
     return {
       email: "" as string,
@@ -110,6 +199,8 @@ export default defineComponent({
       emailValidationResult: {} as ValidationResult,
       passwordValidationResult: {} as ValidationResult,
       usernameValidationResult: {} as ValidationResult,
+      termsDialog: false as boolean,
+      privacyDialog: false as boolean,
     };
   },
   computed: {
@@ -172,6 +263,9 @@ export default defineComponent({
 
 <style scoped>
 @import url("https://fonts.googleapis.com/css?family=Inter");
+.bold {
+  font-weight: bold;
+}
 .header-box {
   margin: 2rem;
 }
