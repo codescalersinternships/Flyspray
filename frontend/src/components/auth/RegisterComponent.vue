@@ -82,24 +82,26 @@
                   <template v-slot:title>
                     <h3>Terms and Conditions</h3></template
                   >
-                  <p class="bold">Last Updated: 09/03/2023</p>
-                  <p class="bold">1. Acceptance of Terms</p>
-                  <p>
-                    By accessing or using Flyspray, you agree to comply with and
-                    be bound by these terms and conditions. If you do not agree
-                    with any part of these terms, please do not use Flyspray.
-                  </p>
+                  <template v-slot:modal-body>
+                    <p class="bold">Last Updated: 09/03/2023</p>
+                    <p class="bold">1. Acceptance of Terms</p>
+                    <p>
+                      By accessing or using Flyspray, you agree to comply with
+                      and be bound by these terms and conditions. If you do not
+                      agree with any part of these terms, please do not use
+                      Flyspray.
+                    </p>
 
-                  <p class="bold">2. License and Access</p>
+                    <p class="bold">2. License and Access</p>
 
-                  <p class="bold">2.1. License:</p>
-                  <p>
-                    Subject to your compliance with these terms, Codescalers
-                    grants you a limited, non-exclusive, non-transferable, and
-                    revocable license to use Flyspray for your personal or
-                    internal business purposes.
-                  </p>
-
+                    <p class="bold">2.1. License:</p>
+                    <p>
+                      Subject to your compliance with these terms, Codescalers
+                      grants you a limited, non-exclusive, non-transferable, and
+                      revocable license to use Flyspray for your personal or
+                      internal business purposes.
+                    </p>
+                  </template>
                   <template v-slot:custom-button>
                     <v-btn
                       class="btn"
@@ -109,6 +111,9 @@
                       "
                       >Accept Terms & Privacy Policy</v-btn
                     >
+                    <v-btn class="btn" @click="termsDialog = false"
+                      >Close</v-btn
+                    >
                   </template>
                 </ModalComponent>
                 <ModalComponent
@@ -116,23 +121,26 @@
                   @close-dialog="(value) => (privacyDialog = value)"
                 >
                   <template v-slot:title> <h3>Privacy Policy</h3> </template>
-                  <p class="bold">Last Updated: 09/03/2023</p>
-                  <p class="bold">1. Acceptance of Terms</p>
-                  <p>
-                    By accessing or using Flyspray, you agree to comply with and
-                    be bound by these terms and conditions. If you do not agree
-                    with any part of these terms, please do not use Flyspray.
-                  </p>
+                  <template v-slot:modal-body>
+                    <p class="bold">Last Updated: 09/03/2023</p>
+                    <p class="bold">1. Acceptance of Terms</p>
+                    <p>
+                      By accessing or using Flyspray, you agree to comply with
+                      and be bound by these terms and conditions. If you do not
+                      agree with any part of these terms, please do not use
+                      Flyspray.
+                    </p>
 
-                  <p class="bold">2. License and Access</p>
+                    <p class="bold">2. License and Access</p>
 
-                  <p class="bold">2.1. License:</p>
-                  <p>
-                    Subject to your compliance with these terms, Codescalers
-                    grants you a limited, non-exclusive, non-transferable, and
-                    revocable license to use Flyspray for your personal or
-                    internal business purposes.
-                  </p>
+                    <p class="bold">2.1. License:</p>
+                    <p>
+                      Subject to your compliance with these terms, Codescalers
+                      grants you a limited, non-exclusive, non-transferable, and
+                      revocable license to use Flyspray for your personal or
+                      internal business purposes.
+                    </p>
+                  </template>
 
                   <template v-slot:custom-button>
                     <v-btn
@@ -142,6 +150,9 @@
                         privacyDialog = false;
                       "
                       >Accept Terms & Privacy Policy</v-btn
+                    >
+                    <v-btn class="btn" @click="privacyDialog = false"
+                      >Close</v-btn
                     >
                   </template>
                 </ModalComponent>

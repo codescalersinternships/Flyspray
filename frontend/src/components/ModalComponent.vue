@@ -1,21 +1,20 @@
 <template>
   <v-dialog
+    class="dialog"
     v-model="internalDialog"
     @update:modelValue="dialogUpdated"
-    max-width="50%"
   >
     <v-card>
       <v-card-title class="headline">
-        <slot name="title" class="title">Modal Title</slot>
+        <slot name="title" class="title"></slot>
       </v-card-title>
       <v-card-text>
-        <slot></slot>
+        <slot name="modal-body" class="modal-body"></slot>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
 
         <slot name="custom-button"></slot>
-        <v-btn class="btn" @click="closeModal">Close</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -37,13 +36,9 @@ export default {
     },
   },
   methods: {
-    closeModal() {
-      this.internalDialog = false;
-      this.$emit("close-dialog", false);
-    },
     dialogUpdated(value: boolean) {
       if (!value) {
-        this.closeModal();
+        this.$emit("close-dialog", false);
       }
     },
   },
@@ -51,15 +46,30 @@ export default {
 </script>
 
 <style scoped>
-.btn {
-  border-radius: 8px;
-  background: linear-gradient(134deg, #9181f4 0%, #5038ed 100%);
-  /* font-family: Roboto; */
-
-  box-shadow: 0px 8px 21px 0px rgba(0, 0, 0, 0.16);
-  color: #ffff;
+@media (max-width: 1100px) {
+  .dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+.v-dialog > .v-overlay__content > .v-card > .v-card-text,
+.v-dialog > .v-overlay__content > form > .v-card > .v-card-text {
+  padding: 0px 50px 25px 50px;
+}
+.v-card .v-card-title {
+  padding-top: 25px;
+  padding-left: 50px;
+}
+.v-card-actions {
+  padding: 0px 50px 25px 0px;
+}
+.modal-body {
+  padding: 100px 100px 100px 100px;
 }
 .title {
   font-weight: 500;
+}
+.dialog {
+  max-width: 50%;
 }
 </style>
