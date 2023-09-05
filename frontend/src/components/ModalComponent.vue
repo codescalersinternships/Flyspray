@@ -2,7 +2,8 @@
   <v-dialog
     class="dialog"
     v-model="internalDialog"
-    @update:modelValue="dialogUpdated"
+    @update:modelValue="(val:boolean) => $emit('close-dialog', val)"
+    theme="dark"
   >
     <v-card>
       <v-card-title class="headline">
@@ -27,19 +28,12 @@ export default {
   },
   data() {
     return {
-      internalDialog: false,
+      internalDialog: false as boolean,
     };
   },
   watch: {
-    dialog(newVal) {
+    dialog(newVal: boolean) {
       this.internalDialog = newVal;
-    },
-  },
-  methods: {
-    dialogUpdated(value: boolean) {
-      if (!value) {
-        this.$emit("close-dialog", false);
-      }
     },
   },
 };

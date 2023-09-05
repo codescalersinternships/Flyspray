@@ -13,13 +13,16 @@
       <v-main class="main-page">
         <v-container class="h-100">
           <v-row class="h-100">
-            <main-page-component></main-page-component>
+            <main-page-component
+              @new-project="showNewProjectDialog = true"
+            ></main-page-component>
             <latest-changes-component></latest-changes-component>
           </v-row>
           <footer-component></footer-component>
         </v-container>
       </v-main>
     </v-app>
+    <CreateProjectDialog :dialog="showNewProjectDialog" @close="close" />
   </div>
 </template>
 
@@ -33,6 +36,7 @@ import HomeNotLoggedinComponent from "../../components/home/HomeNotLoggedinCompo
 import LogoImage from "../../components/LogoImage.vue";
 
 import { defineComponent } from "vue";
+import CreateProjectDialog from "@/components/UI/CreateProjectDialog.vue";
 export default defineComponent({
   name: "HomeLoggedInPage",
   components: {
@@ -42,6 +46,7 @@ export default defineComponent({
     LatestChangesComponent,
     HomeNotLoggedinComponent,
     LogoImage,
+    CreateProjectDialog,
   },
   beforeMount() {
     const loggedIn = true;
@@ -51,7 +56,13 @@ export default defineComponent({
   data() {
     return {
       loggedIn: localStorage.getItem("loggedIn"),
+      showNewProjectDialog: false,
     };
+  },
+  methods: {
+    close() {
+      this.showNewProjectDialog = false;
+    },
   },
 });
 </script>
