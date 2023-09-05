@@ -33,7 +33,13 @@
             </svg>
           </div>
           <div>
-            <v-btn class="btn" prepend-icon="mdi-plus"> Add Project </v-btn>
+            <v-btn
+              class="btn"
+              prepend-icon="mdi-plus"
+              @click="$emit('new-project')"
+            >
+              Add Project
+            </v-btn>
           </div>
         </div>
       </div>
