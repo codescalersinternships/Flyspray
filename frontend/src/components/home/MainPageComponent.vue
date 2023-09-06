@@ -1,5 +1,12 @@
 <template>
-  <v-col v-col id="main-section-container" class="h-100" cols="9" lg="9">
+  <v-col
+    v-if="isProjectActive == true"
+    v-col
+    id="main-section-container"
+    class="h-100"
+    cols="9"
+    lg="9"
+  >
     <div id="main-section-innerdiv">
       <div class="header">
         <div class="sub-header">
@@ -45,16 +52,33 @@
       </div>
     </div>
   </v-col>
+  <v-col
+    v-else-if="isMembersActive == true"
+    v-col
+    id="members"
+    class="h-100"
+    cols="9"
+    lg="9"
+  >
+    <members-component></members-component>
+  </v-col>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import ProjectItem from "./ProjectItem.vue";
+import MembersComponent from "../MembersComponent.vue";
 
 export default defineComponent({
-  components: { ProjectItem },
+  components: { ProjectItem, MembersComponent },
   data() {
     return {};
+  },
+  props: {
+    isHomeActive: Boolean,
+    isProjectActive: Boolean,
+    isMembersActive: Boolean,
+    isBugsActive: Boolean,
   },
 });
 </script>

@@ -39,6 +39,7 @@
                   isProjectActive = false;
                   isMembersActive = false;
                   isBugsActive = false;
+                  emitActiveVariables();
                 "
                 ><svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -70,6 +71,7 @@
                   isHomeActive = false;
                   isMembersActive = false;
                   isBugsActive = false;
+                  emitActiveVariables();
                 "
               >
                 <svg
@@ -101,6 +103,7 @@
                   isProjectActive = false;
                   isMembersActive = true;
                   isBugsActive = false;
+                  emitActiveVariables();
                 "
               >
                 <svg
@@ -159,6 +162,7 @@
                   isProjectActive = false;
                   isMembersActive = false;
                   isBugsActive = true;
+                  emitActiveVariables();
                 "
               >
                 <svg
@@ -205,11 +209,20 @@ export default {
   data() {
     return {
       drawer: false as boolean,
-      isHomeActive: false as boolean,
+      isHomeActive: true as boolean,
       isProjectActive: false as boolean,
       isMembersActive: false as boolean,
       isBugsActive: false as boolean,
     };
+  },
+  methods: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    emitActiveVariables(this: any) {
+      this.$emit("members-is-active", this.isMembersActive);
+      this.$emit("home-is-active", this.isHomeActive);
+      this.$emit("project-is-active", this.isProjectActive);
+      this.$emit("bugs-is-active", this.isBugsActive);
+    },
   },
 };
 </script>
