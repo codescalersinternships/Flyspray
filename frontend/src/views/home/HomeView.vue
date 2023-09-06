@@ -9,11 +9,21 @@
       </div>
     </div>
     <v-app v-else>
-      <navbar-sidebar-component></navbar-sidebar-component>
+      <navbar-sidebar-component
+        @home-is-active="(value) => (isHomeActive = value)"
+        @project-is-active="(value) => (isProjectActive = value)"
+        @members-is-active="(value) => (isMembersActive = value)"
+        @bugs-is-active="(value) => (isBugsActive = value)"
+      ></navbar-sidebar-component>
       <v-main class="main-page">
         <v-container class="h-100">
           <v-row class="h-100">
-            <main-page-component></main-page-component>
+            <main-page-component
+              :isBugsActive="computedIsBugsActive"
+              :isHomeActive="computedIsHomeActive"
+              :isMembersActive="computedIsMembersActive"
+              :isProjectActive="computedIsProjectActive"
+            ></main-page-component>
             <latest-changes-component></latest-changes-component>
           </v-row>
           <footer-component></footer-component>
@@ -35,6 +45,7 @@ import LogoImage from "../../components/LogoImage.vue";
 import { defineComponent } from "vue";
 export default defineComponent({
   name: "HomeLoggedInPage",
+
   components: {
     NavbarSidebarComponent,
     MainPageComponent,
@@ -51,7 +62,25 @@ export default defineComponent({
   data() {
     return {
       loggedIn: localStorage.getItem("loggedIn"),
+      isHomeActive: false as boolean,
+      isProjectActive: false as boolean,
+      isMembersActive: false as boolean,
+      isBugsActive: false as boolean,
     };
+  },
+  computed: {
+    computedIsBugsActive(): boolean {
+      return this.isBugsActive;
+    },
+    computedIsHomeActive(): boolean {
+      return this.isHomeActive;
+    },
+    computedIsMembersActive(): boolean {
+      return this.isMembersActive;
+    },
+    computedIsProjectActive(): boolean {
+      return this.isProjectActive;
+    },
   },
 });
 </script>

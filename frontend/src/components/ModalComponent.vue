@@ -2,7 +2,7 @@
   <v-dialog
     class="dialog"
     v-model="internalDialog"
-    @update:modelValue="dialogUpdated"
+    @update:modelValue="(val:boolean) => $emit('close-dialog', val)"
   >
     <v-card>
       <v-card-title class="headline">
@@ -27,19 +27,13 @@ export default {
   },
   data() {
     return {
-      internalDialog: false,
+      internalDialog: false as boolean,
     };
   },
   watch: {
-    dialog(newVal) {
-      this.internalDialog = newVal;
-    },
-  },
-  methods: {
-    dialogUpdated(value: boolean) {
-      if (!value) {
-        this.$emit("close-dialog", false);
-      }
+    dialog(newVal: boolean) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this as any).internalDialog = newVal;
     },
   },
 };
